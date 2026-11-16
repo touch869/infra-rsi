@@ -28,9 +28,10 @@ infra-rsi/
 │   │
 │   ├── prompting/
 │   │   ├── __init__.py
-│   │   ├── spec.py                # StagePromptSpec / ExpertPromptSpec
+│   │   ├── context.py             # StageContext
+│   │   ├── spec.py                # ExpertPromptSpec / SkillView / RenderedPrompt
 │   │   ├── builder.py             # 通用 prompt 拼装
-│   │   └── registry.py            # stage → prompt spec
+│   │   └── registry.py            # role/stage → prompt spec
 │   │
 │   ├── knowledge/
 │   │   ├── __init__.py
@@ -182,7 +183,8 @@ infra-rsi/
 ## 3. prompt 拼装位置
 
 - **专家目录**：`experts/*/prompt_spec.py`，定义角色、目标、输入、允许工具、输出 schema。
-- **通用拼装**：`prompting/builder.py`，把 `StagePromptSpec + StageContext + selected skills` 渲染成 prompt。
+- **上下文类型**：`prompting/context.py`，定义 `StageContext`，只带当前 stage 需要的切片。
+- **通用拼装**：`prompting/builder.py`，把 `ExpertPromptSpec + StageContext + selected skills` 按固定段在前、变化段在后渲染成 prompt。
 - **上下文组装**：`orchestration/context_builder.py`，从 task、skills、records、constraints 组装 `StageContext`。
 - **确定性工具**：`runtime/facade.py`，提供 `validate_surface`、`execute_trial`、`run_gates`、`commit` 等。
 
