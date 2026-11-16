@@ -14,7 +14,32 @@ PR #1517 的 autoresearch harness 在其 SKILL.md 里明说:field record(DeepSee
 
 engagement 正证据 = 双因子:resolved-config dump 中 `activation_checkpoint.mode` 精确等于请求值 **且** 峰值显存落该模式特征带(full≈4.0 / selective≈4.9 / off≈9.1 GB,本机实测)。故障注入通过 `exec_config.inject` 受控模拟两类真实事故:`silent_fallback`(请求 off 但配置管道断裂、full 继续跑)与 `numerical_corruption`(grad clip 1.0→0.001,速度不变数值必坏)。
 
-## 2. 决策对照(全部与预期一致)
+## 2. Agent(创意半边)工作清单与分工
+
+PR 的分工宣言:*"The agent owns the creative half (pick an idea, make the edit); this skill owns the deterministic half."* 本复现中 agent(ZCode 会话)承担全部创意半边与脚手架;引擎(PR 原代码)承担全部确定性半边,零修改。
+
+### 研究与选型(实验前)
+- 读 PR 引擎三件套源码(`autoresearch.py`/`config.py`/`loop.py`),提取硬契约:receipt 恰好一行 + 字段枚举校验、run.json 字段规则、决策树(improved→keep,其余 discard;gate 失败/marker 缺/engaged=false→crash)、dirty-tree 规则、restore 的具体 git 命令(前向 commit,非 revert)
+- 选机:SSH 探测 114/126 两台 910B4(114 裸机、126 有全套 irsi 环境),选 126
+- 定实验面:`activation_checkpoint.mode`——同时具备「已知 ground truth + 单键修改面 + engaged 双因子可证」
+- 预注册 5 个候选(含 2 个故障注入)及各自预期决策,事后全部命中(见 §3)
+
+### 环境与脚手架
+- 拉取 PR head `d51e911` 到本地 checkout,rsync(带 `.git`)到 126 `/root/hp-pr1517`;修 `git safe.directory`
+- 跑 PR 自带 13 个引擎单测(CPU,全绿);`test_agent_skill_contracts.py` 因 torch importlib 兼容问题无法运行(测的是另外 3 个 skill,与 autoresearch 无关,如实记录)
+- 手动 8 卡短训 ×3(full/off/selective 各 8 步)实测显存特征带(4.0/9.1/4.9 GB)与 resolved-config dump 证据形态
+- 自建 `runner.py`(约 250 行,属 PR 契约允许的 wrapper 声明层,**非引擎修改**):渲染 trial YAML、torchrun 8 卡启动、日志解析、bitwise 指纹、双因子 engaged 判定、故障注入、emit `RSI_TRAINING_RECEIPT`
+- 用引擎 `init` 脚手架 run 目录 + 手写 run.json(training_protocol/workload_id/metric_pattern/noise/aux)
+- 排障 3 次(每次都以引擎 crash 行如实留史):① workload_id 误含 git HEAD → scaffolding commit 作废在途 run;② resolved-config dump 是跨两行的 pretty JSON,逐行正则永远不匹配 → engaged 误判 false;③ HP codegen 按训练 YAML 改写 `generated/` 已跟踪文件 → dirty-tree 拒绝,commit 确定性稳态解决
+
+### 实验循环(每轮 agent 动作 = PR 设计的 agent 半边)
+- 选择并编辑 `exec_config.json`(保持 uncommitted)→ `iterate --description "..."` → 读引擎输出决策与 receipt → 按 PR 工作流 append `experiment_log.md`/`learnings.md`
+- 两次 baseline crash 的根因定位:读 `candidates.jsonl` 的 `receipt_error` 字段、三个 trial log 交叉比对
+
+### 引擎(确定性半边,对照)
+- dirty-tree 检查、commit-before-test、gate→bench 调度、receipt 严格校验、noise band 决策、keep/discard/crash、前向 commit restore、append-only 记账——全部由 PR 代码执行,agent 未触碰
+
+## 3. 决策对照(全部与预期一致)
 
 | 实验 | exec_config | 预期 | 实际 | 证据 |
 |---|---|---|---|---|
@@ -27,7 +52,7 @@ engagement 正证据 = 双因子:resolved-config dump 中 `activation_checkpoint
 
 C1 与 ground truth 同方向同量级(infra-rsi 实测 +20.63%,本次 +16.6%),引擎在不知先验的情况下自主重新发现了已知最优。
 
-## 3. 四铁律逐项核验
+## 4. 四铁律逐项核验
 
 | 铁律 | PR 宣称 | 本实验证据 | 结论 |
 |---|---|---|---|
@@ -36,7 +61,7 @@ C1 与 ground truth 同方向同量级(infra-rsi 实测 +20.63%,本次 +16.6%),�
 | 3. gate 失败作废 metric | 无论 metric 多好 | C4:off 路径真 engaged、tps 本应更快,但指纹 step 2 分叉 → crash,metric 不进 results.tsv | ✓ |
 | 4. 失败留历史,restore 用前向 commit | 不重写历史,best-so-far 恒为 HEAD | gitlog:C2/C3/C4/C5 各有 `exp:` + `discard:/crash:` 两个前向 commit;终态 HEAD = off(C1 keep 状态)= best | ✓ |
 
-## 4. 协议能力清单核验
+## 5. 协议能力清单核验
 
 | 能力 | 结果 | 证据 |
 |---|---|---|
@@ -53,7 +78,7 @@ C1 与 ground truth 同方向同量级(infra-rsi 实测 +20.63%,本次 +16.6%),�
 | dirty-tree 防护(只许 target + run 目录) | ✓ | 引擎代码路径;run 目录内 trials/、fingerprint.json 未被拒 |
 | 引擎自带单测 | ✓ | 13/13 通过(CPU,126 上 2.5s) |
 
-## 5. 复现中发现的真实现象(非 PR 文档明说)
+## 6. 复现中发现的真实现象(非 PR 文档明说)
 
 1. **同配置跨 run 波动 ~12%**(C1 26955 vs C5 23703,同一 off 配置)。5% 噪声带在此类 NPU 训练上偏紧;且引擎的 noise_confirm 只在带内触发,带外回归直接 discard、不做确认——一个 -12% 的纯噪声回归可能错杀一个等价候选。infra-rsi 记忆中"候选跨 run 波动可达 ~10%、3% 带偏紧"在此再次得到独立印证。
 2. **workload_id 不应含代码 commit**:PR 协议说 workload_id 从"冻结的数据、shape、硬件与拓扑"派生。我们最初把 git HEAD 混入,任何 scaffolding commit 都会作废在途 run(第一次 baseline crash 的根因)。
@@ -61,7 +86,7 @@ C1 与 ground truth 同方向同量级(infra-rsi 实测 +20.63%,本次 +16.6%),�
 4. resolved-config dump 是最强 engagement 证据(精确到配置键);显存特征带是好的第二因子,且对"配置没生效"类事故两者同时翻车(dump 不匹配 + 显存落错带),双因子冗余。
 5. `first_error_step` 的语义分辨率达到单 optimizer update:C4 注入 clip 后 grad_norm(裁剪前)第 1 步不变、loss 第 2 步分叉,first_error_step=2 精确定位。
 
-## 6. 与 PR field record 的可比性
+## 7. 与 PR field record 的可比性
 
 | 维度 | PR field run(DSv4.1 Lightning-Indexer) | 本复现 |
 |---|---|---|
@@ -71,7 +96,7 @@ C1 与 ground truth 同方向同量级(infra-rsi 实测 +20.63%,本次 +16.6%),�
 
 引擎协议行为完全一致;量级与负载类型不可直接对比(本复现是协议验证,不是性能对标)。
 
-## 7. 结论
+## 8. 结论
 
 PR #1517 的 autoresearch 引擎——四铁律、结构化训练回执、失败分类、噪声带决策、append-only 记账、前向 commit/restore——**在 8×910B4 真实训练负载上全部按文档成立**,且决策与独立测得的 ground truth 一致。引擎本身零修改;全部适配都发生在 PR 契约允许的 wrapper/gate/benchmark 声明层。两个值得带走的工程事实:noise_confirm 的带外盲区,与 workload_id 的 HEAD 无关性要求。
 
