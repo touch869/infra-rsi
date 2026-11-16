@@ -1,0 +1,18 @@
+e5c6bf3 repro: record experiment log and learnings
+7883595 [autoresearch] discard: C5: no-op re-measure of the kept off configuration (expect within-noise discard, median-of-3 confirm)
+d1aa920 [autoresearch] exp: C5: no-op re-measure of the kept off configuration (expect within-noise discard, median-of-3 confirm)
+9561e11 [autoresearch] crash: C4: injected numerical corruption - grad clip 1.0->0.001 keeps tps but must fail the numeric gate (expect numerical_mismatch crash)
+0724413 [autoresearch] exp: C4: injected numerical corruption - grad clip 1.0->0.001 keeps tps but must fail the numeric gate (expect numerical_mismatch crash)
+7eadaf9 [autoresearch] crash: C3: injected silent fallback - requested off but full keeps running (expect path_not_engaged crash)
+a3f35b5 [autoresearch] exp: C3: injected silent fallback - requested off but full keeps running (expect path_not_engaged crash)
+cdb2abc [autoresearch] discard: C2: recompute selective - probe whether per-layer selection beats off (ground truth: slower)
+b77f6d5 [autoresearch] exp: C2: recompute selective - probe whether per-layer selection beats off (ground truth: slower)
+f16b0f5 [autoresearch] keep: C1: recompute off - trade activation memory for speed (ground truth ~ +20%)
+59d791c [autoresearch] exp: C1: recompute off - trade activation memory for speed (ground truth ~ +20%)
+7547293 [autoresearch] baseline: metric=2.313e+04
+4086cb7 repro: fix mode-dump regex to match pretty-printed config
+2d73a52 [autoresearch] crash: baseline: activation_checkpoint full (native HF checkpointing)
+9679fe1 repro: fix workload_id in run.json (HEAD-independent)
+e9eb223 repro: commit deterministic codegen steady-state + workload_id independent of HEAD
+0b29653 [autoresearch] crash: baseline: activation_checkpoint full (native HF checkpointing)
+0cbdd3e repro: scaffold autoresearch run qwen3-recompute (wrapper + run.json)

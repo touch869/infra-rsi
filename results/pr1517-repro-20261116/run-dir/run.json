@@ -1,0 +1,20 @@
+{
+  "target_files": ["autoresearch-runs/qwen3-recompute/exec_config.json"],
+  "gate_cmd": ["/root/miniconda3/envs/irsi/bin/python", "/root/hp-pr1517/autoresearch-runs/qwen3-recompute/runner.py", "--phase", "gate"],
+  "benchmark_cmd": ["/root/miniconda3/envs/irsi/bin/python", "/root/hp-pr1517/autoresearch-runs/qwen3-recompute/runner.py", "--phase", "benchmark"],
+  "metric_pattern": "steady_tokens_per_second=(?P<metric>[0-9.]+)",
+  "metric_lower_is_better": false,
+  "noise_fraction": 0.05,
+  "noise_confirm_reruns": 2,
+  "aux_patterns": {
+    "peak_mem_gb": "steady_peak_mem_gb=(?P<value>[0-9.]+)",
+    "engaged_mode": "steady_engaged_mode=(?P<value>[a-zA-Z_]+)"
+  },
+  "bench_must_match": ["RSI_TRAINING_RECEIPT"],
+  "gate_must_match": ["RSI_TRAINING_RECEIPT"],
+  "training_protocol": {
+    "workload_id": "sha256:717a1f211a7a425a",
+    "gate_steps": 8,
+    "benchmark_steps": 32
+  }
+}
