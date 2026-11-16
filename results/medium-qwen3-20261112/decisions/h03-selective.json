@@ -1,0 +1,34 @@
+{
+  "artifacts": {
+    "config": "/root/irsi-workspace/runs/20261112T133547Z-medium-qwen3-recompute/trials/h03-selective/train.yaml",
+    "log": "/root/irsi-workspace/runs/20261112T133547Z-medium-qwen3-recompute/trials/h03-selective/run.log"
+  },
+  "baseline_metric": 21416.4,
+  "best_before": 25834.9,
+  "delta_vs_best": -0.43425172924996813,
+  "description": "selective activation checkpointing instead of full",
+  "detail": "14616 does not beat 25834.9 beyond noise",
+  "gates": [
+    {
+      "detail": "32 steps",
+      "name": "receipt",
+      "passed": true
+    },
+    {
+      "detail": "identical loss/grad_norm",
+      "name": "bitwise",
+      "passed": true
+    },
+    {
+      "detail": "peak 4.88 GiB <= 24.00 GiB",
+      "name": "memory",
+      "passed": true
+    }
+  ],
+  "metric": 14616.05,
+  "overrides": {
+    "activation_checkpoint.mode": "selective"
+  },
+  "status": "discard",
+  "trial": "h03-selective"
+}

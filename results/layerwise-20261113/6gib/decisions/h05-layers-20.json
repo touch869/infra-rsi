@@ -1,0 +1,36 @@
+{
+  "artifacts": {
+    "config": "/root/irsi-workspace/runs/20261113T013442Z-medium-qwen3-layerwise-6gib/trials/h05-layers-20/train.yaml",
+    "log": "/root/irsi-workspace/runs/20261113T013442Z-medium-qwen3-layerwise-6gib/trials/h05-layers-20/run.log"
+  },
+  "baseline_metric": 19485.449999999997,
+  "best_before": 21315.45,
+  "delta_vs_best": -0.076880854028416,
+  "description": "recompute the first 20 decoder layers via safe regions",
+  "detail": "19676.7 does not beat 21315.5 beyond noise",
+  "gates": [
+    {
+      "detail": "32 steps",
+      "name": "receipt",
+      "passed": true
+    },
+    {
+      "detail": "identical loss/grad_norm",
+      "name": "bitwise",
+      "passed": true
+    },
+    {
+      "detail": "peak 4.40 GiB <= 6.00 GiB",
+      "name": "memory",
+      "passed": true
+    }
+  ],
+  "metric": 19676.7,
+  "overrides": {
+    "activation_checkpoint.mode": "selective",
+    "activation_checkpoint.selection.layer_count": 20,
+    "activation_checkpoint.selection.source": "model_adapter_safe_regions"
+  },
+  "status": "discard",
+  "trial": "h05-layers-20"
+}

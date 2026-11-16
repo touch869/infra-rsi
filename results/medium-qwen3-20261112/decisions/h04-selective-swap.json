@@ -1,0 +1,35 @@
+{
+  "artifacts": {
+    "config": "/root/irsi-workspace/runs/20261112T133547Z-medium-qwen3-recompute/trials/h04-selective-swap/train.yaml",
+    "log": "/root/irsi-workspace/runs/20261112T133547Z-medium-qwen3-recompute/trials/h04-selective-swap/run.log"
+  },
+  "baseline_metric": 21416.4,
+  "best_before": 25834.9,
+  "delta_vs_best": -0.4604933636282703,
+  "description": "selective checkpointing with activation input swap",
+  "detail": "13938.1 does not beat 25834.9 beyond noise",
+  "gates": [
+    {
+      "detail": "32 steps",
+      "name": "receipt",
+      "passed": true
+    },
+    {
+      "detail": "identical loss/grad_norm",
+      "name": "bitwise",
+      "passed": true
+    },
+    {
+      "detail": "peak 4.70 GiB <= 24.00 GiB",
+      "name": "memory",
+      "passed": true
+    }
+  ],
+  "metric": 13938.1,
+  "overrides": {
+    "activation_checkpoint.mode": "selective",
+    "activation_checkpoint.swap_inputs": true
+  },
+  "status": "discard",
+  "trial": "h04-selective-swap"
+}

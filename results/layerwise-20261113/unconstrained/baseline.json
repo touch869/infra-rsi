@@ -1,0 +1,33 @@
+{
+  "gates": [
+    {
+      "detail": "32 steps",
+      "name": "receipt",
+      "passed": true
+    },
+    {
+      "detail": "baseline reference",
+      "name": "bitwise",
+      "passed": true
+    },
+    {
+      "detail": "peak 3.99 GiB <= 24.00 GiB",
+      "name": "memory",
+      "passed": true
+    }
+  ],
+  "summary": {
+    "backend": "hyperparallel",
+    "completed_steps": 32,
+    "config_path": "/root/irsi-workspace/runs/20261113T012727Z-medium-qwen3-layerwise/trials/baseline/train.yaml",
+    "elapsed_s": 59.097,
+    "exit_code": 0,
+    "label": "baseline",
+    "last_step": 32,
+    "log_path": "/root/irsi-workspace/runs/20261113T012727Z-medium-qwen3-layerwise/trials/baseline/run.log",
+    "numeric_hash": "48f4302f934c94a844a199348aafab158be8294bdc3436217f7ba7675edf9710",
+    "peak_mem_gib": 3.98619,
+    "timed_out": false,
+    "traceback": false
+  }
+}

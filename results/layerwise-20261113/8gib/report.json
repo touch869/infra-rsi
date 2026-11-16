@@ -1,0 +1,231 @@
+{
+  "baseline": {
+    "gates": [
+      {
+        "detail": "32 steps",
+        "name": "receipt",
+        "passed": true
+      },
+      {
+        "detail": "baseline reference",
+        "name": "bitwise",
+        "passed": true
+      },
+      {
+        "detail": "peak 3.99 GiB <= 8.00 GiB",
+        "name": "memory",
+        "passed": true
+      }
+    ],
+    "metric": 19626.699999999997,
+    "numeric_hash": "48f4302f934c94a844a199348aafab158be8294bdc3436217f7ba7675edf9710",
+    "peak_mem_gib": 3.98619,
+    "trial": "baseline"
+  },
+  "best": {
+    "gain_vs_baseline": 0.28036042737699174,
+    "gain_vs_control": 0.29463480729303493,
+    "metric": 25129.25,
+    "numeric_hash": "48f4302f934c94a844a199348aafab158be8294bdc3436217f7ba7675edf9710",
+    "peak_mem_gib": 7.67779,
+    "trial": "h03-layers-6"
+  },
+  "counts": {
+    "crashed": 1,
+    "discarded": 3,
+    "kept": 1,
+    "trials": 5
+  },
+  "decisions": [
+    {
+      "artifacts": {
+        "config": "/root/irsi-workspace/runs/20261113T014430Z-medium-qwen3-layerwise-8gib/trials/h01-control/train.yaml",
+        "log": "/root/irsi-workspace/runs/20261113T014430Z-medium-qwen3-layerwise-8gib/trials/h01-control/run.log"
+      },
+      "baseline_metric": 19626.699999999997,
+      "best_before": 19626.699999999997,
+      "delta_vs_best": -0.011025796491513817,
+      "description": "no-op control (baseline re-run for drift)",
+      "detail": "19410.3 does not beat 19626.7 beyond noise",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "identical loss/grad_norm",
+          "name": "bitwise",
+          "passed": true
+        },
+        {
+          "detail": "peak 3.99 GiB <= 8.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "metric": 19410.300000000003,
+      "overrides": {},
+      "status": "discard",
+      "trial": "h01-control"
+    },
+    {
+      "artifacts": {
+        "config": "/root/irsi-workspace/runs/20261113T014430Z-medium-qwen3-layerwise-8gib/trials/h02-layers-4/train.yaml",
+        "log": "/root/irsi-workspace/runs/20261113T014430Z-medium-qwen3-layerwise-8gib/trials/h02-layers-4/run.log"
+      },
+      "baseline_metric": 19626.699999999997,
+      "best_before": 19626.699999999997,
+      "delta_vs_best": 0.1956518416239105,
+      "description": "recompute the first 4 decoder layers via safe regions",
+      "detail": "memory: peak 8.14 GiB > limit 8.00 GiB",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "identical loss/grad_norm",
+          "name": "bitwise",
+          "passed": true
+        },
+        {
+          "detail": "peak 8.14 GiB > limit 8.00 GiB",
+          "name": "memory",
+          "passed": false
+        }
+      ],
+      "metric": 23466.7,
+      "overrides": {
+        "activation_checkpoint.mode": "selective",
+        "activation_checkpoint.selection.layer_count": 4,
+        "activation_checkpoint.selection.source": "model_adapter_safe_regions"
+      },
+      "status": "crash",
+      "trial": "h02-layers-4"
+    },
+    {
+      "artifacts": {
+        "config": "/root/irsi-workspace/runs/20261113T014430Z-medium-qwen3-layerwise-8gib/trials/h03-layers-6/train.yaml",
+        "log": "/root/irsi-workspace/runs/20261113T014430Z-medium-qwen3-layerwise-8gib/trials/h03-layers-6/run.log"
+      },
+      "baseline_metric": 19626.699999999997,
+      "best_before": 19626.699999999997,
+      "delta_vs_best": 0.28036042737699174,
+      "description": "recompute the first 6 decoder layers via safe regions",
+      "detail": "25129.2 beats 19626.7 beyond noise",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "identical loss/grad_norm",
+          "name": "bitwise",
+          "passed": true
+        },
+        {
+          "detail": "peak 7.68 GiB <= 8.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "metric": 25129.25,
+      "overrides": {
+        "activation_checkpoint.mode": "selective",
+        "activation_checkpoint.selection.layer_count": 6,
+        "activation_checkpoint.selection.source": "model_adapter_safe_regions"
+      },
+      "status": "keep",
+      "trial": "h03-layers-6"
+    },
+    {
+      "artifacts": {
+        "config": "/root/irsi-workspace/runs/20261113T014430Z-medium-qwen3-layerwise-8gib/trials/h04-layers-8/train.yaml",
+        "log": "/root/irsi-workspace/runs/20261113T014430Z-medium-qwen3-layerwise-8gib/trials/h04-layers-8/run.log"
+      },
+      "baseline_metric": 19626.699999999997,
+      "best_before": 25129.25,
+      "delta_vs_best": -0.04514062297919749,
+      "description": "recompute the first 8 decoder layers via safe regions",
+      "detail": "23994.9 does not beat 25129.2 beyond noise",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "identical loss/grad_norm",
+          "name": "bitwise",
+          "passed": true
+        },
+        {
+          "detail": "peak 7.21 GiB <= 8.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "metric": 23994.9,
+      "overrides": {
+        "activation_checkpoint.mode": "selective",
+        "activation_checkpoint.selection.layer_count": 8,
+        "activation_checkpoint.selection.source": "model_adapter_safe_regions"
+      },
+      "status": "discard",
+      "trial": "h04-layers-8"
+    },
+    {
+      "artifacts": {
+        "config": "/root/irsi-workspace/runs/20261113T014430Z-medium-qwen3-layerwise-8gib/trials/h05-layers-10/train.yaml",
+        "log": "/root/irsi-workspace/runs/20261113T014430Z-medium-qwen3-layerwise-8gib/trials/h05-layers-10/run.log"
+      },
+      "baseline_metric": 19626.699999999997,
+      "best_before": 25129.25,
+      "delta_vs_best": -0.16348080424206857,
+      "description": "recompute the first 10 decoder layers via safe regions",
+      "detail": "21021.1 does not beat 25129.2 beyond noise",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "identical loss/grad_norm",
+          "name": "bitwise",
+          "passed": true
+        },
+        {
+          "detail": "peak 6.75 GiB <= 8.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "metric": 21021.1,
+      "overrides": {
+        "activation_checkpoint.mode": "selective",
+        "activation_checkpoint.selection.layer_count": 10,
+        "activation_checkpoint.selection.source": "model_adapter_safe_regions"
+      },
+      "status": "discard",
+      "trial": "h05-layers-10"
+    }
+  ],
+  "domain": "recompute-layerwise",
+  "drift": {
+    "control_delta_vs_baseline": -0.011025796491513817,
+    "control_trials": [
+      "h01-control"
+    ],
+    "suspected": false
+  },
+  "metric_direction": "maximize",
+  "metric_key": "performance/tokens_per_second",
+  "name": "medium-qwen3-layerwise-8gib",
+  "noise_fraction": 0.03,
+  "robust": true,
+  "task": "20261113T014430Z-medium-qwen3-layerwise-8gib"
+}

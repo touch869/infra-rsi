@@ -1,0 +1,36 @@
+{
+  "artifacts": {
+    "config": "/root/irsi-workspace/runs/20261113T012727Z-medium-qwen3-layerwise/trials/h04-layers-12/train.yaml",
+    "log": "/root/irsi-workspace/runs/20261113T012727Z-medium-qwen3-layerwise/trials/h04-layers-12/run.log"
+  },
+  "baseline_metric": 19543.35,
+  "best_before": 26244.9,
+  "delta_vs_best": -0.14945951403891813,
+  "description": "recompute the first 12 decoder layers via safe regions",
+  "detail": "22322.3 does not beat 26244.9 beyond noise",
+  "gates": [
+    {
+      "detail": "32 steps",
+      "name": "receipt",
+      "passed": true
+    },
+    {
+      "detail": "identical loss/grad_norm",
+      "name": "bitwise",
+      "passed": true
+    },
+    {
+      "detail": "peak 6.29 GiB <= 24.00 GiB",
+      "name": "memory",
+      "passed": true
+    }
+  ],
+  "metric": 22322.35,
+  "overrides": {
+    "activation_checkpoint.mode": "selective",
+    "activation_checkpoint.selection.layer_count": 12,
+    "activation_checkpoint.selection.source": "model_adapter_safe_regions"
+  },
+  "status": "discard",
+  "trial": "h04-layers-12"
+}

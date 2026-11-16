@@ -1,0 +1,32 @@
+{
+  "artifacts": {
+    "config": "/root/irsi-workspace/runs/20261113T013442Z-medium-qwen3-layerwise-6gib/trials/h01-control/train.yaml",
+    "log": "/root/irsi-workspace/runs/20261113T013442Z-medium-qwen3-layerwise-6gib/trials/h01-control/run.log"
+  },
+  "baseline_metric": 19485.449999999997,
+  "best_before": 19485.449999999997,
+  "delta_vs_best": 0.018731925616293187,
+  "description": "no-op control (baseline re-run for drift)",
+  "detail": "19850.4 does not beat 19485.4 beyond noise",
+  "gates": [
+    {
+      "detail": "32 steps",
+      "name": "receipt",
+      "passed": true
+    },
+    {
+      "detail": "identical loss/grad_norm",
+      "name": "bitwise",
+      "passed": true
+    },
+    {
+      "detail": "peak 3.99 GiB <= 6.00 GiB",
+      "name": "memory",
+      "passed": true
+    }
+  ],
+  "metric": 19850.449999999997,
+  "overrides": {},
+  "status": "discard",
+  "trial": "h01-control"
+}

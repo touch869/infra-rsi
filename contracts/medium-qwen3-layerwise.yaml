@@ -1,0 +1,54 @@
+name: medium-qwen3-layerwise
+repo_root: /root/hyper-parallel
+base_config: /root/irsi-workspace/configs/train_medium.yaml
+domain: recompute-layerwise
+domain_params:
+  layer_counts: [0, 6, 12, 18]
+
+python: /root/miniconda3/envs/irsi/bin/python
+env_setup: source /usr/local/Ascend/ascend-toolkit/latest/set_env.sh
+extra_pythonpath:
+  - /root/irsi-workspace
+
+base_overrides:
+  training.train_iters: 32
+  activation_checkpoint.mode: full
+
+writable_prefixes:
+  - activation_checkpoint.
+
+read_only_keys:
+  - activation_checkpoint.allow_cache_entry_mutation
+  - training.seed
+  - training.enable_full_determinism
+  - training.global_batch_size
+  - training.micro_batch_size
+  - mixed_precision
+  - compile
+  - accelerator
+  - fsdp_config
+
+metric:
+  key: performance/tokens_per_second
+  direction: maximize
+  noise_fraction: 0.03
+  warmup_steps: 8
+  measured_steps: 16
+
+workload:
+  nproc: 8
+  seed: 42
+  determinism: true
+  expect_steps: 32
+
+gates:
+  - name: receipt
+  - name: bitwise
+  - name: memory
+    params:
+      limit_gib: 24.0
+
+budget:
+  max_trials: 5
+  timeout_min: 25
+memory_budget_gib: 24.0

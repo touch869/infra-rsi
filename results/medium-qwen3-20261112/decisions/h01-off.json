@@ -1,0 +1,34 @@
+{
+  "artifacts": {
+    "config": "/root/irsi-workspace/runs/20261112T133547Z-medium-qwen3-recompute/trials/h01-off/train.yaml",
+    "log": "/root/irsi-workspace/runs/20261112T133547Z-medium-qwen3-recompute/trials/h01-off/run.log"
+  },
+  "baseline_metric": 21416.4,
+  "best_before": 21416.4,
+  "delta_vs_best": 0.2063138529351338,
+  "description": "disable activation recompute (baseline is full)",
+  "detail": "25834.9 beats 21416.4 beyond noise",
+  "gates": [
+    {
+      "detail": "32 steps",
+      "name": "receipt",
+      "passed": true
+    },
+    {
+      "detail": "identical loss/grad_norm",
+      "name": "bitwise",
+      "passed": true
+    },
+    {
+      "detail": "peak 9.06 GiB <= 24.00 GiB",
+      "name": "memory",
+      "passed": true
+    }
+  ],
+  "metric": 25834.9,
+  "overrides": {
+    "activation_checkpoint.mode": "off"
+  },
+  "status": "keep",
+  "trial": "h01-off"
+}

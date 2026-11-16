@@ -1,0 +1,36 @@
+{
+  "artifacts": {
+    "config": "/root/irsi-workspace/runs/20261113T013442Z-medium-qwen3-layerwise-6gib/trials/h02-layers-12/train.yaml",
+    "log": "/root/irsi-workspace/runs/20261113T013442Z-medium-qwen3-layerwise-6gib/trials/h02-layers-12/run.log"
+  },
+  "baseline_metric": 19485.449999999997,
+  "best_before": 19485.449999999997,
+  "delta_vs_best": 0.10898388284591849,
+  "description": "recompute the first 12 decoder layers via safe regions",
+  "detail": "memory: peak 6.29 GiB > limit 6.00 GiB",
+  "gates": [
+    {
+      "detail": "32 steps",
+      "name": "receipt",
+      "passed": true
+    },
+    {
+      "detail": "identical loss/grad_norm",
+      "name": "bitwise",
+      "passed": true
+    },
+    {
+      "detail": "peak 6.29 GiB > limit 6.00 GiB",
+      "name": "memory",
+      "passed": false
+    }
+  ],
+  "metric": 21609.05,
+  "overrides": {
+    "activation_checkpoint.mode": "selective",
+    "activation_checkpoint.selection.layer_count": 12,
+    "activation_checkpoint.selection.source": "model_adapter_safe_regions"
+  },
+  "status": "crash",
+  "trial": "h02-layers-12"
+}

@@ -1,0 +1,145 @@
+From 19985a7ecd8f049aa698889829c00094a7a95f24 Mon Sep 17 00:00:00 2001
+From: CafeDead <cafedead@CafeDeaddeMac-Mini.local>
+Date: Fri, 13 Nov 2026 09:26:39 +0800
+Subject: [PATCH] feat(qwen3): declare a dense recompute policy for layer
+ selection
+
+selection.source=model_adapter_safe_regions requires ModelAdapterSpec.recompute;
+only DeepSeek-V4.1 declared one, so Qwen3 dense could not use layer_count or
+layer_indices. Every Qwen3 decoder layer is one safe region (no cross-layer
+state producer/consumer, no non-decoder execution branch), so the policy is a
+single region pattern with no exclusions or runtime hook.
+
+With a policy installed, mode=full without an explicit selection auto-upgrades
+to the adapter regions, so existing full-recompute baselines change behavior
+and must be re-measured.
+---
+ .../policies/activation_checkpointing.py      | 32 +++++++++++++
+ .../models/qwen3/adapter/registration.py      | 10 ++++
+ .../models/qwen3/test_recompute_policy.py     | 48 +++++++++++++++++++
+ 3 files changed, 90 insertions(+)
+ create mode 100644 hyper_parallel/models/qwen3/adapter/policies/activation_checkpointing.py
+ create mode 100644 tests/ut/auto_models/models/qwen3/test_recompute_policy.py
+
+diff --git a/hyper_parallel/models/qwen3/adapter/policies/activation_checkpointing.py b/hyper_parallel/models/qwen3/adapter/policies/activation_checkpointing.py
+new file mode 100644
+index 00000000..cec528a2
+--- /dev/null
++++ b/hyper_parallel/models/qwen3/adapter/policies/activation_checkpointing.py
+@@ -0,0 +1,32 @@
++# Copyright 2026 Huawei Technologies Co., Ltd
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++# http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++# ============================================================================
++"""Declare the Qwen3 dense recompute regions used by normal training."""
++
++from hyper_parallel.models.adapter_spec import RecomputePolicy
++
++
++def build_recompute_policy() -> RecomputePolicy:
++    """Return the Qwen3 safe recompute regions.
++
++    Every decoder layer is one region: the pattern matches the layer itself, so
++    a selected layer keeps a single saved copy of its input and replays the
++    whole layer. Qwen3 dense has no cross-layer state producer or consumer and
++    no non-decoder execution branch, so nothing is excluded and no runtime hook
++    is needed.
++    """
++    return RecomputePolicy(region_patterns=("model.layers.*",))
++
++
++__all__ = ["build_recompute_policy"]
+diff --git a/hyper_parallel/models/qwen3/adapter/registration.py b/hyper_parallel/models/qwen3/adapter/registration.py
+index 847e441e..3693a0b2 100644
+--- a/hyper_parallel/models/qwen3/adapter/registration.py
++++ b/hyper_parallel/models/qwen3/adapter/registration.py
+@@ -39,12 +39,22 @@ def _load_attention():
+     return attention
+ 
+ 
++def _load_recompute():
++    """Return the Qwen3 recompute policy through a lazy provider."""
++    from hyper_parallel.models.qwen3.adapter.policies.activation_checkpointing import (  # pylint: disable=C0415
++        build_recompute_policy,
++    )
++
++    return build_recompute_policy()
++
++
+ QWEN3_ADAPTER_SPEC = ModelAdapterSpec(
+     architecture="Qwen3ForCausalLM",
+     model_type="qwen3",
+     replacements=_load_replacements,
+     attention=_load_attention,
+     sharding_rules=build_parameter_sharding_rules,
++    recompute=_load_recompute,
+ )
+ 
+ register_model_adapter(QWEN3_ADAPTER_SPEC)
+diff --git a/tests/ut/auto_models/models/qwen3/test_recompute_policy.py b/tests/ut/auto_models/models/qwen3/test_recompute_policy.py
+new file mode 100644
+index 00000000..df6c9b2c
+--- /dev/null
++++ b/tests/ut/auto_models/models/qwen3/test_recompute_policy.py
+@@ -0,0 +1,48 @@
++# Copyright 2026 Huawei Technologies Co., Ltd
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++# http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++# ============================================================================
++"""Pin the Qwen3 recompute-policy declaration used by layer selection.
++
++Gate-1 test: no NPU, no process group, no model build. It pins the adapter
++declaration that unlocks ``selection.source=model_adapter_safe_regions`` for
++Qwen3 dense models, where every decoder layer is one safe recompute region.
++"""
++
++import unittest
++
++from hyper_parallel.models.adapter_spec import RecomputePolicy
++from hyper_parallel.models.qwen3.adapter.policies.activation_checkpointing import (
++    build_recompute_policy,
++)
++from hyper_parallel.models.registry import get_model_adapter
++
++
++class Qwen3RecomputePolicyTest(unittest.TestCase):
++    def test_policy_declares_one_region_per_decoder_layer(self):
++        policy = build_recompute_policy()
++        self.assertIsInstance(policy, RecomputePolicy)
++        self.assertEqual(policy.region_patterns, ("model.layers.*",))
++        self.assertEqual(policy.exclude_patterns, ())
++        self.assertIsNone(policy.exclude_predicate)
++        self.assertIsNone(policy.on_applied)
++
++    def test_qwen3_adapter_registers_the_recompute_provider(self):
++        spec = get_model_adapter("qwen3")
++        self.assertIsNotNone(spec)
++        self.assertTrue(callable(spec.recompute))
++        self.assertIsInstance(spec.recompute(), RecomputePolicy)
++
++
++if __name__ == "__main__":
++    unittest.main()
+-- 
+2.54.0 (Apple Git-157)
+

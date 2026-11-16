@@ -1,0 +1,36 @@
+{
+  "artifacts": {
+    "config": "/root/irsi-workspace/runs/20261113T012727Z-medium-qwen3-layerwise/trials/h02-layers-0/train.yaml",
+    "log": "/root/irsi-workspace/runs/20261113T012727Z-medium-qwen3-layerwise/trials/h02-layers-0/run.log"
+  },
+  "baseline_metric": 19543.35,
+  "best_before": 19543.35,
+  "delta_vs_best": 0.34290692230349473,
+  "description": "keep every activation resident (no layer recomputes)",
+  "detail": "26244.9 beats 19543.3 beyond noise",
+  "gates": [
+    {
+      "detail": "32 steps",
+      "name": "receipt",
+      "passed": true
+    },
+    {
+      "detail": "identical loss/grad_norm",
+      "name": "bitwise",
+      "passed": true
+    },
+    {
+      "detail": "peak 9.06 GiB <= 24.00 GiB",
+      "name": "memory",
+      "passed": true
+    }
+  ],
+  "metric": 26244.9,
+  "overrides": {
+    "activation_checkpoint.mode": "selective",
+    "activation_checkpoint.selection.layer_count": 0,
+    "activation_checkpoint.selection.source": "model_adapter_safe_regions"
+  },
+  "status": "keep",
+  "trial": "h02-layers-0"
+}
