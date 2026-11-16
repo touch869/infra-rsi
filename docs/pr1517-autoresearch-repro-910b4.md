@@ -52,7 +52,58 @@ PR 的分工宣言:*"The agent owns the creative half (pick an idea, make the ed
 
 C1 与 ground truth 同方向同量级(infra-rsi 实测 +20.63%,本次 +16.6%),引擎在不知先验的情况下自主重新发现了已知最优。
 
-## 4. 四铁律逐项核验
+## 4. RSI 循环逐步记录(假设 → 知识 → 修改 → 检查 → 结果)
+
+> 定位说明:本运行中"提出假设、选择编辑"的创意半边是**预注册的脚本化动作**(由 ZCode agent 按计划执行),不是引擎自主生成。因此这是一次 **RSI 协议骨架的真实训练级演练**——验证循环的确定性半边(修改面控制、正确性门、性能窗、决策、记账、回滚)在真实负载下成立;LLM 自主提出假设的半边未在本运行中测试。
+
+### Step 0 · baseline(full)
+- **假设**:activation checkpoint `full`(全层重算)是当前默认执行设置,作为被挑战的 best。
+- **所用知识**:infra-rsi phase-1 中 qwen3 recipe 显式 `mode: full`;该 workload 显存峰值 ≈4GB。
+- **修改**:无(冻结初始状态;`exec_config = {mode: full, inject: null}`)。
+- **检查**:8 步正确性窗 → 冻结 bitwise loss/grad_norm 指纹(成为后续所有候选的数值基准);engaged 双因子(resolved dump=full 且显存 ∈(0,4.5]GB);32 步性能窗记录 steady tps。
+- **结果**:**keep 23130 tps**;training_protocol 冻结(workload_id + gate 8/bench 32 步),baseline 回执入账。
+
+### Step 1 · C1(off)——假设:重计算关闭,用显存换吞吐
+- **假设**:关闭 activation recompute 消除反向重算开销,吞吐显著提升(先验 ~+20%,引擎不知此数字)。
+- **所用知识**:recompute 语义(off=保留 activation、反向不重算);infra-rsi 两次实测 +20.63%/+11.28%;显存 4→9GB 仍在 32GB 卡预算内。
+- **修改**:`exec_config.json` 单键 `full → off`(保持 uncommitted,由引擎 commit——铁律 1)。
+- **检查**:gate=指纹必须与 baseline **bitwise 一致**(数值语义不变)+ engaged(dump=off 且显存 >7GB);bench=32 步 steady tps(丢 warmup 8 步、末 16 步取中位);对 best 的噪声带 ±5%。
+- **结果**:**keep 26955(+16.6%,超带)**,实验 commit `59d791c` 成为新 best/HEAD;aux 证据 `peak_mem_gb=9.058 engaged_mode=off`。**循环在不知先验的情况下重新发现了已知最优。**
+
+### Step 2 · C2(selective)——假设:逐层选择性重算可能更优
+- **假设**(探索性):选择性重算只对部分层重算,或许保留省显存优势同时减少开销,可能优于 off。
+- **所用知识**:HP selective 按安全 region 选层;本 workload 显存本就充裕,省显存收益无用而选择开销仍在(先验:infra-rsi 实测慢 30–45%,作为 RSI 循环内的独立探索步重新验证)。
+- **修改**:`off → selective`(单键)。
+- **检查**:同 C1(指纹 bitwise + engaged:dump=selective 且显存 ∈[4.5,7]GB + tps 对 best 26955)。
+- **结果**:**discard 14262(−47%)**。引擎不保留编辑:前向 restore commit `cdb2abc` 把配置恢复为 off,best 不变;失败行按铁律 4 留在 results.tsv/candidates.jsonl。
+
+### Step 3 · C3(silent_fallback 注入)——协议验证:静默回退必须被抓
+- **假设**(协议验证而非性能假设):若配置管道断裂(请求 off、实际仍跑 full),训练会"正常完成、数值完美",仅凭输出无法发现——必须由 engaged 正证据拦截(铁律 2)。
+- **所用知识**:PR 原始动机 *"a fallback run and an optimized run are indistinguishable by no warning"*;engaged 双因子设计(dump 精确匹配 + 显存特征带)。
+- **修改**:`mode: off` + `inject: silent_fallback`(wrapper 模拟管道断裂:YAML 仍渲染 full)。
+- **检查**:gate 的 engaged 断言(dump=full ≠ 请求的 off;显存 4.0 落 full 带)。
+- **结果**:**crash `path_not_engaged`,metric=None**——bench 根本不执行;数值"看起来完美"也进不了账本;restore 前向 commit `7eadaf9`。
+
+### Step 4 · C4(numerical_corruption 注入)——协议验证:快但错的候选必须作废
+- **假设**(协议验证):数值正确性与性能可分离——"更快但数值错误"的候选必须被作废(铁律 3),且错误能定位到步。
+- **所用知识**:grad clip 1.0→0.001 不改计算路径(速度不变)只改更新幅度;grad_norm 日志是裁剪**前**的值(第 1 步不变),loss 从第 2 步分叉 → 预期 first_error_step=2。
+- **修改**:`mode: off` + `inject: numerical_corruption`。
+- **检查**:gate 指纹逐 step 比对(→ 第 2 步分叉);engaged 仍 true(路径真实走了 off)。
+- **结果**:**crash `numerical_mismatch, first_error_step=2`**——engaged 与数值错误两个维度干净分离;metric 作废。
+
+### Step 5 · C5(no-op 重测)——假设:同配置重复测量应落噪声带内
+- **假设**:同 best 配置重复 bench 应落在 ±5% 带内 → discard(带内则触发 median-of-3 噪声确认);检验测量稳定性。
+- **所用知识**:infra-rsi 记录同机跨 run 波动 2.4–4.2%、候选间可达 ~10%。
+- **修改**:exec_config 增加语义 no-op 的 `note` 字段(文本 dirty、语义与 best 相同)。
+- **检查**:gate 指纹一致 + engaged;bench tps 对 best;带内→rerun 取中位、带外→直接 discard。
+- **结果**:**discard 23703(−12.1%,带外)**——同配置两次测量差 ~12%,超出带宽;噪声确认按设计未触发(clear regression 跳过 rerun),暴露"带外盲区"(见 §7 发现 1)。
+
+### 循环净效果
+- 配置轨迹:full → **off**(唯一 keep);1 keep、2 discard、2 crash(注入)、另 2 次脚手架 crash 留史;账本 8 行,git 前向链完整。
+- 吞吐:23130 → 26955 tps(**+16.6%**),数值语义 bitwise 不变,显存 4.0→9.1GB。
+- 知识回流(learnings.md 三条):跨 run 波动 ~12%/噪声带偏紧;resolved-config dump 是最强 engaged 证据;first_error_step 可定位到单个 optimizer update。
+
+## 5. 四铁律逐项核验
 
 | 铁律 | PR 宣称 | 本实验证据 | 结论 |
 |---|---|---|---|
@@ -61,7 +112,7 @@ C1 与 ground truth 同方向同量级(infra-rsi 实测 +20.63%,本次 +16.6%),�
 | 3. gate 失败作废 metric | 无论 metric 多好 | C4:off 路径真 engaged、tps 本应更快,但指纹 step 2 分叉 → crash,metric 不进 results.tsv | ✓ |
 | 4. 失败留历史,restore 用前向 commit | 不重写历史,best-so-far 恒为 HEAD | gitlog:C2/C3/C4/C5 各有 `exp:` + `discard:/crash:` 两个前向 commit;终态 HEAD = off(C1 keep 状态)= best | ✓ |
 
-## 5. 协议能力清单核验
+## 6. 协议能力清单核验
 
 | 能力 | 结果 | 证据 |
 |---|---|---|
@@ -78,7 +129,7 @@ C1 与 ground truth 同方向同量级(infra-rsi 实测 +20.63%,本次 +16.6%),�
 | dirty-tree 防护(只许 target + run 目录) | ✓ | 引擎代码路径;run 目录内 trials/、fingerprint.json 未被拒 |
 | 引擎自带单测 | ✓ | 13/13 通过(CPU,126 上 2.5s) |
 
-## 6. 复现中发现的真实现象(非 PR 文档明说)
+## 7. 复现中发现的真实现象(非 PR 文档明说)
 
 1. **同配置跨 run 波动 ~12%**(C1 26955 vs C5 23703,同一 off 配置)。5% 噪声带在此类 NPU 训练上偏紧;且引擎的 noise_confirm 只在带内触发,带外回归直接 discard、不做确认——一个 -12% 的纯噪声回归可能错杀一个等价候选。infra-rsi 记忆中"候选跨 run 波动可达 ~10%、3% 带偏紧"在此再次得到独立印证。
 2. **workload_id 不应含代码 commit**:PR 协议说 workload_id 从"冻结的数据、shape、硬件与拓扑"派生。我们最初把 git HEAD 混入,任何 scaffolding commit 都会作废在途 run(第一次 baseline crash 的根因)。
@@ -86,7 +137,7 @@ C1 与 ground truth 同方向同量级(infra-rsi 实测 +20.63%,本次 +16.6%),�
 4. resolved-config dump 是最强 engagement 证据(精确到配置键);显存特征带是好的第二因子,且对"配置没生效"类事故两者同时翻车(dump 不匹配 + 显存落错带),双因子冗余。
 5. `first_error_step` 的语义分辨率达到单 optimizer update:C4 注入 clip 后 grad_norm(裁剪前)第 1 步不变、loss 第 2 步分叉,first_error_step=2 精确定位。
 
-## 7. 与 PR field record 的可比性
+## 8. 与 PR field record 的可比性
 
 | 维度 | PR field run(DSv4.1 Lightning-Indexer) | 本复现 |
 |---|---|---|
@@ -96,7 +147,7 @@ C1 与 ground truth 同方向同量级(infra-rsi 实测 +20.63%,本次 +16.6%),�
 
 引擎协议行为完全一致;量级与负载类型不可直接对比(本复现是协议验证,不是性能对标)。
 
-## 8. 结论
+## 9. 结论
 
 PR #1517 的 autoresearch 引擎——四铁律、结构化训练回执、失败分类、噪声带决策、append-only 记账、前向 commit/restore——**在 8×910B4 真实训练负载上全部按文档成立**,且决策与独立测得的 ground truth 一致。引擎本身零修改;全部适配都发生在 PR 契约允许的 wrapper/gate/benchmark 声明层。两个值得带走的工程事实:noise_confirm 的带外盲区,与 workload_id 的 HEAD 无关性要求。
 
