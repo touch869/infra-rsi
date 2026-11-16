@@ -82,7 +82,8 @@ infra-rsi/
 │   │
 │   ├── experts/
 │   │   ├── __init__.py
-│   │   ├── base.py                # ExpertRole
+│   │   ├── base.py                # ExpertRole / ExpertResult
+│   │   ├── artifacts.py           # HypothesisSet / CandidateSpec / Judgment / ...
 │   │   ├── registry.py
 │   │   ├── decision/
 │   │   │   ├── __init__.py
@@ -176,7 +177,7 @@ infra-rsi/
 | `gates/` | 通用 gate 与其 registry |
 | `execution/` | 执行器、观察器、指标抽取、快照 |
 | `runtime/` | 确定性 runtime facade、专家运行时 adapter |
-| `experts/` | 六个专家角色与各自 prompt spec |
+| `experts/` | 六个专家角色、各自 prompt spec、统一 artifact 类型 |
 | `audit/` | HITT 成果审计、知识审计 |
 | `reporting/` | 每步报告、round 报告、`exporters/` 导出插件 |
 

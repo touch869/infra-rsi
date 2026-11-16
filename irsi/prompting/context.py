@@ -21,6 +21,8 @@ class StageContext:
     stage: str
     baseline_metric: float | None = None
     best_metric: float | None = None
+    baseline_trial: Any = None
+    best_trial: Any = None
     recent_decisions: tuple[Mapping[str, Any], ...] = ()
     records: tuple[Mapping[str, Any], ...] = ()
     previous_artifact: Any = None
