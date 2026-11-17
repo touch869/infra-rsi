@@ -2,6 +2,7 @@
 
 from .baseline_reference import BaselineReference
 from .calibration import BaselineCalibration, BaselineCalibrator
+from .candidate_patch import CandidatePatchManager
 from .expert_runtime import ExpertRuntime
 from .facade import RuntimeFacade
 from .neutrality import NeutralityChecker, NeutralityResult
@@ -13,6 +14,7 @@ __all__ = [
     "BaselineCalibration",
     "BaselineCalibrator",
     "BaselineReference",
+    "CandidatePatchManager",
     "ExpertRuntime",
     "NativePromptRuntime",
     "NeutralityChecker",

@@ -30,7 +30,12 @@ class HypothesisSet:
 
 @dataclass(frozen=True)
 class CandidateSpec:
-    """A contract-approved candidate produced by DevelopmentExpert."""
+    """A contract-approved candidate produced by DevelopmentExpert.
+
+    ``patch`` is an optional source-code diff. The orchestrator applies it to
+    the task repo before execution and reverts it on discard/crash; on keep the
+    patch artifact is committed with the step report.
+    """
 
     hypothesis_id: str
     description: str
@@ -38,10 +43,14 @@ class CandidateSpec:
     expect_numeric_equal: bool = True
     target_surface: str = ""
     rationale: str = ""
+    patch: str = ""
+    patch_target_files: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.hypothesis_id.strip():
             raise ValueError("hypothesis_id must be non-empty")
+        if self.patch and not self.patch_target_files:
+            raise ValueError("a candidate patch must declare patch_target_files")
 
 
 @dataclass(frozen=True)
