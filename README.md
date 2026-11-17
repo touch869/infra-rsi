@@ -11,19 +11,24 @@ engine.
 ## Architecture
 
 ```
-entry       cli.py
+entry       cli.py (entry/ commands planned)
 engine      baseline -> candidates -> gates -> keep/discard/crash -> ledger
 plugins     contract/surfaces/ (which candidates a surface offers)
             execution/backends/ (how a trial runs)
             gates/ (receipt, bitwise, memory)
 contract    contract/task_spec.py (what may change, how it is judged)
 knowledge   knowledge/runtime/ledger_store.py (append-only runtime evidence)
+prompting   prompting/ (StageContext, expert prompt specs, deterministic builder)
+experts     experts/ (six role artifacts, prompt specs, registry)
+runtime     runtime/facade.py + runtime/calibration.py
 reporting   reporting/ (step/round reports + exporters/)
 ```
 
-Dependency rule: `engine` never imports torch or HyperParallel; it talks to a
-`Backend`. Gates never mutate a trial. Surfaces only emit contract-approved
-overrides, and the contract rejects any key outside `writable_prefixes`.
+Dependency rule: `engine` and expert roles never import torch or HyperParallel;
+they talk to a `Backend` and `RuntimeFacade`. Gates never mutate a trial.
+Surfaces only emit contract-approved overrides, and the contract rejects any key
+outside `writable_prefixes`. Observation patches are applied by the runtime,
+not by an expert; clean/observed baseline calibration is code-enforced.
 
 ## Quickstart (Ascend host)
 
@@ -72,6 +77,22 @@ adapter-region wrapper path, which is ~7–13% slower than HF native checkpointi
 | `receipt` | exit 0, no traceback, expected step count |
 | `bitwise` | loss / grad_norm fingerprint identical to baseline |
 | `memory` | peak device memory within budget |
+
+## Phase-1 knowledge skills
+
+The core skill set is:
+
+```text
+hp/recompute-modes
+hp/recompute-layerwise
+hp/measurement
+hp/memory-budget
+hp/numeric-fingerprint
+hp/engaged-evidence
+```
+
+`hp/mfu-perf` is optional. Process control, report schemas, contract validation
+and audit are code-enforced, not skills.
 
 ## Edit surfaces
 
