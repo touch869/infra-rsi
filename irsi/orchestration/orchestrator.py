@@ -141,6 +141,8 @@ class Orchestrator:
             return advance(state, Stage.DONE, stop_reason="no_hypotheses")
 
         for index, hypothesis in enumerate(hypotheses):
+            if state.stage == Stage.NEXT_CANDIDATE:
+                state = advance(state, Stage.DECISION)
             if state.trials_run >= self.task.budget.max_trials:
                 return advance(state, Stage.DONE, stop_reason="budget_exhausted")
 
