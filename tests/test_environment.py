@@ -72,3 +72,27 @@ def test_environment_repair_agent_respects_attempt_budget():
     assert first.success is True
     assert second.action == "exhausted"
     assert second.success is False
+
+
+def test_environment_repair_agent_uses_allowlisted_package_command():
+    spec = replace(
+        TASK,
+        env_setup="",
+        domain_params={
+            "environment_repair": {
+                "commands": ["true"],
+            }
+        },
+    )
+    agent = EnvironmentRepairAgent(spec)
+    diagnosis = agent.diagnose(ModuleNotFoundError("No module named 'foo'"))
+    assert diagnosis.kind == "package_error"
+
+    action = agent.repair(ModuleNotFoundError("No module named 'foo'"))
+    assert action.action == "allowlisted_command"
+    assert action.command == "true"
+    assert action.success is True
+
+    command, action_name = agent._select_command(diagnosis)
+    assert action_name == "allowlisted_command"
+    assert command == "true"
