@@ -19,6 +19,16 @@ from .state import RoundState, Stage
 __all__ = ["Orchestrator"]
 
 
+def _error_status(exc: Exception) -> str:
+    """Classify an execution failure as crash vs environment error."""
+    text = str(exc).lower()
+    if isinstance(exc, (OSError, EnvironmentError)):
+        return "env_error"
+    if "out of memory" in text or "oom" in text:
+        return "crash"
+    return "crash"
+
+
 class Orchestrator:
     """Run decision → development → execution → judgment → archive per candidate."""
 
@@ -86,7 +96,45 @@ class Orchestrator:
             context, _skills = self.builder.build(
                 state, Stage.EXECUTION, candidate=candidate
             )
-            execution = self.execution.run(context, self.facade)
+            try:
+                execution = self.execution.run(context, self.facade)
+            except Exception as exc:  # noqa: BLE001 - a failed trial is evidence
+                judgment = Judgment(
+                    trial=f"{candidate.hypothesis_id}-failed",
+                    status="crash",
+                    metric=None,
+                    baseline_metric=state.baseline_metric,
+                    best_before=state.best_metric,
+                    delta_vs_best=None,
+                    gates=(),
+                    detail=f"execution error: {exc}",
+                    overrides=dict(candidate.overrides),
+                )
+                state = replace(
+                    state,
+                    stage=Stage.EXECUTION,
+                    previous_artifact=judgment,
+                    trials_run=state.trials_run + 1,
+                )
+                context, _skills = self.builder.build(state, Stage.ARCHIVE)
+                archive_result = EXPERTS.get("archive_report").run(context, self.facade)
+                require_artifact(Stage.ARCHIVE, archive_result.artifact)
+                state = replace(
+                    state,
+                    stage=Stage.ARCHIVE,
+                    previous_artifact=archive_result.artifact,
+                )
+                self._record(
+                    state,
+                    candidate,
+                    None,
+                    judgment,
+                    rollback="not_committed",
+                    status=_error_status(exc),
+                )
+                state = replace(state, stage=Stage.NEXT_CANDIDATE)
+                continue
+
             require_artifact(Stage.EXECUTION, execution)
             state = replace(
                 state,
@@ -118,7 +166,7 @@ class Orchestrator:
                 previous_artifact=archive_result.artifact,
             )
 
-            self._record(state, index, candidate, execution, judgment)
+            self._record(state, candidate, execution, judgment)
 
             if judgment.status == "keep":
                 state = replace(
@@ -142,10 +190,12 @@ class Orchestrator:
     def _record(
         self,
         state: RoundState,
-        index: int,
         candidate: CandidateSpec,
-        execution: Any,
+        execution: Any | None,
         judgment: Judgment,
+        *,
+        rollback: str | None = None,
+        status: str | None = None,
     ) -> None:
         if self.store is None:
             return
@@ -153,6 +203,17 @@ class Orchestrator:
             {"name": gate.name, "passed": gate.passed, "detail": gate.detail}
             for gate in judgment.gates
         )
+        artifacts: dict[str, str] = {}
+        evidence: dict[str, Any] = {}
+        if execution is not None:
+            artifacts = {
+                "config": str(execution.trial.config_path),
+                "log": str(execution.trial.log_path),
+            }
+            evidence = {
+                "peak_mem_gib": execution.trial.metrics.peak_mem_gib,
+                "numeric_hash": execution.trial.metrics.numeric_hash,
+            }
         self.store.append(
             ExperimentRecord(
                 record_id="",
@@ -162,17 +223,12 @@ class Orchestrator:
                 hypothesis_id=candidate.hypothesis_id,
                 overrides=dict(candidate.overrides),
                 metric=judgment.metric,
-                status=judgment.status,
+                status=status or judgment.status,
                 detail=judgment.detail,
                 baseline_metric=state.baseline_metric,
                 gates=gates,
-                artifacts={
-                    "config": str(execution.trial.config_path),
-                    "log": str(execution.trial.log_path),
-                },
-                evidence={
-                    "peak_mem_gib": execution.trial.metrics.peak_mem_gib,
-                    "numeric_hash": execution.trial.metrics.numeric_hash,
-                },
+                artifacts=artifacts,
+                evidence=evidence,
+                rollback=rollback,
             )
         )

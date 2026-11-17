@@ -58,6 +58,15 @@ class FakeBackend:
         )
 
 
+class FailingBackend(FakeBackend):
+    """Raise on the first candidate trial to exercise crash recording."""
+
+    def run(self, spec, trial_dir, overrides, label):
+        if label == "layers-0":
+            raise RuntimeError("out of memory during candidate trial")
+        return super().run(spec, trial_dir, overrides, label)
+
+
 def test_round_controller_uses_observed_baseline_and_one_candidate(tmp_path):
     task = replace(TASK, budget=BudgetSpec(max_trials=1))
     backend = FakeBackend([_metrics(100.0), _metrics(100.0), _metrics(120.0)])
@@ -104,3 +113,22 @@ def test_budget_is_enforced(tmp_path):
 
     assert state.trials_run == 1
     assert state.stop_reason == "budget_exhausted"
+
+
+def test_execution_failure_is_recorded_as_crash(tmp_path):
+    task = replace(TASK, budget=BudgetSpec(max_trials=1))
+    backend = FailingBackend([_metrics(100.0), _metrics(100.0)])
+    store = ExperimentRecordStore(tmp_path / "task")
+
+    controller = RoundController(task, backend, tmp_path / "runs", store=store)
+    state = controller.run_round("round-1")
+
+    assert state.stage == Stage.DONE
+    assert state.trials_run == 1
+
+    records = store.recent(10, round_id="round-1")
+    crash = records[-1]
+    assert crash.status == "crash"
+    assert crash.metric is None
+    assert "execution error" in crash.detail
+    assert crash.rollback == "not_committed"

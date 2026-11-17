@@ -85,7 +85,7 @@ COMMIT / REPORT
 | `ExecutionStage` | 确定性执行候选；不生成 prompt、不裁决 | `CandidateSpec` | `ExecutionResult` |
 | `Backend` | HyperParallel 等具体执行实现 | `CandidateSpec` | `TrialResult` |
 
-**边界**：执行是确定性 runtime；环境搭建可能需要有界 agent；ExecutionStage 不控制流程。
+**边界**：执行是确定性 runtime；环境搭建可能需要有界 agent；ExecutionStage 不控制流程。ExecutionStage 不捕获异常；`Orchestrator` 捕获执行失败，写 `crash` / `env_error` 记录，并标记 `rollback=not_committed`。
 
 ---
 
@@ -177,7 +177,7 @@ COMMIT / REPORT
 | `ReportBuilder` | 生成 `report.json` / `report.md` | ledger / store | report files |
 | `CommitRecorder` | 每个候选一个 commit；report 随 commit | patch、report | commit |
 
-**边界**：报告 schema 由代码强制；`ArchiveReportExpert` 只整理 artifact，不自动 commit。失败 patch 不入库，失败修改描述写在 report。
+**边界**：报告 schema 由代码强制；`ArchiveReportExpert` 只整理 artifact，不自动 commit。失败 patch 不入库，失败修改描述写在 report；当前 config-only 候选的 rollback 标记为 `not_committed`，代码 patch 的 actual revert 由 `CommitRecorder` 处理。
 
 ---
 
