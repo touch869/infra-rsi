@@ -49,6 +49,9 @@ class RoundController:
         observed_facade = RuntimeFacade(
             self.task, self.backend, self.root / "baseline-observed"
         )
+        candidate_facade = RuntimeFacade(
+            self.task, self.backend, self.root / "trials"
+        )
 
         # Observation is task-level and independent of any hypothesis.
         plan = ObservationExpert().run(
@@ -133,6 +136,6 @@ class RoundController:
             self.task, reader=self.reader, resolver=self.resolver
         )
         orchestrator = Orchestrator(
-            self.task, observed_facade, store=self.store, builder=builder
+            self.task, candidate_facade, store=self.store, builder=builder
         )
         return orchestrator.run_round(state, observation_plan=plan)

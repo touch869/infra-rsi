@@ -101,8 +101,14 @@ class ExperimentRecordStore:
         for record in records:
             counts[record.status] = counts.get(record.status, 0) + 1
 
+        calibrated = next((record for record in records if record.stage == "calibrated"), None)
         baseline = next((record for record in records if record.stage == "baseline"), None)
-        baseline_metric = baseline.metric if baseline is not None else None
+        if calibrated is not None:
+            baseline_metric = calibrated.baseline_metric
+            if baseline_metric is None:
+                baseline_metric = calibrated.metric
+        else:
+            baseline_metric = baseline.metric if baseline is not None else None
 
         kept = [record for record in records if record.status == "keep" and record.metric is not None]
         if kept:

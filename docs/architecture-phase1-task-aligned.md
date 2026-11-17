@@ -261,7 +261,7 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 
 | 设计组件 | 现有代码 | 状态 |
 |---|---|---|
-| `CLI` | `irsi/cli.py` | 已有入口 |
+| `CLI` | `irsi/cli.py` | 已接入 `RoundController` |
 | `Orchestrator` / `RoundController` / `ContextBuilder` | `irsi/orchestration/` | 已实现：状态机、上下文、候选循环 |
 | `ExperimentRecordStore` | `irsi/knowledge/runtime/record_store.py` | 已实现 |
 | `RuntimeKnowledgeReader` | `irsi/knowledge/runtime/reader.py` | 已实现 |
@@ -277,8 +277,8 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | 五个 `ExpertRole` | `irsi/experts/*/expert.py` | 已实现 |
 | `PromptBuilder` | `irsi/prompting/builder.py` | 已实现 |
 | `RuntimeFacade` | `irsi/runtime/facade.py` | 已实现 |
-| `ReportBuilder` / `StepReport` / `RoundReport` | `irsi/reporting/` | 待实现 |
+| `ReportBuilder` / `StepReport` / `RoundReport` | `irsi/reporting/report_builder.py` | 已实现；从 `ExperimentRecordStore` 生成 report |
 | `CommitRecorder` | 无 | 待实现 |
 | `HITTAudit` | 无 | 暂缓 |
 
-**结论**：第一阶段真正缺的是 **TrialExecutor 统一执行原语、ReportBuilder / CommitRecorder**；Orchestrator / RoundController / ContextBuilder、NeutralityChecker / BaselineReference 已落地，专家与知识库字段已按新流程修正。
+**结论**：第一阶段真正缺的是 **TrialExecutor 统一执行原语、CommitRecorder、ObservationPatch apply/revert、ExpertRuntime adapter**；CLI / Orchestrator / RoundController / ContextBuilder / NeutralityChecker / BaselineReference / ReportBuilder 已落地。

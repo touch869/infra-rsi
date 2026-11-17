@@ -91,6 +91,8 @@ infra-rsi/
 │   │       └── prompt_spec.py
 │   │
 │   ├── reporting/
+│   │   ├── __init__.py
+│   │   ├── report_builder.py      # StepReport / RoundReport / ReportBuilder
 │   │   └── exporters/
 │   │       └── __init__.py        # 出口合并点；具体 exporter 待建
 │   │
@@ -158,9 +160,6 @@ infra-rsi/
 - `execution/trial_executor.py`
 - `runtime/native_prompt_runtime.py`
 - `runtime/openjiuwen_runtime.py`
-- `reporting/step_report.py`
-- `reporting/round_report.py`
-- `reporting/report_builder.py`
 - `reporting/exporters/json_exporter.py` / `markdown_exporter.py` / `csv_exporter.py`
 - `audit/hitt.py`、`audit/knowledge_audit.py`、`audit/audit_record.py`（暂缓）
 - `git/CommitRecorder`（待建）
@@ -183,7 +182,7 @@ infra-rsi/
 | `runtime/` | 确定性 runtime facade、baseline 分析、专家运行时 adapter（facade/neutrality/baseline_reference/expert_runtime 已建） |
 | `experts/` | 五个专家角色、各自 prompt spec、统一 artifact 类型（已建） |
 | `audit/` | HITT 成果审计、知识审计（暂缓） |
-| `reporting/` | 每步报告、round 报告、`exporters/` 导出插件（待建） |
+| `reporting/` | 每步报告、round 报告、`exporters/` 导出插件（report_builder 已建；exporters 待建） |
 
 ---
 
@@ -274,6 +273,7 @@ ExecutionStage
 Orchestrator / RoundController / ContextBuilder
 NeutralityChecker / BaselineReference
 BaselineCalibrator（只分析 TrialResult）
+ReportBuilder
 ```
 
 仍待实现：
@@ -281,7 +281,7 @@ BaselineCalibrator（只分析 TrialResult）
 ```text
 TrialExecutor
 ExpertRuntime adapter
-ReportBuilder / CommitRecorder
+CommitRecorder
 ```
 
 ---
@@ -320,13 +320,12 @@ ReportBuilder / CommitRecorder
 - `knowledge/runtime/experiment_record.py`、`record_store.py`、`reader.py`
 - `knowledge/skills.py`、`catalog.py`、`reader.py`、`providers/hyperparallel.py`
 - `knowledge/skills/hp/*` 七个 skill 包（6 核心 + 1 可选）
-- `reporting/exporters/base.py` 与出口占位
+- `reporting/report_builder.py`、`reporting/exporters/base.py` 与出口占位
 
 **待建：**
 
 - `entry/`（commands / openjiuwen）
 - `execution/trial_executor.py`
-- `reporting/report_builder.py` / step / round report
 - `runtime/native_prompt_runtime.py` / openjiuwen
 - `git/CommitRecorder`、`baseline/BaselineWorld`
 
