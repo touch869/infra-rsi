@@ -1,5 +1,5 @@
 """Edit-surface plugins: turn a contract into concrete hypotheses."""
 
-from . import recompute, source_patch  # noqa: F401  (register surfaces)
+from . import parallel, recompute, source_patch  # noqa: F401  (register surfaces)
 
-__all__ = ["recompute", "source_patch"]
+__all__ = ["parallel", "recompute", "source_patch"]
