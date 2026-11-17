@@ -300,4 +300,4 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `CommitRecorder` | `irsi/git/commit_recorder.py` | 已接入 Orchestrator/CLI；keep 提交 trial config + patch artifact + step report，discard/crash 只提交 step report |
 | `HITTAudit` | 无 | 暂缓 |
 
-**结论**：第一阶段剩余的是 **OpenJiuwen runtime 与真实远端运行**；CLI / Orchestrator / RoundController / ContextBuilder / TrialExecutor / NeutralityChecker / BaselineReference / ReportBuilder / ObservationPatchManager / CandidatePatchManager / NativePromptRuntime / CommitRecorder / EnvironmentSnapshot / EnvironmentExpert / EnvironmentRepairAgent / source-patch surface 已落地。Qwen3-0.6B 契约与配置已加入，准备在 910b4-126/114 实跑。
+**结论**：第一阶段代码闭环已落地并在 910b4-126/114 用 Qwen3-0.6B 实跑；**OpenJiuwen runtime 按约定暂缓**。CLI / Orchestrator / RoundController / ContextBuilder / TrialExecutor / NeutralityChecker / BaselineReference / ReportBuilder / ObservationPatchManager / CandidatePatchManager / NativePromptRuntime / CommitRecorder / EnvironmentSnapshot / EnvironmentExpert / EnvironmentRepairAgent / source-patch surface 已落地。
