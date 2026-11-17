@@ -1,0 +1,87 @@
+{
+  "round_report": {
+    "baseline_metric": 15407.05,
+    "best_metric": 17348.449999999997,
+    "domain": "parallel",
+    "steps": [
+      {
+        "delta_vs_best": -0.8581515927935924,
+        "detail": "numeric-parity: first divergence at step 16: loss 11.2647 -> 11.8916 (|delta|=0.6269 > 0.563335)",
+        "gates": [
+          {
+            "detail": "32 steps",
+            "name": "receipt",
+            "passed": true
+          },
+          {
+            "detail": "mesh (1, 1, 8); FSDP (1, 1, 8); sequence_parallel=False, loss_parallel=True",
+            "name": "parallel-engagement",
+            "passed": true
+          },
+          {
+            "detail": "first divergence at step 16: loss 11.2647 -> 11.8916 (|delta|=0.6269 > 0.563335)",
+            "name": "numeric-parity",
+            "passed": false
+          },
+          {
+            "detail": "peak 2.39 GiB <= 24.00 GiB",
+            "name": "memory",
+            "passed": true
+          }
+        ],
+        "metric": 2460.85,
+        "overrides": {
+          "accelerator.cp_size": 1,
+          "accelerator.ep_size": 1,
+          "accelerator.loss_parallel": true,
+          "accelerator.pp_size": 1,
+          "accelerator.sequence_parallel": false,
+          "accelerator.tp_size": 8,
+          "fsdp_config.dp_shard_size": 1
+        },
+        "status": "crash",
+        "trial": "tp8-dp1"
+      }
+    ],
+    "task": "qwen3-0.6b-parallel"
+  },
+  "status": "crash",
+  "step_report": {
+    "delta_vs_best": -0.8581515927935924,
+    "detail": "numeric-parity: first divergence at step 16: loss 11.2647 -> 11.8916 (|delta|=0.6269 > 0.563335)",
+    "gates": [
+      {
+        "detail": "32 steps",
+        "name": "receipt",
+        "passed": true
+      },
+      {
+        "detail": "mesh (1, 1, 8); FSDP (1, 1, 8); sequence_parallel=False, loss_parallel=True",
+        "name": "parallel-engagement",
+        "passed": true
+      },
+      {
+        "detail": "first divergence at step 16: loss 11.2647 -> 11.8916 (|delta|=0.6269 > 0.563335)",
+        "name": "numeric-parity",
+        "passed": false
+      },
+      {
+        "detail": "peak 2.39 GiB <= 24.00 GiB",
+        "name": "memory",
+        "passed": true
+      }
+    ],
+    "metric": 2460.85,
+    "overrides": {
+      "accelerator.cp_size": 1,
+      "accelerator.ep_size": 1,
+      "accelerator.loss_parallel": true,
+      "accelerator.pp_size": 1,
+      "accelerator.sequence_parallel": false,
+      "accelerator.tp_size": 8,
+      "fsdp_config.dp_shard_size": 1
+    },
+    "status": "crash",
+    "trial": "tp8-dp1"
+  }
+}

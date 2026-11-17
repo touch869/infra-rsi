@@ -1,0 +1,94 @@
+model:
+  _target_: hyper_parallel.models._transformers.HyperAutoModelForCausalLM.from_config
+  config:
+    _target_: transformers.AutoConfig.from_pretrained
+    pretrained_model_name_or_path: /root/irsi-workspace/configs/qwen3-0.6b
+    local_files_only: true
+  torch_dtype: bfloat16
+  attn_implementation: sdpa
+  validate_placement: false
+model_init_dtype: bfloat16
+training:
+  train_iters: 32
+  eval_iters: 0
+  global_batch_size: 8
+  micro_batch_size: 1
+  backend: hccl
+  init_device: meta
+  loss_aggregation: token_weighted
+  max_grad_norm: 1.0
+  seed: 42
+  enable_full_determinism: true
+  logging_steps: 1
+accelerator:
+  tp_size: 8
+  cp_size: 1
+  ep_size: 1
+  pp_size: 1
+  sequence_parallel: false
+  loss_parallel: true
+fsdp_config:
+  dp_shard_size: 1
+  edp_shard_size: 1
+  replicate_params: []
+  reshard_after_forward: true
+  reshard_after_backward: true
+  requires_grad_sync: true
+  comm_fusion: false
+  mix_precision:
+    param_dtype: bfloat16
+    reduce_dtype: float32
+    cast_forward_inputs: false
+mixed_precision:
+  enabled: false
+activation_checkpoint:
+  mode: full
+activation_swap: none
+compile:
+  enabled: false
+  mode: default
+  fullgraph: false
+  dynamic: false
+  backend: null
+  options: {}
+  dynamo_cache_size_limit: 256
+dataset:
+  _target_: irsi_data.PackedTensorDataset
+  data_path: /root/irsi-workspace/data/tiny-packed
+  data_config:
+    seq_length: 2048
+    labels_are_shifted: true
+    create_attention_mask_in_dataloader: true
+  sequence_length: 2048
+dataloader:
+  _target_: hyper_parallel.data.batching.FixedBatchDataLoader
+  collate_fn:
+    _target_: hyper_parallel.data.batching.build_online_text_collate_fn
+  get_batch:
+    _target_: hyper_parallel.data.batching.TextParallelBatch
+    source_type: packed_text
+    attention_mode: dense
+    reset_position_ids: true
+  drop_last: true
+  num_workers: 0
+  pin_memory: true
+optimizer:
+  _target_: hyper_parallel.components.optim.AdamW
+  fp32_main_params: true
+  adamw_config:
+    adamw_lr: 0.0001
+    adamw_weight_decay: 0.0
+    adamw_betas:
+    - 0.9
+    - 0.999
+    adamw_eps: 1.0e-08
+lr_scheduler:
+  _target_: hyper_parallel.components.optim.MultiLRScheduler
+  lr_decay_style: constant
+  lr_config:
+    lr: 0.0001
+    lr_warmup_steps: 0
+    min_lr: 0.0
+checkpoint:
+  save_ckpt: false
+  checkpoint_dir: ''

@@ -1,0 +1,11 @@
+212a036 step 11 control discard
+7c6c53c step 10 tp8-dp1 crash
+4b13dfb step 9 tp4-dp2 crash
+266b32a step 8 tp2-dp4 discard
+14584ec step 7 tp2-dp2 crash
+9e09bd3 step 6 tp2-dp1 crash
+fe32440 step 5 dp4 discard
+1f79939 step 4 dp2 discard
+342b63e step 3 dp1 keep
+6753ba4 observation patch + calibration
+b749cf5 environment baseline

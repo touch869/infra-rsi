@@ -1,0 +1,351 @@
+{
+  "baseline_metric": 15407.05,
+  "best": {
+    "hypothesis_id": "dp1",
+    "metric": 17348.449999999997,
+    "record_id": "round-1-0003"
+  },
+  "counts": {
+    "baseline": 2,
+    "calibrated": 1,
+    "crash": 4,
+    "discard": 4,
+    "keep": 1
+  },
+  "round_id": "round-1",
+  "steps": [
+    {
+      "baseline_metric": null,
+      "commit": null,
+      "detail": "clean baseline (observation off)",
+      "gates": [],
+      "hypothesis_id": null,
+      "metric": 16665.5,
+      "record_id": "round-1-0000",
+      "rollback": null,
+      "stage": "clean_baseline",
+      "status": "baseline"
+    },
+    {
+      "baseline_metric": null,
+      "commit": null,
+      "detail": "observed baseline (observation on)",
+      "gates": [],
+      "hypothesis_id": null,
+      "metric": 15407.05,
+      "record_id": "round-1-0001",
+      "rollback": null,
+      "stage": "observed_baseline",
+      "status": "baseline"
+    },
+    {
+      "baseline_metric": 15407.05,
+      "commit": null,
+      "detail": "reference = observed baseline",
+      "gates": [],
+      "hypothesis_id": null,
+      "metric": 15407.05,
+      "record_id": "round-1-0002",
+      "rollback": null,
+      "stage": "calibrated",
+      "status": "calibrated"
+    },
+    {
+      "baseline_metric": 15407.05,
+      "commit": null,
+      "detail": "17348.4 beats 15407 beyond noise",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "mesh (8, 1, 1); FSDP (8, 1, 1); sequence_parallel=False, loss_parallel=False",
+          "name": "parallel-engagement",
+          "passed": true
+        },
+        {
+          "detail": "parity within rtol=0.05, atol=0.0001, fields=('loss',)",
+          "name": "numeric-parity",
+          "passed": true
+        },
+        {
+          "detail": "peak 11.38 GiB <= 24.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "hypothesis_id": "dp1",
+      "metric": 17348.449999999997,
+      "record_id": "round-1-0003",
+      "rollback": null,
+      "stage": "judgment",
+      "status": "keep"
+    },
+    {
+      "baseline_metric": 15407.05,
+      "commit": null,
+      "detail": "15907.9 does not beat 17348.4 beyond noise",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "mesh (8, 1, 1); FSDP (4, 2, 1); sequence_parallel=False, loss_parallel=False",
+          "name": "parallel-engagement",
+          "passed": true
+        },
+        {
+          "detail": "parity within rtol=0.05, atol=0.0001, fields=('loss',)",
+          "name": "numeric-parity",
+          "passed": true
+        },
+        {
+          "detail": "peak 7.81 GiB <= 24.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "hypothesis_id": "dp2",
+      "metric": 15907.900000000001,
+      "record_id": "round-1-0004",
+      "rollback": null,
+      "stage": "judgment",
+      "status": "discard"
+    },
+    {
+      "baseline_metric": 15407.05,
+      "commit": null,
+      "detail": "16112.7 does not beat 17348.4 beyond noise",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "mesh (8, 1, 1); FSDP (2, 4, 1); sequence_parallel=False, loss_parallel=False",
+          "name": "parallel-engagement",
+          "passed": true
+        },
+        {
+          "detail": "parity within rtol=0.05, atol=0.0001, fields=('loss',)",
+          "name": "numeric-parity",
+          "passed": true
+        },
+        {
+          "detail": "peak 5.89 GiB <= 24.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "hypothesis_id": "dp4",
+      "metric": 16112.650000000001,
+      "record_id": "round-1-0005",
+      "rollback": null,
+      "stage": "judgment",
+      "status": "discard"
+    },
+    {
+      "baseline_metric": 15407.05,
+      "commit": null,
+      "detail": "numeric-parity: first divergence at step 32: loss 10.508 -> 11.1497 (|delta|=0.6417 > 0.5255)",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "mesh (4, 1, 2); FSDP (4, 1, 2); sequence_parallel=False, loss_parallel=True",
+          "name": "parallel-engagement",
+          "passed": true
+        },
+        {
+          "detail": "first divergence at step 32: loss 10.508 -> 11.1497 (|delta|=0.6417 > 0.5255)",
+          "name": "numeric-parity",
+          "passed": false
+        },
+        {
+          "detail": "peak 9.06 GiB <= 24.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "hypothesis_id": "tp2-dp1",
+      "metric": 8546.075,
+      "record_id": "round-1-0006",
+      "rollback": null,
+      "stage": "judgment",
+      "status": "crash"
+    },
+    {
+      "baseline_metric": 15407.05,
+      "commit": null,
+      "detail": "numeric-parity: first divergence at step 25: loss 10.6008 -> 11.1592 (|delta|=0.5584 > 0.53014)",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "mesh (4, 1, 2); FSDP (2, 2, 2); sequence_parallel=False, loss_parallel=True",
+          "name": "parallel-engagement",
+          "passed": true
+        },
+        {
+          "detail": "first divergence at step 25: loss 10.6008 -> 11.1592 (|delta|=0.5584 > 0.53014)",
+          "name": "numeric-parity",
+          "passed": false
+        },
+        {
+          "detail": "peak 6.29 GiB <= 24.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "hypothesis_id": "tp2-dp2",
+      "metric": 7667.68,
+      "record_id": "round-1-0007",
+      "rollback": null,
+      "stage": "judgment",
+      "status": "crash"
+    },
+    {
+      "baseline_metric": 15407.05,
+      "commit": null,
+      "detail": "7542.16 does not beat 17348.4 beyond noise",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "mesh (4, 1, 2); FSDP (1, 4, 2); sequence_parallel=False, loss_parallel=True",
+          "name": "parallel-engagement",
+          "passed": true
+        },
+        {
+          "detail": "parity within rtol=0.05, atol=0.0001, fields=('loss',)",
+          "name": "numeric-parity",
+          "passed": true
+        },
+        {
+          "detail": "peak 4.67 GiB <= 24.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "hypothesis_id": "tp2-dp4",
+      "metric": 7542.16,
+      "record_id": "round-1-0008",
+      "rollback": null,
+      "stage": "judgment",
+      "status": "discard"
+    },
+    {
+      "baseline_metric": 15407.05,
+      "commit": null,
+      "detail": "numeric-parity: first divergence at step 16: loss 11.2647 -> 11.8309 (|delta|=0.5662 > 0.563335)",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "mesh (2, 1, 4); FSDP (1, 2, 4); sequence_parallel=False, loss_parallel=True",
+          "name": "parallel-engagement",
+          "passed": true
+        },
+        {
+          "detail": "first divergence at step 16: loss 11.2647 -> 11.8309 (|delta|=0.5662 > 0.563335)",
+          "name": "numeric-parity",
+          "passed": false
+        },
+        {
+          "detail": "peak 3.21 GiB <= 24.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "hypothesis_id": "tp4-dp2",
+      "metric": 3992.965,
+      "record_id": "round-1-0009",
+      "rollback": null,
+      "stage": "judgment",
+      "status": "crash"
+    },
+    {
+      "baseline_metric": 15407.05,
+      "commit": null,
+      "detail": "numeric-parity: first divergence at step 16: loss 11.2647 -> 11.8916 (|delta|=0.6269 > 0.563335)",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "mesh (1, 1, 8); FSDP (1, 1, 8); sequence_parallel=False, loss_parallel=True",
+          "name": "parallel-engagement",
+          "passed": true
+        },
+        {
+          "detail": "first divergence at step 16: loss 11.2647 -> 11.8916 (|delta|=0.6269 > 0.563335)",
+          "name": "numeric-parity",
+          "passed": false
+        },
+        {
+          "detail": "peak 2.39 GiB <= 24.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "hypothesis_id": "tp8-dp1",
+      "metric": 2460.85,
+      "record_id": "round-1-0010",
+      "rollback": null,
+      "stage": "judgment",
+      "status": "crash"
+    },
+    {
+      "baseline_metric": 15407.05,
+      "commit": null,
+      "detail": "16288.9 does not beat 17348.4 beyond noise",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "mesh (8, 1, 1); FSDP (1, 8, 1); sequence_parallel=False, loss_parallel=False",
+          "name": "parallel-engagement",
+          "passed": true
+        },
+        {
+          "detail": "numeric fingerprint identical",
+          "name": "numeric-parity",
+          "passed": true
+        },
+        {
+          "detail": "peak 4.89 GiB <= 24.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "hypothesis_id": "control",
+      "metric": 16288.9,
+      "record_id": "round-1-0011",
+      "rollback": null,
+      "stage": "judgment",
+      "status": "discard"
+    }
+  ]
+}

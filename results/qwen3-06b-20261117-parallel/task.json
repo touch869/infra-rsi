@@ -1,0 +1,160 @@
+{
+  "base_config": "/root/irsi-workspace/configs/train_qwen3_06b.yaml",
+  "base_overrides": {
+    "accelerator.cp_size": 1,
+    "accelerator.ep_size": 1,
+    "accelerator.loss_parallel": false,
+    "accelerator.pp_size": 1,
+    "accelerator.sequence_parallel": false,
+    "accelerator.tp_size": 1,
+    "activation_checkpoint.mode": "full",
+    "fsdp_config.dp_shard_size": 8,
+    "training.train_iters": 32
+  },
+  "budget": {
+    "max_repairs": 1,
+    "max_trials": 9,
+    "timeout_min": 25
+  },
+  "contract_path": "/root/infra-rsi/contracts/qwen3-0.6b-parallel.yaml",
+  "domain": "parallel",
+  "domain_params": {
+    "allow_sequence_parallel": false,
+    "num_attention_heads": 16,
+    "num_key_value_heads": 8,
+    "parallel_ladder": [
+      {
+        "description": "No TP; FSDP shard over 4 ranks with 2-way parameter replication",
+        "dp_shard_size": 4,
+        "id": "dp4",
+        "loss_parallel": false,
+        "sequence_parallel": false,
+        "tp_size": 1
+      },
+      {
+        "description": "No TP; FSDP shard over 2 ranks with 4-way parameter replication",
+        "dp_shard_size": 2,
+        "id": "dp2",
+        "loss_parallel": false,
+        "sequence_parallel": false,
+        "tp_size": 1
+      },
+      {
+        "description": "No TP; fully replicated parameters on all 8 ranks",
+        "dp_shard_size": 1,
+        "id": "dp1",
+        "loss_parallel": false,
+        "sequence_parallel": false,
+        "tp_size": 1
+      },
+      {
+        "description": "TP across 2 ranks, FSDP shard over 4 ranks",
+        "dp_shard_size": 4,
+        "id": "tp2-dp4",
+        "loss_parallel": true,
+        "sequence_parallel": false,
+        "tp_size": 2
+      },
+      {
+        "description": "TP across 2 ranks, FSDP shard over 2 ranks with 2-way replication",
+        "dp_shard_size": 2,
+        "id": "tp2-dp2",
+        "loss_parallel": true,
+        "sequence_parallel": false,
+        "tp_size": 2
+      },
+      {
+        "description": "TP across 2 ranks, fully replicated FSDP parameters",
+        "dp_shard_size": 1,
+        "id": "tp2-dp1",
+        "loss_parallel": true,
+        "sequence_parallel": false,
+        "tp_size": 2
+      },
+      {
+        "description": "TP across 4 ranks, FSDP shard over 2 ranks",
+        "dp_shard_size": 2,
+        "id": "tp4-dp2",
+        "loss_parallel": true,
+        "sequence_parallel": false,
+        "tp_size": 4
+      },
+      {
+        "description": "TP across all 8 ranks, no FSDP parameter sharding",
+        "dp_shard_size": 1,
+        "id": "tp8-dp1",
+        "loss_parallel": true,
+        "sequence_parallel": false,
+        "tp_size": 8
+      }
+    ]
+  },
+  "env_setup": "source /usr/local/Ascend/ascend-toolkit/latest/set_env.sh",
+  "extra_pythonpath": [
+    "/root/irsi-workspace"
+  ],
+  "gates": [
+    {
+      "name": "receipt",
+      "params": {}
+    },
+    {
+      "name": "parallel-engagement",
+      "params": {}
+    },
+    {
+      "name": "numeric-parity",
+      "params": {
+        "atol": 0.0001,
+        "fields": [
+          "loss"
+        ],
+        "rtol": 0.05
+      }
+    },
+    {
+      "name": "memory",
+      "params": {
+        "limit_gib": 24.0
+      }
+    }
+  ],
+  "memory_budget_gib": 24.0,
+  "metric": {
+    "direction": "maximize",
+    "key": "performance/tokens_per_second",
+    "measured_steps": 16,
+    "noise_fraction": 0.03,
+    "warmup_steps": 8
+  },
+  "name": "qwen3-0.6b-parallel",
+  "python": "/root/miniconda3/envs/irsi/bin/python",
+  "read_only_keys": [
+    "training.",
+    "activation_checkpoint.",
+    "model.",
+    "dataset.",
+    "dataloader.",
+    "optimizer.",
+    "lr_scheduler.",
+    "mixed_precision.",
+    "compile.",
+    "fsdp_config.reshard_after_forward",
+    "fsdp_config.reshard_after_backward",
+    "fsdp_config.requires_grad_sync",
+    "fsdp_config.replicate_params",
+    "fsdp_config.edp_shard_size"
+  ],
+  "repo_root": "/root/hyper-parallel",
+  "workload": {
+    "determinism": true,
+    "expect_steps": 32,
+    "input_hash": "",
+    "nproc": 8,
+    "seed": 42
+  },
+  "writable_prefixes": [
+    "accelerator.",
+    "fsdp_config.dp_shard_size"
+  ]
+}

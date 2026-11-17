@@ -1,0 +1,274 @@
+{
+  "summary": {
+    "label": "tp8-dp1",
+    "backend": "hyperparallel",
+    "exit_code": 0,
+    "timed_out": false,
+    "traceback": false,
+    "completed_steps": 32,
+    "last_step": 32,
+    "peak_mem_gib": 2.38724,
+    "numeric_hash": "29ebd3c84404eea61138eb0a7a2ce1339fea7889430a4709d6552a2387c6da5b",
+    "elapsed_s": 250.893,
+    "config_path": "/root/irsi-workspace/runs/20261117T162420Z-qwen3-0.6b-parallel/trials/tp8-dp1/train.yaml",
+    "log_path": "/root/irsi-workspace/runs/20261117T162420Z-qwen3-0.6b-parallel/trials/tp8-dp1/run.log"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "loss": 12.1385,
+      "grad_norm": 1.41209,
+      "step_time": 9.50061,
+      "tokens_per_second": 1722.84,
+      "peak_mem_gib": 1.67877
+    },
+    {
+      "step": 2,
+      "loss": 12.1382,
+      "grad_norm": 1.45247,
+      "step_time": 6.9953,
+      "tokens_per_second": 2339.86,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 3,
+      "loss": 12.1275,
+      "grad_norm": 1.38451,
+      "step_time": 7.06751,
+      "tokens_per_second": 2315.95,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 4,
+      "loss": 12.1366,
+      "grad_norm": 1.3605,
+      "step_time": 7.75146,
+      "tokens_per_second": 2111.6,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 5,
+      "loss": 12.1368,
+      "grad_norm": 1.32226,
+      "step_time": 6.93317,
+      "tokens_per_second": 2360.82,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 6,
+      "loss": 12.1419,
+      "grad_norm": 1.24117,
+      "step_time": 6.48964,
+      "tokens_per_second": 2522.17,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 7,
+      "loss": 12.1349,
+      "grad_norm": 1.18458,
+      "step_time": 6.92163,
+      "tokens_per_second": 2364.76,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 8,
+      "loss": 12.1343,
+      "grad_norm": 1.14209,
+      "step_time": 6.41454,
+      "tokens_per_second": 2551.7,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 9,
+      "loss": 11.8827,
+      "grad_norm": 0.908964,
+      "step_time": 6.57607,
+      "tokens_per_second": 2489.03,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 10,
+      "loss": 11.8972,
+      "grad_norm": 0.799356,
+      "step_time": 7.49345,
+      "tokens_per_second": 2184.31,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 11,
+      "loss": 11.8913,
+      "grad_norm": 0.888041,
+      "step_time": 7.18637,
+      "tokens_per_second": 2277.65,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 12,
+      "loss": 11.8996,
+      "grad_norm": 0.803606,
+      "step_time": 6.95357,
+      "tokens_per_second": 2353.9,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 13,
+      "loss": 11.8997,
+      "grad_norm": 0.847694,
+      "step_time": 7.15012,
+      "tokens_per_second": 2289.19,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 14,
+      "loss": 11.9069,
+      "grad_norm": 0.833589,
+      "step_time": 6.42092,
+      "tokens_per_second": 2549.17,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 15,
+      "loss": 11.9116,
+      "grad_norm": 0.861965,
+      "step_time": 6.52225,
+      "tokens_per_second": 2509.56,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 16,
+      "loss": 11.8916,
+      "grad_norm": 0.822428,
+      "step_time": 6.73982,
+      "tokens_per_second": 2428.55,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 17,
+      "loss": 11.6239,
+      "grad_norm": 0.453746,
+      "step_time": 7.09797,
+      "tokens_per_second": 2306.01,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 18,
+      "loss": 11.6658,
+      "grad_norm": 0.551092,
+      "step_time": 6.45237,
+      "tokens_per_second": 2536.74,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 19,
+      "loss": 11.6899,
+      "grad_norm": 0.615163,
+      "step_time": 6.44072,
+      "tokens_per_second": 2541.33,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 20,
+      "loss": 11.7062,
+      "grad_norm": 0.685527,
+      "step_time": 6.80354,
+      "tokens_per_second": 2405.81,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 21,
+      "loss": 11.7096,
+      "grad_norm": 0.683506,
+      "step_time": 6.37678,
+      "tokens_per_second": 2566.81,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 22,
+      "loss": 11.7184,
+      "grad_norm": 0.718834,
+      "step_time": 6.58961,
+      "tokens_per_second": 2483.91,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 23,
+      "loss": 11.7145,
+      "grad_norm": 0.661827,
+      "step_time": 6.71428,
+      "tokens_per_second": 2437.79,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 24,
+      "loss": 11.7252,
+      "grad_norm": 0.754166,
+      "step_time": 6.92141,
+      "tokens_per_second": 2364.84,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 25,
+      "loss": 11.4573,
+      "grad_norm": 0.463567,
+      "step_time": 6.95219,
+      "tokens_per_second": 2354.36,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 26,
+      "loss": 11.4876,
+      "grad_norm": 0.53709,
+      "step_time": 6.92966,
+      "tokens_per_second": 2362.02,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 27,
+      "loss": 11.4967,
+      "grad_norm": 0.489438,
+      "step_time": 6.52579,
+      "tokens_per_second": 2508.2,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 28,
+      "loss": 11.5177,
+      "grad_norm": 0.527558,
+      "step_time": 6.97104,
+      "tokens_per_second": 2348.0,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 29,
+      "loss": 11.5301,
+      "grad_norm": 0.634542,
+      "step_time": 6.93287,
+      "tokens_per_second": 2360.93,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 30,
+      "loss": 11.5326,
+      "grad_norm": 0.611191,
+      "step_time": 6.45281,
+      "tokens_per_second": 2536.57,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 31,
+      "loss": 11.5203,
+      "grad_norm": 0.614276,
+      "step_time": 6.45534,
+      "tokens_per_second": 2535.57,
+      "peak_mem_gib": 2.38724
+    },
+    {
+      "step": 32,
+      "loss": 11.5322,
+      "grad_norm": 0.587551,
+      "step_time": 6.41174,
+      "tokens_per_second": 2552.82,
+      "peak_mem_gib": 2.38724
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "best_metric": 17348.449999999997,
+  "round_id": "round-1",
+  "stage": "done",
+  "status": "COMPLETED",
+  "stop_reason": "budget_exhausted",
+  "trials": 9,
+  "updated": "2026-11-18T00:43:07+08:00"
+}

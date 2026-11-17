@@ -1,0 +1,87 @@
+{
+  "round_report": {
+    "baseline_metric": 15407.05,
+    "best_metric": 17348.449999999997,
+    "domain": "parallel",
+    "steps": [
+      {
+        "delta_vs_best": -0.07123402955307223,
+        "detail": "16112.7 does not beat 17348.4 beyond noise",
+        "gates": [
+          {
+            "detail": "32 steps",
+            "name": "receipt",
+            "passed": true
+          },
+          {
+            "detail": "mesh (8, 1, 1); FSDP (2, 4, 1); sequence_parallel=False, loss_parallel=False",
+            "name": "parallel-engagement",
+            "passed": true
+          },
+          {
+            "detail": "parity within rtol=0.05, atol=0.0001, fields=('loss',)",
+            "name": "numeric-parity",
+            "passed": true
+          },
+          {
+            "detail": "peak 5.89 GiB <= 24.00 GiB",
+            "name": "memory",
+            "passed": true
+          }
+        ],
+        "metric": 16112.650000000001,
+        "overrides": {
+          "accelerator.cp_size": 1,
+          "accelerator.ep_size": 1,
+          "accelerator.loss_parallel": false,
+          "accelerator.pp_size": 1,
+          "accelerator.sequence_parallel": false,
+          "accelerator.tp_size": 1,
+          "fsdp_config.dp_shard_size": 4
+        },
+        "status": "discard",
+        "trial": "dp4"
+      }
+    ],
+    "task": "qwen3-0.6b-parallel"
+  },
+  "status": "discard",
+  "step_report": {
+    "delta_vs_best": -0.07123402955307223,
+    "detail": "16112.7 does not beat 17348.4 beyond noise",
+    "gates": [
+      {
+        "detail": "32 steps",
+        "name": "receipt",
+        "passed": true
+      },
+      {
+        "detail": "mesh (8, 1, 1); FSDP (2, 4, 1); sequence_parallel=False, loss_parallel=False",
+        "name": "parallel-engagement",
+        "passed": true
+      },
+      {
+        "detail": "parity within rtol=0.05, atol=0.0001, fields=('loss',)",
+        "name": "numeric-parity",
+        "passed": true
+      },
+      {
+        "detail": "peak 5.89 GiB <= 24.00 GiB",
+        "name": "memory",
+        "passed": true
+      }
+    ],
+    "metric": 16112.650000000001,
+    "overrides": {
+      "accelerator.cp_size": 1,
+      "accelerator.ep_size": 1,
+      "accelerator.loss_parallel": false,
+      "accelerator.pp_size": 1,
+      "accelerator.sequence_parallel": false,
+      "accelerator.tp_size": 1,
+      "fsdp_config.dp_shard_size": 4
+    },
+    "status": "discard",
+    "trial": "dp4"
+  }
+}
