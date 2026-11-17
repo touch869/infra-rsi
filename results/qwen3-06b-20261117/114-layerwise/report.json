@@ -1,0 +1,193 @@
+{
+  "baseline_metric": 16410.6,
+  "best": {
+    "hypothesis_id": "layers-0",
+    "metric": 23140.5,
+    "record_id": "round-1-0003"
+  },
+  "counts": {
+    "baseline": 2,
+    "calibrated": 1,
+    "discard": 4,
+    "keep": 1
+  },
+  "round_id": "round-1",
+  "steps": [
+    {
+      "baseline_metric": null,
+      "commit": null,
+      "detail": "clean baseline (observation off)",
+      "gates": [],
+      "hypothesis_id": null,
+      "metric": 15795.650000000001,
+      "record_id": "round-1-0000",
+      "rollback": null,
+      "stage": "clean_baseline",
+      "status": "baseline"
+    },
+    {
+      "baseline_metric": null,
+      "commit": null,
+      "detail": "observed baseline (observation on)",
+      "gates": [],
+      "hypothesis_id": null,
+      "metric": 16410.6,
+      "record_id": "round-1-0001",
+      "rollback": null,
+      "stage": "observed_baseline",
+      "status": "baseline"
+    },
+    {
+      "baseline_metric": 16410.6,
+      "commit": null,
+      "detail": "reference = observed baseline",
+      "gates": [],
+      "hypothesis_id": null,
+      "metric": 16410.6,
+      "record_id": "round-1-0002",
+      "rollback": null,
+      "stage": "calibrated",
+      "status": "calibrated"
+    },
+    {
+      "baseline_metric": 16410.6,
+      "commit": null,
+      "detail": "23140.5 beats 16410.6 beyond noise",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "identical loss/grad_norm",
+          "name": "bitwise",
+          "passed": true
+        },
+        {
+          "detail": "peak 9.28 GiB <= 24.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "hypothesis_id": "layers-0",
+      "metric": 23140.5,
+      "record_id": "round-1-0003",
+      "rollback": null,
+      "stage": "judgment",
+      "status": "keep"
+    },
+    {
+      "baseline_metric": 16410.6,
+      "commit": null,
+      "detail": "19497.2 does not beat 23140.5 beyond noise",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "identical loss/grad_norm",
+          "name": "bitwise",
+          "passed": true
+        },
+        {
+          "detail": "peak 7.41 GiB <= 24.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "hypothesis_id": "layers-12",
+      "metric": 19497.25,
+      "record_id": "round-1-0004",
+      "rollback": null,
+      "stage": "judgment",
+      "status": "discard"
+    },
+    {
+      "baseline_metric": 16410.6,
+      "commit": null,
+      "detail": "18421.1 does not beat 23140.5 beyond noise",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "identical loss/grad_norm",
+          "name": "bitwise",
+          "passed": true
+        },
+        {
+          "detail": "peak 6.47 GiB <= 24.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "hypothesis_id": "layers-18",
+      "metric": 18421.1,
+      "record_id": "round-1-0005",
+      "rollback": null,
+      "stage": "judgment",
+      "status": "discard"
+    },
+    {
+      "baseline_metric": 16410.6,
+      "commit": null,
+      "detail": "20917.8 does not beat 23140.5 beyond noise",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "identical loss/grad_norm",
+          "name": "bitwise",
+          "passed": true
+        },
+        {
+          "detail": "peak 8.34 GiB <= 24.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "hypothesis_id": "layers-6",
+      "metric": 20917.800000000003,
+      "record_id": "round-1-0006",
+      "rollback": null,
+      "stage": "judgment",
+      "status": "discard"
+    },
+    {
+      "baseline_metric": 16410.6,
+      "commit": null,
+      "detail": "16160.9 does not beat 23140.5 beyond noise",
+      "gates": [
+        {
+          "detail": "32 steps",
+          "name": "receipt",
+          "passed": true
+        },
+        {
+          "detail": "identical loss/grad_norm",
+          "name": "bitwise",
+          "passed": true
+        },
+        {
+          "detail": "peak 4.89 GiB <= 24.00 GiB",
+          "name": "memory",
+          "passed": true
+        }
+      ],
+      "hypothesis_id": "control",
+      "metric": 16160.900000000001,
+      "record_id": "round-1-0007",
+      "rollback": null,
+      "stage": "judgment",
+      "status": "discard"
+    }
+  ]
+}

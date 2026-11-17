@@ -1,0 +1,65 @@
+{
+  "round_report": {
+    "baseline_metric": 17160.25,
+    "best_metric": 21054.5,
+    "domain": "recompute",
+    "steps": [
+      {
+        "delta_vs_best": -0.43718444988007316,
+        "detail": "11849.8 does not beat 21054.5 beyond noise",
+        "gates": [
+          {
+            "detail": "32 steps",
+            "name": "receipt",
+            "passed": true
+          },
+          {
+            "detail": "identical loss/grad_norm",
+            "name": "bitwise",
+            "passed": true
+          },
+          {
+            "detail": "peak 5.97 GiB <= 24.00 GiB",
+            "name": "memory",
+            "passed": true
+          }
+        ],
+        "metric": 11849.8,
+        "overrides": {
+          "activation_checkpoint.mode": "selective"
+        },
+        "status": "discard",
+        "trial": "selective"
+      }
+    ],
+    "task": "qwen3-0.6b-recompute"
+  },
+  "status": "discard",
+  "step_report": {
+    "delta_vs_best": -0.43718444988007316,
+    "detail": "11849.8 does not beat 21054.5 beyond noise",
+    "gates": [
+      {
+        "detail": "32 steps",
+        "name": "receipt",
+        "passed": true
+      },
+      {
+        "detail": "identical loss/grad_norm",
+        "name": "bitwise",
+        "passed": true
+      },
+      {
+        "detail": "peak 5.97 GiB <= 24.00 GiB",
+        "name": "memory",
+        "passed": true
+      }
+    ],
+    "metric": 11849.8,
+    "overrides": {
+      "activation_checkpoint.mode": "selective"
+    },
+    "status": "discard",
+    "trial": "selective"
+  }
+}

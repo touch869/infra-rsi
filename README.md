@@ -85,4 +85,4 @@ hp/engaged-evidence
 python -m pytest -q
 ```
 
-Design docs live in `docs/`: `architecture-phase1-task-aligned.md`, `directory-plan.md`, `runtime-knowledge-design.md`, `architecture-comparison-inferrsi.md`, `architecture-comparison-hp-pr1517.md`; results in `phase1-result.md` and `layerwise-recompute-result.md`. Older design notes are in `docs/archive/`.
+Design docs live in `docs/`: `architecture-phase1-task-aligned.md`, `directory-plan.md`, `runtime-knowledge-design.md`, `architecture-comparison-inferrsi.md`, `architecture-comparison-hp-pr1517.md`; results in `phase1-result.md`, `layerwise-recompute-result.md` and `qwen3-0.6b-result.md`. Older design notes are in `docs/archive/`. Qwen3-0.6B evidence (126/114, recompute/layerwise) is exported under `results/qwen3-06b-20261117/`; the summary is in `docs/qwen3-0.6b-result.md`.

@@ -1,0 +1,67 @@
+{
+  "base_config": "/root/irsi-workspace/configs/train_qwen3_06b.yaml",
+  "base_overrides": {
+    "activation_checkpoint.mode": "full",
+    "training.train_iters": 32
+  },
+  "budget": {
+    "max_repairs": 1,
+    "max_trials": 4,
+    "timeout_min": 25
+  },
+  "contract_path": "/root/infra-rsi/contracts/qwen3-0.6b-recompute.yaml",
+  "domain": "recompute",
+  "domain_params": {},
+  "env_setup": "source /usr/local/Ascend/ascend-toolkit/latest/set_env.sh",
+  "extra_pythonpath": [
+    "/root/irsi-workspace"
+  ],
+  "gates": [
+    {
+      "name": "receipt",
+      "params": {}
+    },
+    {
+      "name": "bitwise",
+      "params": {}
+    },
+    {
+      "name": "memory",
+      "params": {
+        "limit_gib": 24.0
+      }
+    }
+  ],
+  "memory_budget_gib": 24.0,
+  "metric": {
+    "direction": "maximize",
+    "key": "performance/tokens_per_second",
+    "measured_steps": 16,
+    "noise_fraction": 0.03,
+    "warmup_steps": 8
+  },
+  "name": "qwen3-0.6b-recompute",
+  "python": "/root/miniconda3/envs/irsi/bin/python",
+  "read_only_keys": [
+    "activation_checkpoint.allow_cache_entry_mutation",
+    "training.seed",
+    "training.enable_full_determinism",
+    "training.global_batch_size",
+    "training.micro_batch_size",
+    "mixed_precision",
+    "compile",
+    "accelerator",
+    "fsdp_config"
+  ],
+  "repo_root": "/root/hyper-parallel",
+  "workload": {
+    "determinism": true,
+    "expect_steps": 32,
+    "input_hash": "",
+    "nproc": 8,
+    "seed": 42
+  },
+  "writable_prefixes": [
+    "activation_checkpoint."
+  ]
+}

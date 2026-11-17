@@ -1,0 +1,69 @@
+{
+  "round_report": {
+    "baseline_metric": 16410.6,
+    "best_metric": 16410.6,
+    "domain": "recompute-layerwise",
+    "steps": [
+      {
+        "delta_vs_best": 0.4100946948923258,
+        "detail": "23140.5 beats 16410.6 beyond noise",
+        "gates": [
+          {
+            "detail": "32 steps",
+            "name": "receipt",
+            "passed": true
+          },
+          {
+            "detail": "identical loss/grad_norm",
+            "name": "bitwise",
+            "passed": true
+          },
+          {
+            "detail": "peak 9.28 GiB <= 24.00 GiB",
+            "name": "memory",
+            "passed": true
+          }
+        ],
+        "metric": 23140.5,
+        "overrides": {
+          "activation_checkpoint.mode": "selective",
+          "activation_checkpoint.selection.layer_count": 0,
+          "activation_checkpoint.selection.source": "model_adapter_safe_regions"
+        },
+        "status": "keep",
+        "trial": "layers-0"
+      }
+    ],
+    "task": "qwen3-0.6b-layerwise"
+  },
+  "status": "keep",
+  "step_report": {
+    "delta_vs_best": 0.4100946948923258,
+    "detail": "23140.5 beats 16410.6 beyond noise",
+    "gates": [
+      {
+        "detail": "32 steps",
+        "name": "receipt",
+        "passed": true
+      },
+      {
+        "detail": "identical loss/grad_norm",
+        "name": "bitwise",
+        "passed": true
+      },
+      {
+        "detail": "peak 9.28 GiB <= 24.00 GiB",
+        "name": "memory",
+        "passed": true
+      }
+    ],
+    "metric": 23140.5,
+    "overrides": {
+      "activation_checkpoint.mode": "selective",
+      "activation_checkpoint.selection.layer_count": 0,
+      "activation_checkpoint.selection.source": "model_adapter_safe_regions"
+    },
+    "status": "keep",
+    "trial": "layers-0"
+  }
+}

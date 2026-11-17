@@ -1,0 +1,14 @@
+{
+  "clean_metric": 16846.95,
+  "snapshot": {
+    "env_setup": "source /usr/local/Ascend/ascend-toolkit/latest/set_env.sh",
+    "packages": {
+      "torch": "2.9.0",
+      "torch_npu": "2.9.0.post9"
+    },
+    "platform": "Linux-5.10.0-136.12.0.86.r1526_92.hce2.aarch64-aarch64-with-glibc2.34",
+    "python": "3.11.18",
+    "repo_commit": null,
+    "repo_root": "/root/hyper-parallel"
+  }
+}

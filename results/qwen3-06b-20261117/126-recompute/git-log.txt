@@ -1,0 +1,6 @@
+6815ade step 6 selective-swap discard
+dd767d3 step 5 selective discard
+fbbe5e8 step 4 off keep
+4f39eff step 3 full-swap discard
+15d3f3b observation patch + calibration
+438b007 environment baseline

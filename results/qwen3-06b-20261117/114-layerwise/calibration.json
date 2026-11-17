@@ -1,0 +1,13 @@
+{
+  "clean_metric": 15795.650000000001,
+  "numeric_identical": true,
+  "observation_patch": {
+    "apply_before_baseline": true,
+    "diff": "",
+    "target_files": []
+  },
+  "observed_metric": 16410.6,
+  "overhead": 0.038931604587338735,
+  "peak_mem_delta": 0.0,
+  "reference_metric": 16410.6
+}

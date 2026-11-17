@@ -1,0 +1,7 @@
+cfb4a65 step 7 control discard
+38baa93 step 6 layers-6 discard
+3e93198 step 5 layers-18 discard
+13ba5ae step 4 layers-12 discard
+2caec20 step 3 layers-0 keep
+359e453 observation patch + calibration
+4672dfd environment baseline

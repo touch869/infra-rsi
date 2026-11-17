@@ -1,0 +1,550 @@
+<frozen runpy>:128: RuntimeWarning: 'torch.distributed.run' found in sys.modules after import of package 'torch.distributed', but prior to execution of 'torch.distributed.run'; this may result in unpredictable behaviour
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+2026-11-17 21:45:30,740 [INFO] hyper_parallel.trainer.base: Process rank: 7, world size: 8
+2026-11-17 21:45:30,755 [INFO] hyper_parallel.distributed.mesh: Built device mesh (8, 1, 1), dense FSDP mesh (1, 8, 1) and expert FSDP mesh None
+2026-11-17 21:45:30,773 [INFO] hyper_parallel.models._transformers.model_builder: FSDP2Manager instantiated with FSDP2Config
+2026-11-17 21:45:30,869 [INFO] hyper_parallel.trainer.base: Process rank: 3, world size: 8
+2026-11-17 21:45:30,887 [INFO] hyper_parallel.distributed.mesh: Built device mesh (8, 1, 1), dense FSDP mesh (1, 8, 1) and expert FSDP mesh None
+2026-11-17 21:45:30,923 [INFO] hyper_parallel.models._transformers.model_builder: FSDP2Manager instantiated with FSDP2Config
+2026-11-17 21:45:30,972 [INFO] hyper_parallel.trainer.base: Process rank: 2, world size: 8
+2026-11-17 21:45:30,986 [INFO] hyper_parallel.distributed.mesh: Built device mesh (8, 1, 1), dense FSDP mesh (1, 8, 1) and expert FSDP mesh None
+2026-11-17 21:45:31,002 [INFO] hyper_parallel.models._transformers.model_builder: FSDP2Manager instantiated with FSDP2Config
+2026-11-17 21:45:31,006 [INFO] hyper_parallel.distributed.activation_checkpoint: Model-adapter recompute wrapped 6 region(s) and excluded 0 region(s) across 6/28 discovered layers
+2026-11-17 21:45:31,017 [INFO] hyper_parallel.trainer.base: Process rank: 1, world size: 8
+2026-11-17 21:45:31,031 [INFO] hyper_parallel.distributed.mesh: Built device mesh (8, 1, 1), dense FSDP mesh (1, 8, 1) and expert FSDP mesh None
+2026-11-17 21:45:31,050 [INFO] hyper_parallel.models._transformers.model_builder: FSDP2Manager instantiated with FSDP2Config
+2026-11-17 21:45:31,067 [INFO] hyper_parallel.trainer.base: Trainer config:
+{
+  "model": {
+    "_target_": "hyper_parallel.models._transformers.HyperAutoModelForCausalLM.from_config",
+    "config": {
+      "_target_": "transformers.AutoConfig.from_pretrained",
+      "pretrained_model_name_or_path": "/root/irsi-workspace/configs/qwen3-0.6b",
+      "local_files_only": true
+    },
+    "torch_dtype": "bfloat16",
+    "attn_implementation": "sdpa",
+    "validate_placement": false,
+    "distributed_setup": null,
+    "device_mesh": null,
+    "backend": null,
+    "peft_config": null,
+    "qat_config": null,
+    "fp8_config": null,
+    "compile_config": null,
+    "freeze_config": null,
+    "activation_checkpoint": null,
+    "swap_inputs": false,
+    "allow_cache_entry_mutation": false,
+    "activation_swap": "none",
+    "model_init_dtype": null,
+    "codegen": false,
+    "codegen_config": null
+  },
+  "optimizer": {
+    "_target_": "hyper_parallel.components.optim.AdamW",
+    "adamw_config": {
+      "adamw_lr": 0.0001,
+      "adamw_weight_decay": 0.0,
+      "adamw_betas": [
+        0.9,
+        0.999
+      ],
+      "adamw_eps": 1e-08
+    },
+    "no_decay_params": null,
+    "excluded_param_ids": null,
+    "fp32_main_params": true,
+    "swap": {
+      "enabled": false,
+      "swap_times": 16,
+      "min_numel": 1024,
+      "state_keys": null,
+      "packed_swap": null
+    }
+  },
+  "lr_scheduler": {
+    "_target_": "hyper_parallel.components.optim.MultiLRScheduler",
+    "lr_decay_style": "constant",
+    "lr_config": {
+      "lr": 0.0001,
+      "lr_warmup_steps": 0,
+      "min_lr": 0.0
+    }
+  },
+  "loss_fn": null,
+  "model_init_dtype": "bfloat16",
+  "training": {
+    "train_iters": 32,
+    "train_samples": null,
+    "lr_scheduler_iters": null,
+    "eval_iters": 0,
+    "global_batch_size": 8,
+    "micro_batch_size": 1,
+    "backend": "hccl",
+    "max_grad_norm": 1.0,
+    "init_device": "meta",
+    "loss_aggregation": "token_weighted",
+    "seed": 42,
+    "enable_full_determinism": true,
+    "gc_steps": 0,
+    "empty_cache_steps": 0,
+    "empty_cache_before_backward": false,
+    "eval_steps": 0,
+    "eval_epochs": 0,
+    "logging_steps": 1,
+    "log_tflops": false,
+    "low_precision": {
+      "enabled": false,
+      "format": "mxfp8_e4m3",
+      "scaling": "mx_block"
+    }
+  },
+  "accelerator": {
+    "tp_size": 1,
+    "cp_size": 1,
+    "ep_size": 1,
+    "pp_size": 1,
+    "sequence_parallel": false,
+    "loss_parallel": false,
+    "encoder_parallel": {
+      "enabled": false,
+      "encoder_cp_size": 1
+    }
+  },
+  "fsdp_config": {
+    "dp_shard_size": 8,
+    "edp_shard_size": 1,
+    "replicate_params": [],
+    "mix_precision": {
+      "param_dtype": "bfloat16",
+      "reduce_dtype": "float32",
+      "output_dtype": null,
+      "cast_forward_inputs": false,
+      "custom_params": {}
+    },
+    "enable_offload": false,
+    "reshard_after_forward": true,
+    "reshard_after_backward": true,
+    "requires_grad_sync": true,
+    "backward_prefetch_depth": 1,
+    "forward_prefetch_depth": 1,
+    "comm_fusion": false,
+    "comm_fusion_zero_copy": null,
+    "wrapper_class": []
+  },
+  "plan_overrides": [],
+  "mixed_precision": {
+    "enabled": false
+  },
+  "activation_checkpoint": {
+    "mode": "selective",
+    "swap_inputs": false,
+    "selection": {
+      "source": "model_adapter_safe_regions",
+      "layer_count": 6,
+      "layer_indices": null
+    },
+    "allow_cache_entry_mutation": false
+  },
+  "activation_swap": "none",
+  "compile": {
+    "enabled": false,
+    "use_joint_graph": false,
+    "mode": "default",
+    "fullgraph": false,
+    "dynamic": false,
+    "backend": null,
+    "options": {},
+    "dynamo_cache_size_limit": 256,
+    "dynamic_arg_dims": null,
+    "fsdp_allgather_prefetch": true,
+    "fsdp_overlap_grad_reduce": true,
+    "max_in_flight_gb": 0.25
+  },
+  "codegen": false,
+  "dataset": {
+    "_target_": "irsi_data.PackedTensorDataset",
+    "data_path": "/root/irsi-workspace/data/tiny-packed",
+    "data_config": {
+      "seq_length": 2048,
+      "labels_are_shifted": true,
+      "create_attention_mask_in_dataloader": true
+    },
+    "sequence_length": 2048,
+    "model_assets": {
+      "chat_template": null,
+      "chat_template_kwargs": {},
+      "tokenizer": null
+    },
+    "data_transform": null
+  },
+  "dataloader": {
+    "_target_": "hyper_parallel.data.batching.FixedBatchDataLoader",
+    "drop_last": true,
+    "num_workers": 0,
+    "pin_memory": true,
+    "batch_sampler": null,
+    "collate_fn": {
+      "_target_": "hyper_parallel.data.batching.build_online_text_collate_fn",
+      "mesh_context": null,
+      "pad_to_length": null
+    },
+    "batch_size": null,
+    "sampler_type": "single",
+    "seed": 1234,
+    "prefetch_factor": null,
+    "get_batch": {
+      "_target_": "hyper_parallel.data.batching.TextParallelBatch",
+      "source_type": "packed_text",
+      "attention_mode": "dense",
+      "reset_position_ids": true,
+      "causal": true,
+      "sliding_window": null,
+      "reset_attention_mask": false,
+      "eod_mask_loss": false,
+      "runtime_input_adapter": null,
+      "dataloader_context": null
+    },
+    "cost_model": null,
+    "balancing_algorithm": null,
+    "data_rearrange_map": null,
+    "data_sharding": false,
+    "use_background_prefetcher": false
+  },
+  "packed_sequence": null,
+  "checkpoint": {
+    "save_ckpt": false,
+    "checkpoint_dir": "",
+    "save_steps": 0,
+    "save_epochs": 1,
+    "save_time_interval_minutes": 0.0,
+    "save_total_limit": null,
+    "is_async": false,
+    "is_peft": false,
+    "save_optimizer": true,
+    "save_train_state": true,
+    "save_hf_weights": false,
+    "save_extra_state_per_rank": true,
+    "restore_from": null,
+    "restore_optimizer": true,
+    "restore_train_state": true,
+    "restore_dataloader_state": true,
+    "model_save_format": "safetensors",
+    "save_consolidated": "final",
+    "staging_dir": null,
+    "best_metric_key": "default"
+  },
+  "debug": {
+    "check_dataset": null,
+    "log_first_rendered_template": false,
+    "check_nan_inf": false,
+    "check_fsdp_runtime": false
+  },
+  "model_integration": {
+    "mode": "off"
+  },
+  "memory": {
+    "enable": false,
+    "start_step": 1,
+    "end_step": 2,
+    "save_path": "./memory_snapshot",
+    "dump_ranks": [
+      0
+    ],
+    "stacks": "all",
+    "mem_info": false
+  },
+  "wandb": {
+    "enabled": false,
+    "project": "",
+    "entity": null
+  },
+  "profiler": {
+    "enable": false,
+    "start_step": 1,
+    "stop_step": 10,
+    "warmup_steps": 0,
+    "memory": true,
+    "rank_ids": null,
+    "output_path": null,
+    "level": 1,
+    "with_stack": false,
+    "data_simplification": false,
+    "analysis": {
+      "enable": true,
+      "async_mode": false
+    }
+  },
+  "stress_detect": {
+    "op_stress_detect": {
+      "detection_interval": 0,
+      "num_detections": 1,
+      "detect_type": "aic",
+      "exit_training_on_sdc": false
+    },
+    "model_stress_detect": {
+      "detection_interval": 0
+    }
+  },
+  "magi": null,
+  "peft": null
+}
+2026-11-17 21:45:31,068 [INFO] hyper_parallel.trainer.base: Process rank: 0, world size: 8
+2026-11-17 21:45:31,079 [INFO] hyper_parallel.distributed.mesh: Built device mesh (8, 1, 1), dense FSDP mesh (1, 8, 1) and expert FSDP mesh None
+[INFO|configuration_utils.py:1032] 2026-11-17 21:45:31,089 >> loading configuration file /root/irsi-workspace/configs/qwen3-0.6b/config.json
+2026-11-17 21:45:31,094 [INFO] hyper_parallel.trainer.base: Process rank: 6, world size: 8
+[INFO|configuration_utils.py:1106] 2026-11-17 21:45:31,098 >> Model config Qwen3Config {
+  "architectures": [
+    "Qwen3ForCausalLM"
+  ],
+  "attention_bias": false,
+  "attention_dropout": 0.0,
+  "bos_token_id": 151643,
+  "dtype": "bfloat16",
+  "eos_token_id": 151645,
+  "head_dim": 128,
+  "hidden_act": "silu",
+  "hidden_size": 1024,
+  "initializer_range": 0.02,
+  "intermediate_size": 3072,
+  "layer_types": [
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention"
+  ],
+  "max_position_embeddings": 40960,
+  "max_window_layers": 28,
+  "model_type": "qwen3",
+  "num_attention_heads": 16,
+  "num_hidden_layers": 28,
+  "num_key_value_heads": 8,
+  "pad_token_id": null,
+  "rms_norm_eps": 1e-06,
+  "rope_parameters": {
+    "rope_theta": 1000000,
+    "rope_type": "default"
+  },
+  "sliding_window": null,
+  "tie_word_embeddings": true,
+  "transformers_version": "5.22.2",
+  "use_cache": true,
+  "use_sliding_window": false,
+  "vocab_size": 151936
+}
+
+2026-11-17 21:45:31,098 [INFO] hyper_parallel.models._transformers.model_builder: FSDP2Manager instantiated with FSDP2Config
+2026-11-17 21:45:31,108 [INFO] hyper_parallel.distributed.mesh: Built device mesh (8, 1, 1), dense FSDP mesh (1, 8, 1) and expert FSDP mesh None
+[INFO|configuration_utils.py:1152] 2026-11-17 21:45:31,114 >> Generate config GenerationConfig {
+  "bos_token_id": 151643,
+  "eos_token_id": 151645,
+  "output_attentions": false,
+  "output_hidden_states": false,
+  "use_cache": true
+}
+
+2026-11-17 21:45:31,129 [INFO] hyper_parallel.models._transformers.model_builder: FSDP2Manager instantiated with FSDP2Config
+2026-11-17 21:45:31,188 [INFO] hyper_parallel.trainer.base: Process rank: 4, world size: 8
+2026-11-17 21:45:31,202 [INFO] hyper_parallel.distributed.activation_checkpoint: Model-adapter recompute wrapped 6 region(s) and excluded 0 region(s) across 6/28 discovered layers
+2026-11-17 21:45:31,202 [INFO] hyper_parallel.distributed.mesh: Built device mesh (8, 1, 1), dense FSDP mesh (1, 8, 1) and expert FSDP mesh None
+2026-11-17 21:45:31,219 [INFO] hyper_parallel.models._transformers.model_builder: FSDP2Manager instantiated with FSDP2Config
+2026-11-17 21:45:31,233 [INFO] hyper_parallel.distributed.activation_checkpoint: Model-adapter recompute wrapped 6 region(s) and excluded 0 region(s) across 6/28 discovered layers
+2026-11-17 21:45:31,295 [INFO] hyper_parallel.distributed.activation_checkpoint: Model-adapter recompute wrapped 6 region(s) and excluded 0 region(s) across 6/28 discovered layers
+2026-11-17 21:45:31,297 [INFO] hyper_parallel.trainer.base: Process rank: 5, world size: 8
+2026-11-17 21:45:31,310 [INFO] hyper_parallel.distributed.mesh: Built device mesh (8, 1, 1), dense FSDP mesh (1, 8, 1) and expert FSDP mesh None
+2026-11-17 21:45:31,328 [INFO] hyper_parallel.models._transformers.model_builder: FSDP2Manager instantiated with FSDP2Config
+2026-11-17 21:45:31,349 [INFO] hyper_parallel.distributed.activation_checkpoint: Model-adapter recompute wrapped 6 region(s) and excluded 0 region(s) across 6/28 discovered layers
+2026-11-17 21:45:31,356 [INFO] hyper_parallel.distributed.activation_checkpoint: Model-adapter recompute wrapped 6 region(s) and excluded 0 region(s) across 6/28 discovered layers
+/root/miniconda3/envs/irsi/lib/python3.11/site-packages/torch_npu/utils/storage.py:55: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
+  if self.device.type != 'cpu':
+2026-11-17 21:45:31,462 [INFO] hyper_parallel.distributed.activation_checkpoint: Model-adapter recompute wrapped 6 region(s) and excluded 0 region(s) across 6/28 discovered layers
+2026-11-17 21:45:31,501 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: Applied FSDP2 to 28 child units and the root module
+2026-11-17 21:45:31,503 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: FSDP2 wrap applied
+2026-11-17 21:45:31,579 [INFO] hyper_parallel.distributed.activation_checkpoint: Model-adapter recompute wrapped 6 region(s) and excluded 0 region(s) across 6/28 discovered layers
+[rank0]:[W1117 21:45:31.393912052 NPUCachingAllocator.cpp:204] Warning: The current CANN and Soc versions require processing for 32 padding size, with memory allocation. (function operator())
+2026-11-17 21:45:31,688 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: Applied FSDP2 to 28 child units and the root module
+2026-11-17 21:45:31,689 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: FSDP2 wrap applied
+2026-11-17 21:45:31,710 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: Applied FSDP2 to 28 child units and the root module
+2026-11-17 21:45:31,711 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: FSDP2 wrap applied
+2026-11-17 21:45:31,754 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: Applied FSDP2 to 28 child units and the root module
+2026-11-17 21:45:31,754 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: FSDP2 wrap applied
+2026-11-17 21:45:31,810 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: Applied FSDP2 to 28 child units and the root module
+2026-11-17 21:45:31,810 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: FSDP2 wrap applied
+2026-11-17 21:45:31,814 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: Applied FSDP2 to 28 child units and the root module
+2026-11-17 21:45:31,814 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: FSDP2 wrap applied
+2026-11-17 21:45:31,929 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: Applied FSDP2 to 28 child units and the root module
+2026-11-17 21:45:31,930 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: FSDP2 wrap applied
+2026-11-17 21:45:32,043 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: Applied FSDP2 to 28 child units and the root module
+2026-11-17 21:45:32,043 [INFO] hyper_parallel.distributed._builder.fsdp_adapter: FSDP2 wrap applied
+2026-11-17 21:45:33,256 [INFO] hyper_parallel.models._transformers.model_builder: Initialized model state with model-native random initialization
+2026-11-17 21:45:33,256 [INFO] hyper_parallel.models._transformers.model_builder: Initialized model state with model-native random initialization
+2026-11-17 21:45:33,259 [INFO] hyper_parallel.models._transformers.model_builder: Initialized model state with model-native random initialization
+2026-11-17 21:45:33,259 [INFO] hyper_parallel.models._transformers.model_builder: Initialized model state with model-native random initialization
+2026-11-17 21:45:33,259 [INFO] hyper_parallel.models._transformers.model_builder: Initialized model state with model-native random initialization
+2026-11-17 21:45:33,260 [INFO] hyper_parallel.models._transformers.model_builder: Initialized model state with model-native random initialization
+2026-11-17 21:45:33,261 [INFO] hyper_parallel.models._transformers.model_builder: Initialized model state with model-native random initialization
+2026-11-17 21:45:33,262 [INFO] hyper_parallel.models._transformers.model_builder: Initialized model state with model-native random initialization
+2026-11-17 21:45:33,610 [INFO] hyper_parallel.trainer.base: Model config:
+{
+  "transformers_version": "5.22.2",
+  "architectures": [
+    "Qwen3ForCausalLM"
+  ],
+  "output_hidden_states": false,
+  "return_dict": true,
+  "dtype": "bfloat16",
+  "chunk_size_feed_forward": 0,
+  "is_encoder_decoder": false,
+  "id2label": {
+    "0": "LABEL_0",
+    "1": "LABEL_1"
+  },
+  "label2id": {
+    "LABEL_0": 0,
+    "LABEL_1": 1
+  },
+  "problem_type": null,
+  "vocab_size": 151936,
+  "hidden_size": 1024,
+  "intermediate_size": 3072,
+  "num_hidden_layers": 28,
+  "num_attention_heads": 16,
+  "num_key_value_heads": 8,
+  "head_dim": 128,
+  "hidden_act": "silu",
+  "max_position_embeddings": 40960,
+  "initializer_range": 0.02,
+  "rms_norm_eps": 1e-06,
+  "use_cache": false,
+  "tie_word_embeddings": true,
+  "rope_parameters": {
+    "rope_theta": 1000000,
+    "rope_type": "default"
+  },
+  "attention_bias": false,
+  "use_sliding_window": false,
+  "sliding_window": null,
+  "max_window_layers": 28,
+  "layer_types": [
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention"
+  ],
+  "attention_dropout": 0.0,
+  "pad_token_id": null,
+  "bos_token_id": 151643,
+  "eos_token_id": 151645,
+  "_name_or_path": "/root/irsi-workspace/configs/qwen3-0.6b",
+  "model_type": "qwen3",
+  "output_attentions": false
+}
+2026-11-17 21:45:33,625 [INFO] hyper_parallel.components.optim.parameter_groups: Parameters without weight decay: ['model.layers.0.self_attn.q_norm.weight', 'model.layers.0.self_attn.k_norm.weight', 'model.layers.0.input_layernorm.weight', 'model.layers.0.post_attention_layernorm.weight', 'model.layers.1.self_attn.q_norm.weight', 'model.layers.1.self_attn.k_norm.weight', 'model.layers.1.input_layernorm.weight', 'model.layers.1.post_attention_layernorm.weight', 'model.layers.2.self_attn.q_norm.weight', 'model.layers.2.self_attn.k_norm.weight', 'model.layers.2.input_layernorm.weight', 'model.layers.2.post_attention_layernorm.weight', 'model.layers.3.self_attn.q_norm.weight', 'model.layers.3.self_attn.k_norm.weight', 'model.layers.3.input_layernorm.weight', 'model.layers.3.post_attention_layernorm.weight', 'model.layers.4.self_attn.q_norm.weight', 'model.layers.4.self_attn.k_norm.weight', 'model.layers.4.input_layernorm.weight', 'model.layers.4.post_attention_layernorm.weight', 'model.layers.5.self_attn.q_norm.weight', 'model.layers.5.self_attn.k_norm.weight', 'model.layers.5.input_layernorm.weight', 'model.layers.5.post_attention_layernorm.weight', 'model.layers.6.self_attn.q_norm.weight', 'model.layers.6.self_attn.k_norm.weight', 'model.layers.6.input_layernorm.weight', 'model.layers.6.post_attention_layernorm.weight', 'model.layers.7.self_attn.q_norm.weight', 'model.layers.7.self_attn.k_norm.weight', 'model.layers.7.input_layernorm.weight', 'model.layers.7.post_attention_layernorm.weight', 'model.layers.8.self_attn.q_norm.weight', 'model.layers.8.self_attn.k_norm.weight', 'model.layers.8.input_layernorm.weight', 'model.layers.8.post_attention_layernorm.weight', 'model.layers.9.self_attn.q_norm.weight', 'model.layers.9.self_attn.k_norm.weight', 'model.layers.9.input_layernorm.weight', 'model.layers.9.post_attention_layernorm.weight', 'model.layers.10.self_attn.q_norm.weight', 'model.layers.10.self_attn.k_norm.weight', 'model.layers.10.input_layernorm.weight', 'model.layers.10.post_attention_layernorm.weight', 'model.layers.11.self_attn.q_norm.weight', 'model.layers.11.self_attn.k_norm.weight', 'model.layers.11.input_layernorm.weight', 'model.layers.11.post_attention_layernorm.weight', 'model.layers.12.self_attn.q_norm.weight', 'model.layers.12.self_attn.k_norm.weight', 'model.layers.12.input_layernorm.weight', 'model.layers.12.post_attention_layernorm.weight', 'model.layers.13.self_attn.q_norm.weight', 'model.layers.13.self_attn.k_norm.weight', 'model.layers.13.input_layernorm.weight', 'model.layers.13.post_attention_layernorm.weight', 'model.layers.14.self_attn.q_norm.weight', 'model.layers.14.self_attn.k_norm.weight', 'model.layers.14.input_layernorm.weight', 'model.layers.14.post_attention_layernorm.weight', 'model.layers.15.self_attn.q_norm.weight', 'model.layers.15.self_attn.k_norm.weight', 'model.layers.15.input_layernorm.weight', 'model.layers.15.post_attention_layernorm.weight', 'model.layers.16.self_attn.q_norm.weight', 'model.layers.16.self_attn.k_norm.weight', 'model.layers.16.input_layernorm.weight', 'model.layers.16.post_attention_layernorm.weight', 'model.layers.17.self_attn.q_norm.weight', 'model.layers.17.self_attn.k_norm.weight', 'model.layers.17.input_layernorm.weight', 'model.layers.17.post_attention_layernorm.weight', 'model.layers.18.self_attn.q_norm.weight', 'model.layers.18.self_attn.k_norm.weight', 'model.layers.18.input_layernorm.weight', 'model.layers.18.post_attention_layernorm.weight', 'model.layers.19.self_attn.q_norm.weight', 'model.layers.19.self_attn.k_norm.weight', 'model.layers.19.input_layernorm.weight', 'model.layers.19.post_attention_layernorm.weight', 'model.layers.20.self_attn.q_norm.weight', 'model.layers.20.self_attn.k_norm.weight', 'model.layers.20.input_layernorm.weight', 'model.layers.20.post_attention_layernorm.weight', 'model.layers.21.self_attn.q_norm.weight', 'model.layers.21.self_attn.k_norm.weight', 'model.layers.21.input_layernorm.weight', 'model.layers.21.post_attention_layernorm.weight', 'model.layers.22.self_attn.q_norm.weight', 'model.layers.22.self_attn.k_norm.weight', 'model.layers.22.input_layernorm.weight', 'model.layers.22.post_attention_layernorm.weight', 'model.layers.23.self_attn.q_norm.weight', 'model.layers.23.self_attn.k_norm.weight', 'model.layers.23.input_layernorm.weight', 'model.layers.23.post_attention_layernorm.weight', 'model.layers.24.self_attn.q_norm.weight', 'model.layers.24.self_attn.k_norm.weight', 'model.layers.24.input_layernorm.weight', 'model.layers.24.post_attention_layernorm.weight', 'model.layers.25.self_attn.q_norm.weight', 'model.layers.25.self_attn.k_norm.weight', 'model.layers.25.input_layernorm.weight', 'model.layers.25.post_attention_layernorm.weight', 'model.layers.26.self_attn.q_norm.weight', 'model.layers.26.self_attn.k_norm.weight', 'model.layers.26.input_layernorm.weight', 'model.layers.26.post_attention_layernorm.weight', 'model.layers.27.self_attn.q_norm.weight', 'model.layers.27.self_attn.k_norm.weight', 'model.layers.27.input_layernorm.weight', 'model.layers.27.post_attention_layernorm.weight', 'model.norm.weight']
+2026-11-17 21:45:33,625 [INFO] hyper_parallel.core.optimizer.dtensor_compat: Detected DTensor backend: 'hyper'.
+2026-11-17 21:45:33,626 [INFO] hyper_parallel.core.optimizer: Effective adamw config: {'lr': 0.0001, 'betas': [0.9, 0.999], 'eps': 1e-08, 'weight_decay': 0.0, 'amsgrad': False, 'maximize': False}
+2026-11-17 21:45:34,084 [INFO] hyper_parallel.trainer.base: Checkpointing is inactive (save_ckpt=false, save_hf_weights=false, restore_from=None); no checkpoint callback registered.
+[INFO|/root/hyper-parallel/hyper_parallel/trainer/text_trainer.py:344] 11/17/2026 21:45:34 >> Rank0 Start training. Global step: 0. Train iters: 32. Start epoch: 0. Train epochs: 4.
+2026-11-17 21:45:34,092 [INFO] hyper_parallel.trainer.base: Checkpointing is inactive (save_ckpt=false, save_hf_weights=false, restore_from=None); no checkpoint callback registered.
+[INFO|/root/hyper-parallel/hyper_parallel/trainer/text_trainer.py:344] 11/17/2026 21:45:34 >> Rank1 Start training. Global step: 0. Train iters: 32. Start epoch: 0. Train epochs: 4.
+2026-11-17 21:45:34,094 [INFO] hyper_parallel.trainer.base: Checkpointing is inactive (save_ckpt=false, save_hf_weights=false, restore_from=None); no checkpoint callback registered.
+[INFO|/root/hyper-parallel/hyper_parallel/trainer/text_trainer.py:344] 11/17/2026 21:45:34 >> Rank5 Start training. Global step: 0. Train iters: 32. Start epoch: 0. Train epochs: 4.
+2026-11-17 21:45:34,106 [INFO] hyper_parallel.trainer.base: Checkpointing is inactive (save_ckpt=false, save_hf_weights=false, restore_from=None); no checkpoint callback registered.
+[INFO|/root/hyper-parallel/hyper_parallel/trainer/text_trainer.py:344] 11/17/2026 21:45:34 >> Rank2 Start training. Global step: 0. Train iters: 32. Start epoch: 0. Train epochs: 4.
+2026-11-17 21:45:34,110 [INFO] hyper_parallel.trainer.base: Checkpointing is inactive (save_ckpt=false, save_hf_weights=false, restore_from=None); no checkpoint callback registered.
+[INFO|/root/hyper-parallel/hyper_parallel/trainer/text_trainer.py:344] 11/17/2026 21:45:34 >> Rank3 Start training. Global step: 0. Train iters: 32. Start epoch: 0. Train epochs: 4.
+2026-11-17 21:45:34,116 [INFO] hyper_parallel.trainer.base: Checkpointing is inactive (save_ckpt=false, save_hf_weights=false, restore_from=None); no checkpoint callback registered.
+[INFO|/root/hyper-parallel/hyper_parallel/trainer/text_trainer.py:344] 11/17/2026 21:45:34 >> Rank4 Start training. Global step: 0. Train iters: 32. Start epoch: 0. Train epochs: 4.
+2026-11-17 21:45:34,130 [INFO] hyper_parallel.trainer.base: Checkpointing is inactive (save_ckpt=false, save_hf_weights=false, restore_from=None); no checkpoint callback registered.
+[INFO|/root/hyper-parallel/hyper_parallel/trainer/text_trainer.py:344] 11/17/2026 21:45:34 >> Rank6 Start training. Global step: 0. Train iters: 32. Start epoch: 0. Train epochs: 4.
+2026-11-17 21:45:34,143 [INFO] hyper_parallel.trainer.base: Checkpointing is inactive (save_ckpt=false, save_hf_weights=false, restore_from=None); no checkpoint callback registered.
+[INFO|/root/hyper-parallel/hyper_parallel/trainer/text_trainer.py:344] 11/17/2026 21:45:34 >> Rank7 Start training. Global step: 0. Train iters: 32. Start epoch: 0. Train epochs: 4.
+Training:   3%|▎         | 1/32 [00:03<01:33,  3.03s/step, loss=12.1351, grad_norm=1.43271, lr=1.000e-04, foundation_loss=12.1351, tokens/s=5544.481, step_time=2.952s] | step=1 epoch=0 data/consumed_samples=8 data/consumed_tokens=16368 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=7.76467 memory/device_max_reserved_gb=8.99805 performance/step_time=2.95212 performance/tokens_per_second=5544.48 training/foundation_loss=12.1351 training/grad_norm=1.43271 training/lr=0.0001 training/total_loss=12.1351
+Training:   6%|▋         | 2/32 [00:03<00:58,  1.96s/step, loss=12.1317, grad_norm=1.41433, lr=1.000e-04, foundation_loss=12.1317, tokens/s=18669.883, step_time=0.877s] | step=2 epoch=0 data/consumed_samples=16 data/consumed_tokens=32736 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.876706 performance/tokens_per_second=18669.9 training/foundation_loss=12.1317 training/grad_norm=1.41433 training/lr=0.0001 training/total_loss=12.1317
+Training:   9%|▉         | 3/32 [00:04<00:46,  1.60s/step, loss=12.1279, grad_norm=1.54964, lr=1.000e-04, foundation_loss=12.1279, tokens/s=18802.111, step_time=0.871s] | step=3 epoch=0 data/consumed_samples=24 data/consumed_tokens=49104 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.870541 performance/tokens_per_second=18802.1 training/foundation_loss=12.1279 training/grad_norm=1.54964 training/lr=0.0001 training/total_loss=12.1279
+Training:  12%|█▎        | 4/32 [00:05<00:39,  1.42s/step, loss=12.1275, grad_norm=1.51071, lr=1.000e-04, foundation_loss=12.1275, tokens/s=18808.928, step_time=0.870s] | step=4 epoch=0 data/consumed_samples=32 data/consumed_tokens=65472 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.870225 performance/tokens_per_second=18808.9 training/foundation_loss=12.1275 training/grad_norm=1.51071 training/lr=0.0001 training/total_loss=12.1275
+Training:  16%|█▌        | 5/32 [00:06<00:35,  1.32s/step, loss=12.1004, grad_norm=1.95311, lr=1.000e-04, foundation_loss=12.1004, tokens/s=18780.868, step_time=0.872s] | step=5 epoch=0 data/consumed_samples=40 data/consumed_tokens=81840 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.871525 performance/tokens_per_second=18780.9 training/foundation_loss=12.1004 training/grad_norm=1.95311 training/lr=0.0001 training/total_loss=12.1004
+Training:  19%|█▉        | 6/32 [00:07<00:32,  1.24s/step, loss=12.0616, grad_norm=2.48158, lr=1.000e-04, foundation_loss=12.0616, tokens/s=19407.161, step_time=0.843s] | step=6 epoch=0 data/consumed_samples=48 data/consumed_tokens=98208 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.8434 performance/tokens_per_second=19407.2 training/foundation_loss=12.0616 training/grad_norm=2.48158 training/lr=0.0001 training/total_loss=12.0616
+Training:  22%|██▏       | 7/32 [00:08<00:29,  1.18s/step, loss=12.0318, grad_norm=3.38782, lr=1.000e-04, foundation_loss=12.0318, tokens/s=20491.713, step_time=0.799s] | step=7 epoch=0 data/consumed_samples=56 data/consumed_tokens=114576 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.798762 performance/tokens_per_second=20491.7 training/foundation_loss=12.0318 training/grad_norm=3.38782 training/lr=0.0001 training/total_loss=12.0318
+Training:  25%|██▌       | 8/32 [00:09<00:27,  1.13s/step, loss=11.9, grad_norm=0.816887, lr=1.000e-04, foundation_loss=11.9, tokens/s=20261.541, step_time=0.808s] | step=8 epoch=0 data/consumed_samples=64 data/consumed_tokens=130944 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.807836 performance/tokens_per_second=20261.5 training/foundation_loss=11.9 training/grad_norm=0.816887 training/lr=0.0001 training/total_loss=11.9
+2026-11-17 21:45:43,153 [INFO] hyper_parallel.trainer.runtime.logging: VRAM usage after epoch 1: cur 1.00GB, max 8.34GB.
+Training:  28%|██▊       | 9/32 [00:09<00:25,  1.10s/step, loss=11.6451, grad_norm=0.645873, lr=1.000e-04, foundation_loss=11.6451, tokens/s=20151.682, step_time=0.812s] | step=9 epoch=1 data/consumed_samples=72 data/consumed_tokens=147312 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.81224 performance/tokens_per_second=20151.7 training/foundation_loss=11.6451 training/grad_norm=0.645873 training/lr=0.0001 training/total_loss=11.6451
+Training:  31%|███▏      | 10/32 [00:10<00:23,  1.07s/step, loss=11.6655, grad_norm=0.478225, lr=1.000e-04, foundation_loss=11.6655, tokens/s=20320.619, step_time=0.805s] | step=10 epoch=1 data/consumed_samples=80 data/consumed_tokens=163680 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.805487 performance/tokens_per_second=20320.6 training/foundation_loss=11.6655 training/grad_norm=0.478225 training/lr=0.0001 training/total_loss=11.6655
+Training:  34%|███▍      | 11/32 [00:11<00:22,  1.05s/step, loss=11.6298, grad_norm=0.409484, lr=1.000e-04, foundation_loss=11.6298, tokens/s=19891.317, step_time=0.823s] | step=11 epoch=1 data/consumed_samples=88 data/consumed_tokens=180048 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.822872 performance/tokens_per_second=19891.3 training/foundation_loss=11.6298 training/grad_norm=0.409484 training/lr=0.0001 training/total_loss=11.6298
+Training:  38%|███▊      | 12/32 [00:12<00:20,  1.03s/step, loss=11.5875, grad_norm=0.378841, lr=1.000e-04, foundation_loss=11.5875, tokens/s=19265.640, step_time=0.850s] | step=12 epoch=1 data/consumed_samples=96 data/consumed_tokens=196416 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.849595 performance/tokens_per_second=19265.6 training/foundation_loss=11.5875 training/grad_norm=0.378841 training/lr=0.0001 training/total_loss=11.5875
+Training:  41%|████      | 13/32 [00:13<00:19,  1.02s/step, loss=11.5188, grad_norm=0.35386, lr=1.000e-04, foundation_loss=11.5188, tokens/s=19769.976, step_time=0.828s] | step=13 epoch=1 data/consumed_samples=104 data/consumed_tokens=212784 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.827922 performance/tokens_per_second=19770 training/foundation_loss=11.5188 training/grad_norm=0.35386 training/lr=0.0001 training/total_loss=11.5188
+Training:  44%|████▍     | 14/32 [00:14<00:18,  1.00s/step, loss=11.4629, grad_norm=0.343283, lr=1.000e-04, foundation_loss=11.4629, tokens/s=20339.630, step_time=0.805s] | step=14 epoch=1 data/consumed_samples=112 data/consumed_tokens=229152 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.804734 performance/tokens_per_second=20339.6 training/foundation_loss=11.4629 training/grad_norm=0.343283 training/lr=0.0001 training/total_loss=11.4629
+Training:  47%|████▋     | 15/32 [00:14<00:16,  1.01step/s, loss=11.3986, grad_norm=0.329901, lr=1.000e-04, foundation_loss=11.3986, tokens/s=19686.126, step_time=0.831s] | step=15 epoch=1 data/consumed_samples=120 data/consumed_tokens=245520 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.831448 performance/tokens_per_second=19686.1 training/foundation_loss=11.3986 training/grad_norm=0.329901 training/lr=0.0001 training/total_loss=11.3986
+Training:  50%|█████     | 16/32 [00:15<00:15,  1.02step/s, loss=11.2647, grad_norm=0.33254, lr=1.000e-04, foundation_loss=11.2647, tokens/s=20046.257, step_time=0.817s] | step=16 epoch=1 data/consumed_samples=128 data/consumed_tokens=261888 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.816512 performance/tokens_per_second=20046.3 training/foundation_loss=11.2647 training/grad_norm=0.33254 training/lr=0.0001 training/total_loss=11.2647
+2026-11-17 21:45:49,835 [INFO] hyper_parallel.trainer.runtime.logging: VRAM usage after epoch 2: cur 1.00GB, max 8.34GB.
+Training:  53%|█████▎    | 17/32 [00:16<00:14,  1.03step/s, loss=11.0373, grad_norm=0.35128, lr=1.000e-04, foundation_loss=11.0373, tokens/s=20209.565, step_time=0.810s] | step=17 epoch=2 data/consumed_samples=136 data/consumed_tokens=278256 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.809914 performance/tokens_per_second=20209.6 training/foundation_loss=11.0373 training/grad_norm=0.35128 training/lr=0.0001 training/total_loss=11.0373
+Training:  56%|█████▋    | 18/32 [00:17<00:13,  1.04step/s, loss=11.4105, grad_norm=7.70585, lr=1.000e-04, foundation_loss=11.4105, tokens/s=20852.093, step_time=0.785s] | step=18 epoch=2 data/consumed_samples=144 data/consumed_tokens=294624 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.784957 performance/tokens_per_second=20852.1 training/foundation_loss=11.4105 training/grad_norm=7.70585 training/lr=0.0001 training/total_loss=11.4105
+Training:  59%|█████▉    | 19/32 [00:18<00:12,  1.05step/s, loss=11.2768, grad_norm=2.84125, lr=1.000e-04, foundation_loss=11.2768, tokens/s=21355.611, step_time=0.766s] | step=19 epoch=2 data/consumed_samples=152 data/consumed_tokens=310992 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.76645 performance/tokens_per_second=21355.6 training/foundation_loss=11.2768 training/grad_norm=2.84125 training/lr=0.0001 training/total_loss=11.2768
+Training:  62%|██████▎   | 20/32 [00:18<00:11,  1.06step/s, loss=11.0222, grad_norm=2.52911, lr=1.000e-04, foundation_loss=11.0222, tokens/s=21027.121, step_time=0.778s] | step=20 epoch=2 data/consumed_samples=160 data/consumed_tokens=327360 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.778423 performance/tokens_per_second=21027.1 training/foundation_loss=11.0222 training/grad_norm=2.52911 training/lr=0.0001 training/total_loss=11.0222
+Training:  66%|██████▌   | 21/32 [00:19<00:10,  1.06step/s, loss=10.9566, grad_norm=0.328792, lr=1.000e-04, foundation_loss=10.9566, tokens/s=20539.089, step_time=0.797s] | step=21 epoch=2 data/consumed_samples=168 data/consumed_tokens=343728 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.796919 performance/tokens_per_second=20539.1 training/foundation_loss=10.9566 training/grad_norm=0.328792 training/lr=0.0001 training/total_loss=10.9566
+Training:  69%|██████▉   | 22/32 [00:20<00:09,  1.07step/s, loss=10.9159, grad_norm=0.311006, lr=1.000e-04, foundation_loss=10.9159, tokens/s=19468.383, step_time=0.841s] | step=22 epoch=2 data/consumed_samples=176 data/consumed_tokens=360096 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.840748 performance/tokens_per_second=19468.4 training/foundation_loss=10.9159 training/grad_norm=0.311006 training/lr=0.0001 training/total_loss=10.9159
+Training:  72%|███████▏  | 23/32 [00:21<00:08,  1.07step/s, loss=10.8763, grad_norm=0.295927, lr=1.000e-04, foundation_loss=10.8763, tokens/s=19099.303, step_time=0.857s] | step=23 epoch=2 data/consumed_samples=184 data/consumed_tokens=376464 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.856995 performance/tokens_per_second=19099.3 training/foundation_loss=10.8763 training/grad_norm=0.295927 training/lr=0.0001 training/total_loss=10.8763
+Training:  75%|███████▌  | 24/32 [00:22<00:07,  1.07step/s, loss=10.7644, grad_norm=0.294, lr=1.000e-04, foundation_loss=10.7644, tokens/s=18673.447, step_time=0.877s] | step=24 epoch=2 data/consumed_samples=192 data/consumed_tokens=392832 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.876539 performance/tokens_per_second=18673.4 training/foundation_loss=10.7644 training/grad_norm=0.294 training/lr=0.0001 training/total_loss=10.7644
+2026-11-17 21:45:56,456 [INFO] hyper_parallel.trainer.runtime.logging: VRAM usage after epoch 3: cur 1.00GB, max 8.34GB.
+Training:  78%|███████▊  | 25/32 [00:23<00:06,  1.07step/s, loss=10.6008, grad_norm=2.32964, lr=1.000e-04, foundation_loss=10.6008, tokens/s=17969.511, step_time=0.911s] | step=25 epoch=3 data/consumed_samples=200 data/consumed_tokens=409200 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.910876 performance/tokens_per_second=17969.5 training/foundation_loss=10.6008 training/grad_norm=2.32964 training/lr=0.0001 training/total_loss=10.6008
+Training:  81%|████████▏ | 26/32 [00:24<00:05,  1.07step/s, loss=10.6925, grad_norm=0.34621, lr=1.000e-04, foundation_loss=10.6925, tokens/s=18271.146, step_time=0.896s] | step=26 epoch=3 data/consumed_samples=208 data/consumed_tokens=425568 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.895839 performance/tokens_per_second=18271.1 training/foundation_loss=10.6925 training/grad_norm=0.34621 training/lr=0.0001 training/total_loss=10.6925
+Training:  84%|████████▍ | 27/32 [00:25<00:04,  1.08step/s, loss=10.6704, grad_norm=0.320799, lr=1.000e-04, foundation_loss=10.6704, tokens/s=19416.381, step_time=0.843s] | step=27 epoch=3 data/consumed_samples=216 data/consumed_tokens=441936 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.843 performance/tokens_per_second=19416.4 training/foundation_loss=10.6704 training/grad_norm=0.320799 training/lr=0.0001 training/total_loss=10.6704
+Training:  88%|████████▊ | 28/32 [00:25<00:03,  1.08step/s, loss=10.6492, grad_norm=0.314221, lr=1.000e-04, foundation_loss=10.6492, tokens/s=19316.010, step_time=0.847s] | step=28 epoch=3 data/consumed_samples=224 data/consumed_tokens=458304 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.84738 performance/tokens_per_second=19316 training/foundation_loss=10.6492 training/grad_norm=0.314221 training/lr=0.0001 training/total_loss=10.6492
+Training:  91%|█████████ | 29/32 [00:26<00:02,  1.08step/s, loss=10.5671, grad_norm=0.301046, lr=1.000e-04, foundation_loss=10.5671, tokens/s=18955.226, step_time=0.864s] | step=29 epoch=3 data/consumed_samples=232 data/consumed_tokens=474672 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.863509 performance/tokens_per_second=18955.2 training/foundation_loss=10.5671 training/grad_norm=0.301046 training/lr=0.0001 training/total_loss=10.5671
+Training:  94%|█████████▍| 30/32 [00:27<00:01,  1.08step/s, loss=10.5538, grad_norm=0.300209, lr=1.000e-04, foundation_loss=10.5538, tokens/s=18970.870, step_time=0.863s] | step=30 epoch=3 data/consumed_samples=240 data/consumed_tokens=491040 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.862796 performance/tokens_per_second=18970.9 training/foundation_loss=10.5538 training/grad_norm=0.300209 training/lr=0.0001 training/total_loss=10.5538
+Training:  97%|█████████▋| 31/32 [00:28<00:00,  1.09step/s, loss=10.5355, grad_norm=0.303925, lr=1.000e-04, foundation_loss=10.5355, tokens/s=21054.522, step_time=0.777s] | step=31 epoch=3 data/consumed_samples=248 data/consumed_tokens=507408 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.77741 performance/tokens_per_second=21054.5 training/foundation_loss=10.5355 training/grad_norm=0.303925 training/lr=0.0001 training/total_loss=10.5355
+Training: 100%|██████████| 32/32 [00:29<00:00,  1.09step/s, loss=10.508, grad_norm=17.0832, lr=1.000e-04, foundation_loss=10.508, tokens/s=19968.926, step_time=0.820s] | step=32 epoch=3 data/consumed_samples=256 data/consumed_tokens=523776 data/step_samples=8 data/step_tokens=16368 memory/device_max_allocated_gb=8.34365 memory/device_max_reserved_gb=8.99805 performance/step_time=0.819674 performance/tokens_per_second=19968.9 training/foundation_loss=10.508 training/grad_norm=17.0832 training/lr=0.0001 training/total_loss=10.508
+2026-11-17 21:46:03,381 [INFO] hyper_parallel.trainer.runtime.logging: VRAM usage after epoch 4: cur 1.00GB, max 8.34GB.
+/root/miniconda3/envs/irsi/lib/python3.11/site-packages/torch/distributed/distributed_c10d.py:4876: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  warnings.warn(  # warn only once
