@@ -51,13 +51,18 @@ COMMIT / REPORT
  ↺ NEXT_ROUND（复用 observed baseline）
 ```
 
+状态转移由 `irsi/orchestration/state.py` 的 `TRANSITIONS` 和 `advance()` 强制：
+`ENV_SETUP → CLEAN_BASELINE → OBSERVATION → OBSERVED_BASELINE → NEUTRALITY → CALIBRATED → DECISION → DEVELOPMENT → EXECUTION → JUDGMENT → ARCHIVE → NEXT_CANDIDATE → DONE`。执行失败时允许 `EXECUTION → DEVELOPMENT` 的重试边，预算耗尽或不可恢复则进入 `FAILED`/`DONE`。
+
 关键边界：
 
 - `EnvironmentExpert` 只在最开始处理环境；跑通后环境快照固定，后续不再改环境。
+- `EnvironmentRepairAgent` 只运行契约允许的命令（`domain_params.environment_repair.commands`、`requirements`、`env_setup`），诊断包缺失/权限/设备/资源错误，限制 attempts。
 - `ObservationPatch` 可 apply / revert；clean baseline 是 off，observed baseline 是 on。
 - `clean baseline` 只做观测开销对照；**reference baseline 固定为 observed baseline**。
 - `ExecutionStage` 只调用 `TrialExecutor`，不生成 prompt、不裁决。
-- 每个候选一个 commit；正收益提交候选 patch + report，负收益回退候选并提交 report，失败 patch 不入库。
+- 每个候选一个 commit；正收益提交候选 config/patch + report，负收益回退候选 patch 并提交 report，失败 patch 不入库。
+- 候选执行失败时 Orchestrator 写 `crash`/`env_error` 记录，然后通过 `EXECUTION → DEVELOPMENT` 重试边让 DevelopmentExpert 产出修复候选；`budget.max_repairs` 强制重试上限。
 
 ---
 
@@ -81,7 +86,7 @@ COMMIT / REPORT
 | 模块 | 职责 | 输入 | 输出 |
 |---|---|---|---|
 | `EnvironmentExpert` / `EnvironmentOperator` | 环境搭建、诊断、修复；有界 agent，可审计 | task、环境快照、错误 | `EnvironmentSnapshot` / `EnvironmentAction` |
-| `EnvironmentRepairAgent` | 有界修复：诊断错误、重跑 `env_setup`、限制 attempts | error、`TaskSpec` | `EnvironmentAction` |
+| `EnvironmentRepairAgent` | 有界修复：诊断包/权限/设备/资源错误，运行契约允许的命令，限制 attempts | error、`TaskSpec` | `EnvironmentAction` |
 | `EnvironmentSnapshot` | 记录 python、platform、repo commit、packages、env_setup | `TaskSpec` | `EnvironmentSnapshot` |
 | `TrialExecutor` | 唯一执行原语：渲染配置、启动训练、超时清理、返回 `TrialResult` | spec、overrides、label、patch 状态 | `TrialResult` |
 | `ExecutionStage` | 确定性执行候选；不生成 prompt、不裁决 | `CandidateSpec` | `ExecutionResult` |
@@ -112,8 +117,9 @@ COMMIT / REPORT
 | `TaskSpec` | 冻结 workload、只读键、预算、显存上限、允许修改面 | 契约文件 | 只读约束 |
 | `RecomputeSurface` | 生成重计算候选：`off/full/selective`、`layer_count`、`selection.source` | `TaskSpec` | `Hypothesis` |
 | `CandidateGenerator` | 枚举单点候选，不越出修改面 | `RecomputeSurface` | `list[Hypothesis]` |
+| `CandidatePatchManager` | 候选源码 patch 的 apply / revert；keep 时仅提交 patch artifact | `CandidateSpec` | 修改后的源仓库 |
 
-**硬约束**：候选只能落在 `writable_prefixes`；`read_only_keys` 永远优先。
+**硬约束**：候选只能落在 `writable_prefixes`；`read_only_keys` 永远优先。源码 patch 候选通过 `contract/surfaces/source_patch.py` 声明，失败/丢弃时回退，不进入 git。
 
 ---
 
@@ -135,7 +141,7 @@ COMMIT / REPORT
 |---|---|---|---|
 | `EnvironmentExpert` | 环境探测与快照；不修改实验代码 | `TaskSpec` | `EnvironmentSnapshot` |
 | `DecisionExpert` | 从修改面筛选、排序假设 | task、baseline、records、skills | `HypothesisSet` |
-| `DevelopmentExpert` | 把假设转成 contract 允许的候选；只改 `writable_prefixes` | `Hypothesis` / `HypothesisSet` | `CandidateSpec` |
+| `DevelopmentExpert` | 把假设转成 contract 允许的候选；只改 `writable_prefixes`；失败后按 `candidate_repair_ladder`/`repair_step` 产出修复候选 | `Hypothesis` / `HypothesisSet` | `CandidateSpec` |
 | `ObservationExpert` | 生成 task-level 观测计划与 patch | `TaskSpec` | `ObservationPlan` + `ObservationPatch` |
 | `ExecutionStage` | 确定性执行候选 | `CandidateSpec` | `ExecutionResult` |
 | `JudgmentExpert` | 用 gates、metric、observed baseline 判断 | `ExecutionResult`、gates | `Judgment` |
@@ -164,7 +170,8 @@ COMMIT / REPORT
 状态: baseline / calibrated / keep / discard / crash / env_error / patch_error
 推荐: surface, baseline_metric, gates, artifacts,
       environment_snapshot, observation_patch
-可选: commit, rollback, prompt_hash, skill_ids, evidence, neutrality, report
+可选: commit, rollback, prompt_hash, skill_ids, evidence, neutrality, report,
+      candidate_patch_targets
 ```
 
 **边界**：知识库只读写和沉淀，不产生候选，不裁决。专家不直接写 store；写入由 Orchestrator / RoundController 完成。
@@ -180,7 +187,7 @@ COMMIT / REPORT
 | `ReportBuilder` | 生成 `report.json` / `report.md` | ledger / store | report files |
 | `CommitRecorder` | 每个候选一个 commit；report 随 commit | patch、report | commit |
 
-**边界**：报告 schema 由代码强制；`ArchiveReportExpert` 只整理 artifact，不自动 commit。失败 patch 不入库，失败修改描述写在 report；当前 config-only 候选的 rollback 标记为 `not_committed`。`CommitRecorder` 已接入：environment baseline 提交 `environment_report.json`；calibration 提交 `calibration.json` + `observation.patch`；keep 提交 trial config + step report，discard/crash 只提交 step report。
+**边界**：报告 schema 由代码强制；`ArchiveReportExpert` 只整理 artifact，不自动 commit。失败 patch 不入库，失败修改描述写在 report；当前 config-only 候选的 rollback 标记为 `not_committed`。`CommitRecorder` 已接入：environment baseline 提交 `environment_report.json`；calibration 提交 `calibration.json` + `observation.patch`；keep 提交 trial config + `candidate-*.patch`（如有）+ step report，discard/crash 只提交 step report。候选失败后先写 crash/env_error 记录，再由 DevelopmentExpert 重试修复；每个候选最终只产生一个 keep/discard/crash commit。
 
 ---
 
@@ -251,12 +258,14 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 
 1. **专家修改**：ObservationExpert 任务级；去掉 ExecutionExpert agent；新增确定性 `ExecutionStage`。
 2. **知识库修改**：ExperimentRecord 增加 `environment_snapshot`、`observation_patch`、`neutrality`、`report`，status 扩展。
-3. **Orchestrator / RoundController / ContextBuilder**：代码强制阶段顺序、预算、停止条件。
+3. **Orchestrator / RoundController / ContextBuilder**：代码强制状态顺序、预算、停止条件、重试。
 4. **TrialExecutor / NeutralityChecker / BaselineReference**：执行与判断拆开；reference = observed。
 5. **ExperimentRecordStore / RuntimeKnowledgeReader** 接入编排。
 6. **ObservationPatch apply/revert**：可开关观测。
 7. **ReportBuilder / CommitRecorder**：每个候选一个 commit，report 随 commit。
-8. **HITTAudit**：审计流程对齐后再加。
+8. **CandidatePatchManager / source-patch surface**：候选源码修改 apply/revert，keep 才入库。
+9. **EnvironmentRepairAgent 允许清单**：包/权限/设备/资源错误的有界修复。
+10. **HITTAudit**：审计流程对齐后再加。
 
 ---
 
@@ -265,8 +274,11 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | 设计组件 | 现有代码 | 状态 |
 |---|---|---|
 | `CLI` | `irsi/cli.py` | 已接入 `RoundController` |
-| `Orchestrator` / `RoundController` / `ContextBuilder` | `irsi/orchestration/` | 已实现：状态机、上下文、候选循环 |
-| `ExperimentRecordStore` | `irsi/knowledge/runtime/record_store.py` | 已实现 |
+| `CandidatePatchManager` | `irsi/runtime/candidate_patch.py` | 已实现；候选源码 patch apply/revert |
+| `source-patch` surface | `irsi/contract/surfaces/source_patch.py` | 已实现；契约声明 patch 候选 |
+| `Orchestrator` / `RoundController` / `ContextBuilder` | `irsi/orchestration/` | 已实现：状态机、上下文、候选循环、重试 |
+| `Stage transitions` | `irsi/orchestration/state.py` | 已实现：ENV_SETUP→…→CALIBRATED→…→DONE，含 EXECUTION→DEVELOPMENT 重试边 |
+| `ExperimentRecordStore` | `irsi/knowledge/runtime/record_store.py` | 已实现；clean/observed baseline 记录 |
 | `RuntimeKnowledgeReader` | `irsi/knowledge/runtime/reader.py` | 已实现 |
 | `SkillCatalog / HPKnowledgeProvider / SkillResolver` | `irsi/knowledge/{skills,catalog,reader,providers}` | 已实现 |
 | `RecomputeSurface` | `irsi/contract/surfaces/recompute.py` | 已实现 |
@@ -274,18 +286,18 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `TrialExecutor` | `irsi/execution/trial_executor.py` | 已实现；统一执行原语 |
 | `EnvironmentSnapshot` | `irsi/environment/snapshot.py` | 已实现；记录 baseline world |
 | `EnvironmentExpert` | `irsi/experts/environment/expert.py` | 已实现探测/快照 |
-| `EnvironmentRepairAgent` | `irsi/environment/repair.py` | 已实现有界修复；重跑 env_setup、限制 attempts |
+| `EnvironmentRepairAgent` | `irsi/environment/repair.py` | 已实现有界修复；允许清单 + attempts |
 | `ExecutionStage` | `irsi/execution/stage.py` | 已新增，确定性执行 |
 | `ObservationExpert` | `irsi/experts/observation/expert.py` | task-level；可选 patch 来自 `domain_params.observation_patch` |
 | `ObservationPatch` | `irsi/experts/artifacts.py` + `irsi/runtime/observation_patch.py` | 已有 artifact；apply/revert 已实现 |
 | `NeutralityChecker` / `BaselineReference` | `irsi/runtime/neutrality.py`, `irsi/runtime/baseline_reference.py` | 已实现；`BaselineCalibrator` 只分析两个 `TrialResult`，reference 固定 observed |
 | `MetricExtractor` | `irsi/execution/metric_extractor.py` | 已实现 |
-| 五个 `ExpertRole` | `irsi/experts/*/expert.py` | 已实现 |
+| 六个 `ExpertRole` | `irsi/experts/*/expert.py` | 已实现 |
 | `PromptBuilder` | `irsi/prompting/builder.py` | 已实现 |
 | `ExpertRuntime` / `NativePromptRuntime` | `irsi/runtime/native_prompt_runtime.py` | 已实现；渲染 prompt 并记录 prompt_hash / skill_ids |
 | `RuntimeFacade` | `irsi/runtime/facade.py` | 已实现 |
 | `ReportBuilder` / `StepReport` / `RoundReport` | `irsi/reporting/report_builder.py` | 已实现；从 `ExperimentRecordStore` 生成 report |
-| `CommitRecorder` | `irsi/git/commit_recorder.py` | 已接入 Orchestrator/CLI；keep 提交 trial config + step report，discard/crash 只提交 step report |
+| `CommitRecorder` | `irsi/git/commit_recorder.py` | 已接入 Orchestrator/CLI；keep 提交 trial config + patch artifact + step report，discard/crash 只提交 step report |
 | `HITTAudit` | 无 | 暂缓 |
 
-**结论**：第一阶段剩余的是 **OpenJiuwen runtime 与真实远端运行**；CLI / Orchestrator / RoundController / ContextBuilder / TrialExecutor / NeutralityChecker / BaselineReference / ReportBuilder / ObservationPatchManager / NativePromptRuntime / CommitRecorder / EnvironmentSnapshot / EnvironmentExpert / EnvironmentRepairAgent 已落地。
+**结论**：第一阶段剩余的是 **OpenJiuwen runtime 与真实远端运行**；CLI / Orchestrator / RoundController / ContextBuilder / TrialExecutor / NeutralityChecker / BaselineReference / ReportBuilder / ObservationPatchManager / CandidatePatchManager / NativePromptRuntime / CommitRecorder / EnvironmentSnapshot / EnvironmentExpert / EnvironmentRepairAgent / source-patch surface 已落地。Qwen3-0.6B 契约与配置已加入，准备在 910b4-126/114 实跑。

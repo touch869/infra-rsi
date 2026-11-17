@@ -18,13 +18,13 @@ knowledge   knowledge/runtime/ (records.jsonl, ExperimentRecordStore, RuntimeKno
 prompting   prompting/ (StageContext, expert prompt specs, deterministic builder)
 experts     experts/ (six role artifacts, prompt specs, registry; execution is a deterministic stage)
 execution   execution/stage.py (deterministic ExecutionStage) + execution/trial_executor.py
-runtime     runtime/facade.py + runtime/neutrality.py + runtime/baseline_reference.py + runtime/observation_patch.py + runtime/native_prompt_runtime.py
-environment environment/snapshot.py (baseline world facts) + environment/repair.py (bounded repair)
+runtime     runtime/facade.py + runtime/neutrality.py + runtime/baseline_reference.py + runtime/observation_patch.py + runtime/candidate_patch.py + runtime/native_prompt_runtime.py
+environment environment/snapshot.py (baseline world facts) + environment/repair.py (bounded repair with allowlist)
 git         git/commit_recorder.py (candidate commit + report, revert; wired in Orchestrator)
 reporting   reporting/ (step/round reports + exporters/)
 ```
 
-Dependency rule: `orchestration` and expert roles never import torch or HyperParallel; they talk to a `Backend` and `RuntimeFacade`. Gates never mutate a trial. Surfaces only emit contract-approved overrides, and the contract rejects any key outside `writable_prefixes`. Observation patches are applied by the runtime, not by an expert. Execution is deterministic: `TrialExecutor` runs, `ExecutionStage` only wraps `CandidateSpec`; it does not decide or control flow. The reference baseline is the **observed** baseline; the clean baseline is only a control for observation overhead.
+Dependency rule: `orchestration` and expert roles never import torch or HyperParallel; they talk to a `Backend` and `RuntimeFacade`. Gates never mutate a trial. Surfaces only emit contract-approved overrides or declared source patches, and the contract rejects any key outside `writable_prefixes`. Observation patches are applied by the runtime, not by an expert. Execution is deterministic: `TrialExecutor` runs, `ExecutionStage` only wraps `CandidateSpec`; it does not decide or control flow. The reference baseline is the **observed** baseline; the clean baseline is only a control for observation overhead. A failed candidate is recorded as `crash`/`env_error`, then DevelopmentExpert may repair it through `budget.max_repairs`; source patches are reverted on discard/crash and committed only on keep.
 
 ## Quickstart (Ascend host)
 
@@ -33,11 +33,11 @@ pip install -e .
 # model configs, base YAMLs and the dataset generator live in workspace/
 cp -r workspace/. /root/irsi-workspace/
 (cd /root/irsi-workspace && python make_data.py --out data/tiny-packed)
-irsi run --contract contracts/medium-qwen3.yaml --runs-dir runs
+irsi run --contract contracts/qwen3-0.6b-recompute.yaml --runs-dir runs
 irsi report runs/<task-dir>
 ```
 
-`contracts/tiny-qwen3.yaml` is the 12-layer smoke contract; `medium-qwen3.yaml` is the 24-layer measurement contract. The latest evidence is exported under `results/medium-qwen3-20261112/` (**+20.63%** throughput vs baseline, **+15.78%** vs the no-op control, bitwise-identical numerics), and the write-up is `docs/phase1-result.md`.
+`contracts/tiny-qwen3.yaml` is the 12-layer smoke contract; `medium-qwen3.yaml` is the 24-layer measurement contract; `qwen3-0.6b-recompute.yaml` and `qwen3-0.6b-layerwise.yaml` are the Qwen3-0.6B contracts (28 layers, hidden 1024). The latest phase-1 evidence is exported under `results/medium-qwen3-20261112/` (**+20.63%** throughput vs baseline, **+15.78%** vs the no-op control, bitwise-identical numerics), and the write-up is `docs/phase1-result.md`.
 
 The contract pins the repo, base YAML, writable key surface, metric, gates and budget. Every trial writes `train.yaml`, `run.log`, `metrics.json`; the task writes `results.tsv`, `candidates.jsonl`, `decisions/*.json`, `report.md`.
 
@@ -77,7 +77,7 @@ hp/engaged-evidence
 
 ## Edit surfaces
 
-`contract/surfaces/recompute.py` emits the recompute candidates (`off`, `control`, `selective`, `swap` variants) and the layerwise ladder (`recompute-layerwise`, driven by `domain_params.layer_counts`). A new surface (fusion, parallel, pipeline) is a new surface plugin plus a contract that declares its `writable_prefixes`. Observation is task-level: one `ObservationPlan` / `ObservationPatch` per task/round, shared by all candidates; surface-specific diagnostics go into a superset profile rather than a per-hypothesis patch.
+`contract/surfaces/recompute.py` emits the recompute candidates (`off`, `control`, `selective`, `swap` variants) and the layerwise ladder (`recompute-layerwise`, driven by `domain_params.layer_counts`). `contract/surfaces/source_patch.py` emits candidates declared by `domain_params.candidates` with a source diff and `patch_target_files`; the orchestrator applies/reverts them and commits the patch artifact only on keep. A new surface (fusion, parallel, pipeline) is a new surface plugin plus a contract that declares its `writable_prefixes`. Observation is task-level: one `ObservationPlan` / `ObservationPatch` per task/round, shared by all candidates; surface-specific diagnostics go into a superset profile rather than a per-hypothesis patch.
 
 ## Tests
 
