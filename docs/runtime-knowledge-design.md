@@ -8,33 +8,43 @@ skill 库回答“怎么做/为什么”，运行时知识库回答“过去发�
 
 ## 1. 数据模型
 
-### `ExperimentRecord`
+### `ExperimentRecord`：核心字段 + 可选字段
 
-一条实验记录对应一个阶段或一个 trial：
+一条实验记录对应一个阶段或一个 trial。第一阶段只强制核心字段：
 
 ```text
-record_id
+record_id          # store 生成
 round_id
 step_id
 stage
-surface
-hypothesis_id
-overrides
-baseline_metric
-metric
-status            # keep / discard / crash
-gates             # gate name, passed, detail
+hypothesis_id      # 可为空
+overrides          # baseline 可为 {}
+metric             # crash 可为 null
+status             # baseline / keep / discard / crash
 detail
-artifacts         # config/log/metrics paths
-commit
-rollback
 timestamp
-prompt_hash
-skill_ids
-evidence          # engaged, numeric hash, peak memory, etc.
 ```
 
-建议用 JSON 可序列化结构，写入 `records.jsonl`。
+推荐字段：
+
+```text
+surface
+baseline_metric
+gates              # gate name, passed, detail
+artifacts          # config / log / metrics paths
+```
+
+可选 / 后加：
+
+```text
+commit
+rollback
+prompt_hash
+skill_ids
+evidence           # engaged, numeric hash, peak memory
+```
+
+建议用 JSON 可序列化结构，写入 `records.jsonl`。`record_id` 和 `timestamp` 可由 store 在缺失时自动生成。
 
 ---
 

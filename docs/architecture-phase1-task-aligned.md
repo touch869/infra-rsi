@@ -69,21 +69,22 @@ Ledger / Report / ExperimentRecordStore
 
 | 模块 | 职责 | 输入 | 输出 |
 |---|---|---|---|
-| `ExperimentRecordStore` | 每步记录：为什么改、改了什么、测试结果、commit、失败/回退 | `ExecutionResult`、`Judgment` | `ExperimentRecord` |
+| `ExperimentRecordStore` | 追加语义化实验记录；不原地修改历史 | `ExecutionResult`、`Judgment` | `ExperimentRecord` |
 | `SkillCatalog` | skill 索引/检索：按 framework、surface、model、tag 查询 | `skill.yaml` / `SKILL.md` | `SkillBundle` |
 | `HPKnowledgeProvider` | 加载 HP skill 包，不绑定核心 | `knowledge/skills/hp/*` | `list[Skill]` |
 | `SkillResolver` | 按 stage/tag 选择 skill | query、StageContext | `list[SkillView]` |
-| `KnowledgeReader` | 只读检索：按 round、case、surface 查询 | query | `KnowledgeBundle` |
-| `RuntimeKnowledge` | 正例/反例/假设/issue 的运行时集合 | 记录、审计 | `KnowledgeBundle` |
+| `RuntimeKnowledgeReader` | 只读检索：按 round、status、surface 查询 | query | `KnowledgeBundle` |
+| `RuntimeKnowledge` | 正例/反例/假设/issue 的运行时集合（暂缓） | 记录、审计 | `KnowledgeBundle` |
 
 HP 知识不是 `HPDomainKnowledge` 大类，而是 `knowledge/skills/hp/*` 下的 skill 包；`SKILL.md` 是人类可读流程，`skill.yaml` 是机器可读 manifest。
 
-`ExperimentRecord` 建议字段：
+`ExperimentRecord` 字段分层：
 
 ```text
-round_id, step_id, hypothesis, change, test_result,
-commit, status(kept/discarded/failed), rollback,
-report_path, timestamp
+核心: record_id, round_id, step_id, stage, hypothesis_id,
+      overrides, metric, status(baseline/keep/discard/crash), detail, timestamp
+推荐: surface, baseline_metric, gates, artifacts
+可选: commit, rollback, prompt_hash, skill_ids, evidence
 ```
 
 **边界**：知识库只读写和沉淀，不产生候选，不裁决。  
@@ -286,8 +287,9 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 |---|---|---|
 | `CLI` | `irsi/cli.py` | 已有入口 |
 | `Orchestrator` / `RoundController` | `irsi/engine.py` 的 `run` 流程 | 编排与裁决仍混在一起，需拆 |
-| `ExperimentRecordStore` | 无 | 缺 |
+| `ExperimentRecordStore` | `irsi/knowledge/runtime/record_store.py` | 已实现 |
 | `SkillCatalog / HPKnowledgeProvider / SkillResolver` | `irsi/knowledge/{skills,catalog,reader,providers}` | 已实现；skill 包在 `knowledge/skills/hp/*` |
+| `RuntimeKnowledgeReader` | `irsi/knowledge/runtime/reader.py` | 已实现 |
 | `RecomputeSurface` | `irsi/contract/surfaces/recompute.py` | 已有重计算候选 |
 | `NumericPrecisionGate` | `irsi/gates/builtin.py` 的 `BitwiseGate` | 已有二值 gate |
 | `TrialExecutor` | `irsi/execution/backends/hyperparallel.py` | 已有执行；解析耦合在 backend |
@@ -303,4 +305,4 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `LedgerStore` | `irsi/knowledge/runtime/ledger_store.py` | 已有账本 |
 | `BaselineWorld` | `workspace/` + 契约 | 有输入/产物，缺 baseline 门 |
 
-**结论**：现有代码覆盖 `CLI / RecomputeSurface / NumericPrecisionGate / TrialExecutor / MetricExtractor / LedgerStore / PromptBuilder / RuntimeFacade / 六个 ExpertRole / BaselineCalibrator / SkillCatalog / HPKnowledgeProvider / SkillResolver`；第一阶段真正缺的是 **Orchestrator、RoundController、ExperimentRecordStore、ReportBuilder / StepReport、CommitRecorder、HITTAudit**。
+**结论**：现有代码覆盖 `CLI / RecomputeSurface / NumericPrecisionGate / TrialExecutor / MetricExtractor / LedgerStore / PromptBuilder / RuntimeFacade / 六个 ExpertRole / BaselineCalibrator / SkillCatalog / HPKnowledgeProvider / SkillResolver / ExperimentRecordStore / RuntimeKnowledgeReader`；第一阶段真正缺的是 **Orchestrator、RoundController、ReportBuilder / StepReport、CommitRecorder、HITTAudit**。

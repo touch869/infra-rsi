@@ -48,6 +48,9 @@ infra-rsi/
 │   │   │   └── hyperparallel.py   # HPKnowledgeProvider
 │   │   └── runtime/
 │   │       ├── __init__.py
+│   │       ├── experiment_record.py
+│   │       ├── record_store.py
+│   │       ├── reader.py
 │   │       └── ledger_store.py    # append-only ledger / report
 │   │
 │   ├── prompting/
@@ -101,7 +104,8 @@ infra-rsi/
 │   ├── test_receipt.py
 │   ├── test_prompting.py
 │   ├── test_experts.py
-│   └── test_knowledge.py
+│   ├── test_knowledge.py
+│   └── test_runtime_knowledge.py
 ├── knowledge/
 │   └── skills/
 │       └── hp/
@@ -143,9 +147,6 @@ infra-rsi/
 - `orchestration/context_builder.py`
 - `entry/commands.py`
 - `entry/openjiuwen_entry.py`
-- `knowledge/runtime/experiment_record.py`
-- `knowledge/runtime/record_store.py`
-- `knowledge/runtime/reader.py`（RuntimeKnowledgeReader）
 - `contract/candidate_generator.py`
 - `contract/validation.py`
 - `execution/perf_observer.py`
@@ -304,17 +305,18 @@ ExpertRuntime
 - `gates/`
 - `execution/`
 - `knowledge/runtime/ledger_store.py`
+- `knowledge/runtime/experiment_record.py`、`record_store.py`、`reader.py`
 - `knowledge/skills.py`、`catalog.py`、`reader.py`、`providers/hyperparallel.py`
 - `knowledge/skills/hp/*` 七个 skill 包（6 核心 + 1 可选）
-- `reporting/exporters/` 出口占位
+- `runtime/expert_runtime.py`
+- `reporting/exporters/base.py` 与出口占位
 
 **待建：**
 
 - `orchestration/`（Orchestrator / RoundController / ContextBuilder）
 - `entry/`（commands / openjiuwen）
-- `knowledge/runtime/experiment_record.py` / `record_store.py` / `reader.py`
 - `reporting/report_builder.py` / step / round report
-- `runtime/expert_runtime.py` / native / openjiuwen
+- `runtime/native_prompt_runtime.py` / openjiuwen
 - `git/CommitRecorder`、`baseline/BaselineWorld`
 
 **暂缓：**
