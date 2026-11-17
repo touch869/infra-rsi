@@ -82,12 +82,15 @@ class BudgetSpec:
 
     max_trials: int = 6
     timeout_min: float = 25.0
+    max_repairs: int = 1
 
     def __post_init__(self) -> None:
         if self.max_trials < 1:
             raise ValueError("budget.max_trials must be >= 1")
         if self.timeout_min <= 0:
             raise ValueError("budget.timeout_min must be > 0")
+        if self.max_repairs < 0:
+            raise ValueError("budget.max_repairs must be >= 0")
 
 
 @dataclass(frozen=True)

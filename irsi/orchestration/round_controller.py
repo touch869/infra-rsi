@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +24,7 @@ from ..runtime.facade import RuntimeFacade
 from ..runtime.observation_patch import ObservationPatchManager
 from .context_builder import ContextBuilder
 from .orchestrator import Orchestrator
-from .state import RoundState, Stage
+from .state import RoundState, Stage, advance, fail
 
 __all__ = ["RoundController"]
 
@@ -227,6 +228,8 @@ class RoundController:
             self.task, self.backend, self.root / "trials", executor=executor
         )
 
+        state = RoundState(round_id=round_id, stage=Stage.ENV_SETUP)
+
         environment_expert = EnvironmentExpert()
         environment_context = StageContext(task=self.task, stage="environment")
         if self.runtime is None:
@@ -238,18 +241,40 @@ class RoundController:
                 environment_expert, environment_context, (), clean_facade
             )
         snapshot = environment_result.artifact
-
-        # Observation is task-level and independent of any hypothesis.
-        plan = self._make_observation_plan(observed_facade)
+        state = advance(state, Stage.CLEAN_BASELINE)
 
         # Clean baseline is the control; observed baseline is the reference.
         clean, snapshot = self._run_clean_baseline(clean_facade, round_id, snapshot)
         if clean is None:
-            return RoundState(
-                round_id=round_id,
-                stage=Stage.FAILED,
-                stop_reason="environment_unrecoverable",
-            )
+            return fail(state, "environment_unrecoverable")
+        state = advance(state, Stage.OBSERVATION, clean_trial=clean)
+
+        # Observation is task-level and independent of any hypothesis.
+        plan = self._make_observation_plan(observed_facade)
+        state = replace(state, observation_plan=plan)
+        state = advance(state, Stage.OBSERVED_BASELINE)
+
+        observed, plan, snapshot = self._run_observed_baseline(
+            observed_facade, round_id, plan, snapshot
+        )
+        if observed is None:
+            return fail(state, "observation_unrecoverable")
+        state = replace(state, observation_plan=plan)
+        state = advance(state, Stage.NEUTRALITY)
+
+        calibration = BaselineCalibrator().calibrate(self.task, clean, observed)
+        reference = calibration.reference.trial
+        reference_metric = calibration.reference.metric
+        state = advance(
+            state,
+            Stage.CALIBRATED,
+            baseline_trial=reference,
+            best_trial=reference,
+            baseline_metric=reference_metric,
+            best_metric=reference_metric,
+            observation_plan=plan,
+        )
+
         if self.commit_recorder is not None:
             clean_metric = clean.metrics.value(
                 self.task.metric.key,
@@ -264,20 +289,6 @@ class RoundController:
                 },
             )
             self._commit_file(env_report, "environment baseline")
-
-        observed, plan, snapshot = self._run_observed_baseline(
-            observed_facade, round_id, plan, snapshot
-        )
-        if observed is None:
-            return RoundState(
-                round_id=round_id,
-                stage=Stage.FAILED,
-                stop_reason="observation_unrecoverable",
-            )
-
-        calibration = BaselineCalibrator().calibrate(self.task, clean, observed)
-        reference = calibration.reference.trial
-        reference_metric = calibration.reference.metric
 
         if self.commit_recorder is not None:
             calibration_path = self._write_json(
@@ -315,7 +326,7 @@ class RoundController:
                     record_id="",
                     round_id=round_id,
                     step_id=0,
-                    stage="baseline",
+                    stage="clean_baseline",
                     metric=calibration.neutrality.clean_metric,
                     status="baseline",
                     detail="clean baseline (observation off)",
@@ -331,7 +342,7 @@ class RoundController:
                     record_id="",
                     round_id=round_id,
                     step_id=1,
-                    stage="baseline-observed",
+                    stage="observed_baseline",
                     metric=calibration.neutrality.observed_metric,
                     status="baseline",
                     detail="observed baseline (observation on)",
@@ -365,16 +376,6 @@ class RoundController:
                     },
                 )
             )
-
-        state = RoundState(
-            round_id=round_id,
-            stage=Stage.CALIBRATED,
-            baseline_trial=reference,
-            best_trial=reference,
-            baseline_metric=reference_metric,
-            best_metric=reference_metric,
-            observation_plan=plan,
-        )
 
         builder = ContextBuilder(
             self.task, reader=self.reader, resolver=self.resolver

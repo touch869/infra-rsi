@@ -35,6 +35,8 @@ class ContextBuilder:
         stage: Stage,
         *,
         candidate: Any = None,
+        failure: str = "",
+        attempt: int = 0,
     ) -> tuple[StageContext, tuple[Any, ...]]:
         records = ()
         if self.reader is not None:
@@ -55,5 +57,7 @@ class ContextBuilder:
             records=records,
             previous_artifact=state.previous_artifact,
             candidate=candidate if candidate is not None else state.current_candidate,
+            failure=failure,
+            attempt=attempt,
         )
         return context, skills

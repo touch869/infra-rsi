@@ -234,6 +234,127 @@ def test_environment_repair_retries_clean_baseline(tmp_path):
     assert records[-1].status == "keep"
 
 
+def _make_patch_task(tmp_path: Path, patch: str) -> tuple[object, Path]:
+    repo = tmp_path / "source-repo"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "test@example.com")
+    _git(repo, "config", "user.name", "Test")
+    (repo / "train.py").write_text("A\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "initial")
+
+    task = replace(
+        TASK,
+        repo_root=str(repo),
+        domain="source-patch",
+        domain_params={
+            "candidates": [
+                {
+                    "id": "patch-keep",
+                    "description": "edit train.py",
+                    "overrides": {},
+                    "patch": patch,
+                    "patch_target_files": ["train.py"],
+                }
+            ]
+        },
+        budget=BudgetSpec(max_trials=1),
+    )
+    return task, repo
+
+
+SOURCE_PATCH = (
+    "diff --git a/train.py b/train.py\n"
+    "--- a/train.py\n"
+    "+++ b/train.py\n"
+    "@@ -1 +1 @@\n"
+    "-A\n"
+    "+B\n"
+)
+
+
+def test_kept_source_patch_is_applied_and_committed(tmp_path):
+    task, repo = _make_patch_task(tmp_path, SOURCE_PATCH)
+    task_dir = tmp_path / "task"
+    backend = FakeBackend([_metrics(100.0), _metrics(100.0), _metrics(120.0)])
+    store = ExperimentRecordStore(task_dir)
+    recorder = CommitRecorder(task_dir)
+    recorder.ensure_repo()
+    _git(task_dir, "config", "user.email", "test@example.com")
+    _git(task_dir, "config", "user.name", "Test")
+
+    controller = RoundController(
+        task,
+        backend,
+        task_dir,
+        store=store,
+        commit_recorder=recorder,
+    )
+    state = controller.run_round("round-1")
+
+    assert state.stage == Stage.DONE
+    assert state.best_metric == pytest.approx(120.0)
+    assert (repo / "train.py").read_text(encoding="utf-8") == "B\n"
+    assert (task_dir / "candidate-patch-keep.patch").is_file()
+    tracked = _git(task_dir, "ls-files")
+    assert "candidate-patch-keep.patch" in tracked
+    assert "step_reports/step-0003.json" in tracked
+
+
+def test_discarded_source_patch_is_reverted_and_not_committed(tmp_path):
+    task, repo = _make_patch_task(tmp_path, SOURCE_PATCH)
+    task_dir = tmp_path / "task"
+    backend = FakeBackend([_metrics(100.0), _metrics(100.0), _metrics(95.0)])
+    store = ExperimentRecordStore(task_dir)
+    recorder = CommitRecorder(task_dir)
+    recorder.ensure_repo()
+    _git(task_dir, "config", "user.email", "test@example.com")
+    _git(task_dir, "config", "user.name", "Test")
+
+    controller = RoundController(
+        task,
+        backend,
+        task_dir,
+        store=store,
+        commit_recorder=recorder,
+    )
+    state = controller.run_round("round-1")
+
+    assert state.stage == Stage.DONE
+    assert (repo / "train.py").read_text(encoding="utf-8") == "A\n"
+    assert not (task_dir / "candidate-patch-keep.patch").exists()
+    tracked = _git(task_dir, "ls-files")
+    assert "candidate-patch-keep.patch" not in tracked
+    assert "step_reports/step-0003.json" in tracked
+
+
+def test_failed_candidate_is_repaired_and_retried(tmp_path):
+    task = replace(TASK, budget=BudgetSpec(max_trials=2, max_repairs=1))
+    backend = FailingBackend([_metrics(100.0), _metrics(100.0), _metrics(120.0)])
+    store = ExperimentRecordStore(tmp_path / "task")
+
+    controller = RoundController(task, backend, tmp_path / "runs", store=store)
+    state = controller.run_round("round-1")
+
+    assert state.stage == Stage.DONE
+    assert state.trials_run == 2
+    assert state.best_metric == pytest.approx(120.0)
+    assert backend.calls[-1][0] == "layers-0-retry-1"
+
+    records = store.recent(10, round_id="round-1")
+    assert records[-1].status == "keep"
+
+
+def test_illegal_stage_transition_is_rejected():
+    state = RoundState(round_id="round-1", stage=Stage.CALIBRATED)
+    from irsi.orchestration.state import advance, StageTransitionError
+
+    with pytest.raises(StageTransitionError, match="calibrated"):
+        advance(state, Stage.JUDGMENT)
+    assert advance(state, Stage.DECISION).stage == Stage.DECISION
+
+
 def test_observed_baseline_failure_is_recorded_as_patch_error(tmp_path):
     task = replace(
         TASK,

@@ -28,7 +28,11 @@ class StageContext:
     previous_artifact: Any = None
     candidate: Any = None
     notes: tuple[str, ...] = ()
+    failure: str = ""
+    attempt: int = 0
 
     def __post_init__(self) -> None:
         if not self.stage.strip():
             raise ValueError("stage must be non-empty")
+        if self.attempt < 0:
+            raise ValueError("attempt must be >= 0")
