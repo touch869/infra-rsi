@@ -93,6 +93,10 @@ infra-rsi/
 │   │       ├── expert.py
 │   │       └── prompt_spec.py
 │   │
+│   ├── environment/
+│   │   ├── __init__.py
+│   │   └── snapshot.py            # EnvironmentSnapshot
+│   │
 │   ├── git/
 │   │   ├── __init__.py
 │   │   └── commit_recorder.py     # commit candidate + report; revert
@@ -183,6 +187,7 @@ infra-rsi/
 | `contract/` | TaskSpec、修改面插件、数值精度验证（已建） |
 | `gates/` | 通用 gate 与其 registry（已建） |
 | `execution/` | 执行器、指标抽取、确定性 ExecutionStage（已建） |
+| `environment/` | 环境快照；环境搭建/修复 agent 待建（snapshot 已建） |
 | `runtime/` | 确定性 runtime facade、baseline 分析、观测 patch apply/revert、专家运行时 adapter（facade/neutrality/baseline_reference/observation_patch/expert_runtime 已建） |
 | `git/` | 候选 commit + report、revert（CommitRecorder 已建，未接入编排） |
 | `experts/` | 五个专家角色、各自 prompt spec、统一 artifact 类型（已建） |
@@ -281,6 +286,7 @@ BaselineCalibrator（只分析 TrialResult）
 ObservationPatchManager
 NativePromptRuntime
 ReportBuilder
+EnvironmentSnapshot
 CommitRecorder（已建，未接入编排）
 ```
 
@@ -323,6 +329,7 @@ EnvironmentExpert
 - `contract/surfaces/recompute.py`
 - `gates/`
 - `execution/`（metric_extractor、trial_executor、stage、backends）
+- `environment/snapshot.py` 环境快照
 - `knowledge/runtime/ledger_store.py`
 - `knowledge/runtime/experiment_record.py`、`record_store.py`、`reader.py`
 - `knowledge/skills.py`、`catalog.py`、`reader.py`、`providers/hyperparallel.py`

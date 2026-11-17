@@ -81,6 +81,7 @@ COMMIT / REPORT
 | 模块 | 职责 | 输入 | 输出 |
 |---|---|---|---|
 | `EnvironmentExpert` / `EnvironmentOperator` | 环境搭建、诊断、修复；有界 agent，可审计 | task、环境快照、错误 | `EnvironmentSnapshot` / `EnvironmentAction` |
+| `EnvironmentSnapshot` | 记录 python、platform、repo commit、packages、env_setup | `TaskSpec` | `EnvironmentSnapshot` |
 | `TrialExecutor` | 唯一执行原语：渲染配置、启动训练、超时清理、返回 `TrialResult` | spec、overrides、label、patch 状态 | `TrialResult` |
 | `ExecutionStage` | 确定性执行候选；不生成 prompt、不裁决 | `CandidateSpec` | `ExecutionResult` |
 | `Backend` | HyperParallel 等具体执行实现 | `CandidateSpec` | `TrialResult` |
@@ -269,6 +270,8 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `RecomputeSurface` | `irsi/contract/surfaces/recompute.py` | 已实现 |
 | `NumericPrecisionGate` | `irsi/gates/builtin.py` | 已实现 |
 | `TrialExecutor` | `irsi/execution/trial_executor.py` | 已实现；统一执行原语 |
+| `EnvironmentSnapshot` | `irsi/environment/snapshot.py` | 已实现；记录 baseline world |
+| `EnvironmentExpert` | 无 | 未实现；env setup 仍靠 backend / 人工 |
 | `ExecutionStage` | `irsi/execution/stage.py` | 已新增，确定性执行 |
 | `ObservationExpert` | `irsi/experts/observation/expert.py` | 已改为 task-level |
 | `ObservationPatch` | `irsi/experts/artifacts.py` + `irsi/runtime/observation_patch.py` | 已有 artifact；apply/revert 已实现 |

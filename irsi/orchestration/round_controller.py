@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from ..contract import InfraTaskSpec
+from ..environment.snapshot import EnvironmentSnapshot
 from ..experts.observation.expert import ObservationExpert
 from ..knowledge.reader import SkillResolver
 from ..knowledge.runtime.experiment_record import ExperimentRecord
@@ -51,6 +52,7 @@ class RoundController:
 
     def run_round(self, round_id: str = "round-1") -> RoundState:
         executor = TrialExecutor(self.task, self.backend)
+        snapshot = EnvironmentSnapshot.capture(self.task)
         clean_facade = RuntimeFacade(
             self.task, self.backend, self.root / "baseline-clean", executor=executor
         )
@@ -97,6 +99,7 @@ class RoundController:
                     metric=calibration.neutrality.clean_metric,
                     status="baseline",
                     detail="clean baseline (observation off)",
+                    environment_snapshot=snapshot.to_dict(),
                     artifacts={
                         "config": str(calibration.clean.config_path),
                         "log": str(calibration.clean.log_path),
