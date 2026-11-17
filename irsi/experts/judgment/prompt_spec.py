@@ -34,7 +34,7 @@ JUDGMENT_PROMPT_SPEC = ExpertPromptSpec(
         "Missing metric must be a crash.",
         "Do not override a deterministic gate result.",
     ),
-    skill_policy=SkillPolicy(max_skills=7, max_excerpt_chars=800),
+    skill_policy=SkillPolicy(max_skills=8, max_excerpt_chars=800),
 )
 
 PROMPTS.register(JUDGMENT_PROMPT_SPEC)
