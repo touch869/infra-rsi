@@ -86,7 +86,8 @@ commit, status(kept/discarded/failed), rollback,
 report_path, timestamp
 ```
 
-**边界**：知识库只读写和沉淀，不产生候选，不裁决。
+**边界**：知识库只读写和沉淀，不产生候选，不裁决。  
+运行时知识库接口见 `docs/runtime-knowledge-design.md`：`ExperimentRecordStore` 负责写入，`RuntimeKnowledgeReader` 负责只读查询；专家不直接写 store。
 
 **对应任务**：运行时知识库——实验记录；hp 领域知识库。
 

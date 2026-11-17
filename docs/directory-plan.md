@@ -145,6 +145,7 @@ infra-rsi/
 - `entry/openjiuwen_entry.py`
 - `knowledge/runtime/experiment_record.py`
 - `knowledge/runtime/record_store.py`
+- `knowledge/runtime/reader.py`（RuntimeKnowledgeReader）
 - `contract/candidate_generator.py`
 - `contract/validation.py`
 - `execution/perf_observer.py`
@@ -311,7 +312,7 @@ ExpertRuntime
 
 - `orchestration/`（Orchestrator / RoundController / ContextBuilder）
 - `entry/`（commands / openjiuwen）
-- `knowledge/runtime/experiment_record.py` / `record_store.py`
+- `knowledge/runtime/experiment_record.py` / `record_store.py` / `reader.py`
 - `reporting/report_builder.py` / step / round report
 - `runtime/expert_runtime.py` / native / openjiuwen
 - `git/CommitRecorder`、`baseline/BaselineWorld`

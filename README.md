@@ -108,6 +108,7 @@ python -m pytest -q
 ```
 
 Design docs live in `docs/`: `architecture-phase1-task-aligned.md`,
-`directory-plan.md`, `architecture-comparison-inferrsi.md`,
+`directory-plan.md`, `runtime-knowledge-design.md`,
+`architecture-comparison-inferrsi.md`,
 `architecture-comparison-hp-pr1517.md`; results in `phase1-result.md` and
 `layerwise-recompute-result.md`. Older design notes are in `docs/archive/`.
