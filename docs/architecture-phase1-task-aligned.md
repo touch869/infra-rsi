@@ -272,7 +272,7 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `ExecutionStage` | `irsi/execution/stage.py` | 已新增，确定性执行 |
 | `ObservationExpert` | `irsi/experts/observation/expert.py` | 已改为 task-level |
 | `ObservationPatch` | `irsi/experts/artifacts.py` | 已有 artifact；apply/revert 待实现 |
-| `NeutralityChecker` / `BaselineReference` | `irsi/runtime/calibration.py` | 待拆分；当前 `BaselineCalibrator` 仍耦合执行与判断 |
+| `NeutralityChecker` / `BaselineReference` | `irsi/runtime/neutrality.py`, `irsi/runtime/baseline_reference.py` | 已实现；`BaselineCalibrator` 只分析两个 `TrialResult`，reference 固定 observed |
 | `MetricExtractor` | `irsi/execution/metric_extractor.py` | 已实现 |
 | 五个 `ExpertRole` | `irsi/experts/*/expert.py` | 已实现 |
 | `PromptBuilder` | `irsi/prompting/builder.py` | 已实现 |
@@ -281,4 +281,4 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `CommitRecorder` | 无 | 待实现 |
 | `HITTAudit` | 无 | 暂缓 |
 
-**结论**：第一阶段真正缺的是 **TrialExecutor 统一执行原语、NeutralityChecker / BaselineReference、ReportBuilder / CommitRecorder**；Orchestrator / RoundController / ContextBuilder 已落地，专家与知识库字段已按新流程修正。
+**结论**：第一阶段真正缺的是 **TrialExecutor 统一执行原语、ReportBuilder / CommitRecorder**；Orchestrator / RoundController / ContextBuilder、NeutralityChecker / BaselineReference 已落地，专家与知识库字段已按新流程修正。

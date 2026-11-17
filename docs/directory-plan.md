@@ -64,7 +64,9 @@ infra-rsi/
 │   ├── runtime/
 │   │   ├── __init__.py
 │   │   ├── facade.py              # list_candidates / validate / execute / gates / metric
-│   │   ├── calibration.py         # clean / observed baseline（待拆为 NeutralityChecker / BaselineReference）
+│   │   ├── calibration.py         # analyze clean/observed TrialResult
+│   │   ├── neutrality.py          # NeutralityChecker / NeutralityResult
+│   │   ├── baseline_reference.py  # BaselineReference = observed
 │   │   └── expert_runtime.py      # ExpertRuntime Protocol
 │   │
 │   ├── experts/
@@ -154,8 +156,6 @@ infra-rsi/
 - `execution/perf_observer.py`
 - `execution/snapshot.py`
 - `execution/trial_executor.py`
-- `runtime/neutrality.py`
-- `runtime/baseline_reference.py`
 - `runtime/native_prompt_runtime.py`
 - `runtime/openjiuwen_runtime.py`
 - `reporting/step_report.py`
@@ -180,7 +180,7 @@ infra-rsi/
 | `contract/` | TaskSpec、修改面插件、数值精度验证（已建） |
 | `gates/` | 通用 gate 与其 registry（已建） |
 | `execution/` | 执行器、指标抽取、确定性 ExecutionStage（已建） |
-| `runtime/` | 确定性 runtime facade、baseline 校准、专家运行时 adapter（facade/expert_runtime 已建；calibration 待拆） |
+| `runtime/` | 确定性 runtime facade、baseline 分析、专家运行时 adapter（facade/neutrality/baseline_reference/expert_runtime 已建） |
 | `experts/` | 五个专家角色、各自 prompt spec、统一 artifact 类型（已建） |
 | `audit/` | HITT 成果审计、知识审计（暂缓） |
 | `reporting/` | 每步报告、round 报告、`exporters/` 导出插件（待建） |
@@ -272,14 +272,14 @@ SkillCatalog / HPKnowledgeProvider / SkillResolver
 五个 ExpertRole
 ExecutionStage
 Orchestrator / RoundController / ContextBuilder
-BaselineCalibrator（待拆）
+NeutralityChecker / BaselineReference
+BaselineCalibrator（只分析 TrialResult）
 ```
 
 仍待实现：
 
 ```text
 TrialExecutor
-NeutralityChecker / BaselineReference
 ExpertRuntime adapter
 ReportBuilder / CommitRecorder
 ```
@@ -309,7 +309,7 @@ ReportBuilder / CommitRecorder
 **已建：**
 
 - `prompting/`（context、spec、builder、registry）
-- `runtime/facade.py`、`runtime/calibration.py`、`runtime/expert_runtime.py`
+- `runtime/facade.py`、`runtime/calibration.py`、`runtime/neutrality.py`、`runtime/baseline_reference.py`、`runtime/expert_runtime.py`
 - `experts/` 五个角色与 artifact
 - `execution/stage.py` 确定性 ExecutionStage
 - `orchestration/`（state、policy、context_builder、orchestrator、round_controller）
@@ -326,7 +326,6 @@ ReportBuilder / CommitRecorder
 
 - `entry/`（commands / openjiuwen）
 - `execution/trial_executor.py`
-- `runtime/neutrality.py` / `runtime/baseline_reference.py`
 - `reporting/report_builder.py` / step / round report
 - `runtime/native_prompt_runtime.py` / openjiuwen
 - `git/CommitRecorder`、`baseline/BaselineWorld`

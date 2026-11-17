@@ -253,28 +253,33 @@ def test_baseline_calibration_detects_observation_overhead(tmp_path):
     clean_facade = RuntimeFacade(TASK, clean_backend, tmp_path / "clean")
     observed_facade = RuntimeFacade(TASK, observed_backend, tmp_path / "observed")
 
-    calibration = BaselineCalibrator(TASK, clean_facade, observed_facade).run()
+    clean = clean_facade.execute_trial({}, "baseline-clean")
+    observed = observed_facade.execute_trial({}, "baseline-observed")
+    calibration = BaselineCalibrator().calibrate(TASK, clean, observed)
 
-    assert calibration.clean_metric == pytest.approx(100.0)
-    assert calibration.observed_metric == pytest.approx(95.0)
-    assert calibration.overhead == pytest.approx(-0.05)
-    assert calibration.use_observed is True
-    assert calibration.reference_metric == pytest.approx(95.0)
+    assert calibration.neutrality.clean_metric == pytest.approx(100.0)
+    assert calibration.neutrality.observed_metric == pytest.approx(95.0)
+    assert calibration.neutrality.overhead == pytest.approx(-0.05)
+    assert calibration.neutrality.numeric_identical is True
+    assert calibration.reference.metric == pytest.approx(95.0)
+    assert calibration.reference.trial.label == "baseline-observed"
     assert calibration.clean.label == "baseline-clean"
     assert calibration.observed.label == "baseline-observed"
 
 
-def test_baseline_calibration_keeps_clean_reference_inside_noise(tmp_path):
+def test_baseline_reference_is_observed_inside_noise(tmp_path):
     clean_backend = FakeBackend([_metrics(100.0)])
     observed_backend = FakeBackend([_metrics(101.0)])
     clean_facade = RuntimeFacade(TASK, clean_backend, tmp_path / "clean")
     observed_facade = RuntimeFacade(TASK, observed_backend, tmp_path / "observed")
 
-    calibration = BaselineCalibrator(TASK, clean_facade, observed_facade).run()
+    clean = clean_facade.execute_trial({}, "baseline-clean")
+    observed = observed_facade.execute_trial({}, "baseline-observed")
+    calibration = BaselineCalibrator().calibrate(TASK, clean, observed)
 
-    assert calibration.overhead == pytest.approx(0.01)
-    assert calibration.use_observed is False
-    assert calibration.reference_metric == pytest.approx(100.0)
+    assert calibration.neutrality.overhead == pytest.approx(0.01)
+    assert calibration.reference.metric == pytest.approx(101.0)
+    assert calibration.reference.trial.label == "baseline-observed"
 
 
 def test_judgment_requires_baseline_trial(tmp_path):

@@ -57,11 +57,11 @@ class RoundController:
         ).artifact
 
         # Clean baseline is the control; observed baseline is the reference.
-        calibration = BaselineCalibrator(
-            self.task, clean_facade, observed_facade
-        ).run()
-        reference = calibration.observed
-        reference_metric = calibration.observed_metric
+        clean = clean_facade.execute_trial({}, "baseline-clean")
+        observed = observed_facade.execute_trial({}, "baseline-observed")
+        calibration = BaselineCalibrator().calibrate(self.task, clean, observed)
+        reference = calibration.reference.trial
+        reference_metric = calibration.reference.metric
 
         if self.store is not None:
             self.store.append(
@@ -70,7 +70,7 @@ class RoundController:
                     round_id=round_id,
                     step_id=0,
                     stage="baseline",
-                    metric=calibration.clean_metric,
+                    metric=calibration.neutrality.clean_metric,
                     status="baseline",
                     detail="clean baseline (observation off)",
                     artifacts={
@@ -85,7 +85,7 @@ class RoundController:
                     round_id=round_id,
                     step_id=1,
                     stage="baseline-observed",
-                    metric=calibration.observed_metric,
+                    metric=calibration.neutrality.observed_metric,
                     status="baseline",
                     detail="observed baseline (observation on)",
                     artifacts={
@@ -110,9 +110,11 @@ class RoundController:
                     detail="reference = observed baseline",
                     baseline_metric=reference_metric,
                     neutrality={
-                        "clean_metric": calibration.clean_metric,
-                        "observed_metric": calibration.observed_metric,
-                        "overhead": calibration.overhead,
+                        "clean_metric": calibration.neutrality.clean_metric,
+                        "observed_metric": calibration.neutrality.observed_metric,
+                        "overhead": calibration.neutrality.overhead,
+                        "numeric_identical": calibration.neutrality.numeric_identical,
+                        "peak_mem_delta": calibration.neutrality.peak_mem_delta,
                     },
                 )
             )
