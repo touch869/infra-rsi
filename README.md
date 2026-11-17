@@ -11,7 +11,7 @@ entry       cli.py (entry/ commands planned)
 orchestration  Orchestrator / RoundController / ContextBuilder
 plugins     contract/surfaces/ (which candidates a surface offers)
             execution/backends/ (how a trial runs)
-            gates/ (receipt, bitwise, memory)
+            gates/ (receipt, bitwise, memory, parallel-engagement, numeric-parity)
 contract    contract/task_spec.py (what may change, how it is judged)
 knowledge   knowledge/runtime/ (records.jsonl, ExperimentRecordStore, RuntimeKnowledgeReader)
             knowledge/skills/hp/ (skill packages)
@@ -37,7 +37,7 @@ irsi run --contract contracts/qwen3-0.6b-recompute.yaml --runs-dir runs
 irsi report runs/<task-dir>
 ```
 
-`contracts/tiny-qwen3.yaml` is the 12-layer smoke contract; `medium-qwen3.yaml` is the 24-layer measurement contract; `qwen3-0.6b-recompute.yaml` and `qwen3-0.6b-layerwise.yaml` are the Qwen3-0.6B contracts (28 layers, hidden 1024). The latest phase-1 evidence is exported under `results/medium-qwen3-20261112/` (**+20.63%** throughput vs baseline, **+15.78%** vs the no-op control, bitwise-identical numerics), and the write-up is `docs/phase1-result.md`.
+`contracts/tiny-qwen3.yaml` is the 12-layer smoke contract; `medium-qwen3.yaml` is the 24-layer measurement contract; `qwen3-0.6b-recompute.yaml`, `qwen3-0.6b-layerwise.yaml` and `qwen3-0.6b-parallel.yaml` are the Qwen3-0.6B contracts (28 layers, hidden 1024). The latest phase-1 evidence is exported under `results/medium-qwen3-20261112/` (**+20.63%** throughput vs baseline, **+15.78%** vs the no-op control, bitwise-identical numerics), and the write-up is `docs/phase1-result.md`.
 
 The contract pins the repo, base YAML, writable key surface, metric, gates and budget. Every trial writes `train.yaml`, `run.log`, `metrics.json`; the task writes `results.tsv`, `candidates.jsonl`, `decisions/*.json`, `report.md`.
 
@@ -58,6 +58,8 @@ The ladder comes from `domain_params.layer_counts`; three example budgets are sh
 |---|---|
 | `receipt` | exit 0, no traceback, expected step count |
 | `bitwise` | loss / grad_norm fingerprint identical to the observed baseline |
+| `numeric-parity` | loss (and optionally grad_norm) within a declared tolerance; used for parallel candidates |
+| `parallel-engagement` | runtime built the requested device mesh and applied the requested TP plan |
 | `memory` | peak device memory within budget |
 
 ## Phase-1 knowledge skills
@@ -67,6 +69,9 @@ The core skill set is:
 ```text
 hp/recompute-modes
 hp/recompute-layerwise
+hp/parallel-tensor
+hp/parallel-frontier
+hp/parallel-numeric-parity
 hp/measurement
 hp/memory-budget
 hp/numeric-fingerprint
@@ -77,7 +82,7 @@ hp/engaged-evidence
 
 ## Edit surfaces
 
-`contract/surfaces/recompute.py` emits the recompute candidates (`off`, `control`, `selective`, `swap` variants) and the layerwise ladder (`recompute-layerwise`, driven by `domain_params.layer_counts`). `contract/surfaces/source_patch.py` emits candidates declared by `domain_params.candidates` with a source diff and `patch_target_files`; the orchestrator applies/reverts them and commits the patch artifact only on keep. A new surface (fusion, parallel, pipeline) is a new surface plugin plus a contract that declares its `writable_prefixes`. Observation is task-level: one `ObservationPlan` / `ObservationPatch` per task/round, shared by all candidates; surface-specific diagnostics go into a superset profile rather than a per-hypothesis patch.
+`contract/surfaces/recompute.py` emits the recompute candidates (`off`, `control`, `selective`, `swap` variants) and the layerwise ladder (`recompute-layerwise`, driven by `domain_params.layer_counts`). `contract/surfaces/parallel.py` emits a TP/FSDP ladder from `domain_params.parallel_ladder`, validating `nproc`, head divisibility and FSDP shard size. `contract/surfaces/source_patch.py` emits candidates declared by `domain_params.candidates` with a source diff and `patch_target_files`; the orchestrator applies/reverts them and commits the patch artifact only on keep. A new surface (fusion, pipeline) is a new surface plugin plus a contract that declares its `writable_prefixes`. Observation is task-level: one `ObservationPlan` / `ObservationPatch` per task/round, shared by all candidates; surface-specific diagnostics go into a superset profile rather than a per-hypothesis patch.
 
 ## Tests
 
@@ -85,4 +90,4 @@ hp/engaged-evidence
 python -m pytest -q
 ```
 
-Design docs live in `docs/`: `architecture-phase1-task-aligned.md`, `directory-plan.md`, `runtime-knowledge-design.md`, `architecture-comparison-inferrsi.md`, `architecture-comparison-hp-pr1517.md`; results in `phase1-result.md`, `layerwise-recompute-result.md` and `qwen3-0.6b-result.md`. Older design notes are in `docs/archive/`. Qwen3-0.6B evidence (126/114, recompute/layerwise) is exported under `results/qwen3-06b-20261117/`; the summary is in `docs/qwen3-0.6b-result.md`.
+Design docs live in `docs/`: `architecture-phase1-task-aligned.md`, `directory-plan.md`, `runtime-knowledge-design.md`, `architecture-comparison-inferrsi.md`, `architecture-comparison-hp-pr1517.md`; results in `phase1-result.md`, `layerwise-recompute-result.md`, `qwen3-0.6b-result.md` and `qwen3-0.6b-parallel-result.md`. Older design notes are in `docs/archive/`. Qwen3-0.6B evidence (126/114, recompute/layerwise) is exported under `results/qwen3-06b-20261117/`; parallel evidence is under `results/qwen3-06b-20261117-parallel/`.

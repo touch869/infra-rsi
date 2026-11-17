@@ -121,6 +121,20 @@ COMMIT / REPORT
 
 **硬约束**：候选只能落在 `writable_prefixes`；`read_only_keys` 永远优先。源码 patch 候选通过 `contract/surfaces/source_patch.py` 声明，失败/丢弃时回退，不进入 git。
 
+### 2.4b 修改面：并行策略
+
+| 模块 | 职责 | 输入 | 输出 |
+|---|---|---|---|
+| `ParallelSurface` | 生成 TP/FSDP 候选：`tp_size`、`dp_shard_size`、`loss_parallel`、`sequence_parallel` | `TaskSpec`、`domain_params.parallel_ladder` | `Hypothesis` |
+| `ParallelCandidateGenerator` | 校验 `nproc = dp*cp*tp*pp`、`dp_shard_size` 整除 `dp_size`、TP 整除 heads/KV heads | `TaskSpec` | `CandidateSpec` |
+
+**约束**：
+
+- TP 会把 vocabulary output 分片，必须配 `loss_parallel=true`；否则 loss 形状不匹配。
+- `sequence_parallel` 是独立特性，不是 TP；当前 packed-text 数据没有对 labels 做序列分片，启用会失败。
+- `dp_shard_size < dp_size` 意味着 FSDP 参数复制，会提高单卡显存但降低 all-reduce 通信。
+- 并行候选改变浮点归约顺序，不能用 `bitwise` 判等；用 `numeric-parity` 的容差门。
+
 ---
 
 ### 2.5 验证面：数值精度
@@ -128,7 +142,9 @@ COMMIT / REPORT
 | 模块 | 职责 | 输入 | 输出 |
 |---|---|---|---|
 | `NumericPrecisionGate` | 二值硬门槛：bitwise / feature parity / model equivalence；PASS 或 FAIL | `TrialResult`、baseline | `GateResult` |
-| `GateSuite` | 组合 receipt、bitwise、memory | `TrialResult` | 多个 `GateResult` |
+| `NumericParityGate` | 并行候选的容差数值等价：按 `fields`（默认可含 loss/grad_norm）与 `rtol/atol` 比较 | `TrialResult`、baseline | `GateResult` |
+| `ParallelEngagementGate` | 检查运行时 device mesh 和 ShardingPlanner 是否真正采用了请求拓扑 | `TrialResult`、config | `GateResult` |
+| `GateSuite` | 组合 receipt、bitwise、numeric-parity、parallel-engagement、memory | `TrialResult` | 多个 `GateResult` |
 | `ValidationPolicy` | 按 surface 选择 gate 与容差；数值精度不进入噪声带 | `CandidateSpec` | `GatePlan` |
 
 **关键区分**：数值精度是 **PASS/FAIL**；`INCONCLUSIVE` 只用于性能 metric 的噪声带。
@@ -205,7 +221,8 @@ HITT 流程尚未对齐，暂不建 `HITTAudit` / `KnowledgeAudit` / `AuditRecor
 | 运行时知识库：实验记录 | `ExperimentRecordStore` | `ExperimentRecord` | 已实现，补环境/观测/中性/报告字段 |
 | hp 领域知识库 | `SkillCatalog` + `HPKnowledgeProvider` | `SkillBundle` | 已实现；6 个核心 skill |
 | native infra 修改面：重计算 | `RecomputeSurface` + `CandidateGenerator` | `CandidateSpec` | 已实现 |
-| native infra 验证面：数值精度 | `NumericPrecisionGate` | `GateResult` | 已实现，二值硬门槛 |
+| native infra 修改面：并行策略 | `ParallelSurface` + `ParallelCandidateGenerator` | `CandidateSpec` | 已实现（TP/FSDP） |
+| native infra 验证面：数值精度 | `NumericPrecisionGate` + `NumericParityGate` | `GateResult` | 已实现，二值硬门槛 + 并行容差门 |
 | agents 角色 | 6 个 `ExpertRole` + `ExecutionStage` | artifacts | 已调整：执行不是 agent；环境探测是 expert |
 | HITT 成果审计 | `HITTAudit` | `AuditVerdict` | 暂缓 |
 | 报告 | `StepReport` + `RoundReport` + `ReportBuilder` | report | 待实现 |
@@ -213,7 +230,7 @@ HITT 流程尚未对齐，暂不建 `HITTAudit` / `KnowledgeAudit` / `AuditRecor
 
 **未进入第一阶段、暂列扩展：**
 
-- 并行策略、流水调度、通信调度、算子融合、内存优化、优化器优化、MoE 优化、模型结构等价替换、组合搜索
+- 流水调度、通信调度、算子融合、内存优化、优化器优化、MoE 优化、模型结构等价替换、组合搜索
 - cann 领域知识库、固化知识库
 - 知识沉淀专家、并行策略分析/实施/验证专家、算子优化分析/实施/验证专家
 - openJiuwen prompt 触发、openJiuwen 产物 RSI 入口、idea 结构化 skill
@@ -223,11 +240,14 @@ HITT 流程尚未对齐，暂不建 `HITTAudit` / `KnowledgeAudit` / `AuditRecor
 
 ## 4. 第一阶段知识库决议
 
-核心 6 个 HP skill：
+核心 9 个 HP skill：
 
 ```text
 hp/recompute-modes
 hp/recompute-layerwise
+hp/parallel-tensor
+hp/parallel-frontier
+hp/parallel-numeric-parity
 hp/measurement
 hp/memory-budget
 hp/numeric-fingerprint
@@ -282,6 +302,9 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `RuntimeKnowledgeReader` | `irsi/knowledge/runtime/reader.py` | 已实现 |
 | `SkillCatalog / HPKnowledgeProvider / SkillResolver` | `irsi/knowledge/{skills,catalog,reader,providers}` | 已实现 |
 | `RecomputeSurface` | `irsi/contract/surfaces/recompute.py` | 已实现 |
+| `ParallelSurface` | `irsi/contract/surfaces/parallel.py` | 已实现；TP/FSDP 候选 ladder |
+| `NumericParityGate` | `irsi/gates/parallel.py` | 已实现；并行容差数值等价 |
+| `ParallelEngagementGate` | `irsi/gates/parallel.py` | 已实现；mesh/plan 运行时证据 |
 | `NumericPrecisionGate` | `irsi/gates/builtin.py` | 已实现 |
 | `TrialExecutor` | `irsi/execution/trial_executor.py` | 已实现；统一执行原语 |
 | `EnvironmentSnapshot` | `irsi/environment/snapshot.py` | 已实现；记录 baseline world |
