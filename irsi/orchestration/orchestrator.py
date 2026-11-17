@@ -39,12 +39,20 @@ class Orchestrator:
         *,
         store: ExperimentRecordStore | None = None,
         builder: ContextBuilder | None = None,
+        runtime: Any | None = None,
     ) -> None:
         self.task = task
         self.facade = facade
         self.store = store
         self.builder = builder or ContextBuilder(task)
+        self.runtime = runtime
         self.execution = ExecutionStage()
+
+    def _run_expert(self, name: str, context: Any, skills: tuple[Any, ...]) -> Any:
+        expert = EXPERTS.get(name)
+        if self.runtime is None:
+            return expert.run(context, self.facade)
+        return self.runtime.run(expert, context, skills, self.facade)
 
     def run_round(
         self,
@@ -59,8 +67,8 @@ class Orchestrator:
         state = replace(state, observation_plan=observation_plan)
 
         # DECISION: one HypothesisSet per round.
-        context, _skills = self.builder.build(state, Stage.DECISION)
-        decision_result = EXPERTS.get("decision").run(context, self.facade)
+        context, skills = self.builder.build(state, Stage.DECISION)
+        decision_result = self._run_expert("decision", context, skills)
         require_artifact(Stage.DECISION, decision_result.artifact)
         hypotheses = decision_result.artifact.hypotheses
         state = replace(
@@ -78,10 +86,10 @@ class Orchestrator:
                 return replace(state, stage=Stage.DONE, stop_reason="budget_exhausted")
 
             # DEVELOPMENT: contract-approved CandidateSpec.
-            context, _skills = self.builder.build(
+            context, skills = self.builder.build(
                 state, Stage.DEVELOPMENT, candidate=hypothesis
             )
-            development_result = EXPERTS.get("development").run(context, self.facade)
+            development_result = self._run_expert("development", context, skills)
             require_artifact(Stage.DEVELOPMENT, development_result.artifact)
             candidate = development_result.artifact
             state = replace(
@@ -116,8 +124,8 @@ class Orchestrator:
                     previous_artifact=judgment,
                     trials_run=state.trials_run + 1,
                 )
-                context, _skills = self.builder.build(state, Stage.ARCHIVE)
-                archive_result = EXPERTS.get("archive_report").run(context, self.facade)
+                context, skills = self.builder.build(state, Stage.ARCHIVE)
+                archive_result = self._run_expert("archive_report", context, skills)
                 require_artifact(Stage.ARCHIVE, archive_result.artifact)
                 state = replace(
                     state,
@@ -131,6 +139,8 @@ class Orchestrator:
                     judgment,
                     rollback="not_committed",
                     status=_error_status(exc),
+                    prompt_hash=archive_result.prompt_hash,
+                    skill_ids=archive_result.used_skills,
                 )
                 state = replace(state, stage=Stage.NEXT_CANDIDATE)
                 continue
@@ -144,10 +154,10 @@ class Orchestrator:
             )
 
             # JUDGMENT: gates + observed baseline.
-            context, _skills = self.builder.build(
+            context, skills = self.builder.build(
                 state, Stage.JUDGMENT, candidate=candidate
             )
-            judgment_result = EXPERTS.get("judgment").run(context, self.facade)
+            judgment_result = self._run_expert("judgment", context, skills)
             require_artifact(Stage.JUDGMENT, judgment_result.artifact)
             judgment = judgment_result.artifact
             state = replace(
@@ -157,8 +167,8 @@ class Orchestrator:
             )
 
             # ARCHIVE: step report payload.
-            context, _skills = self.builder.build(state, Stage.ARCHIVE)
-            archive_result = EXPERTS.get("archive_report").run(context, self.facade)
+            context, skills = self.builder.build(state, Stage.ARCHIVE)
+            archive_result = self._run_expert("archive_report", context, skills)
             require_artifact(Stage.ARCHIVE, archive_result.artifact)
             state = replace(
                 state,
@@ -166,7 +176,14 @@ class Orchestrator:
                 previous_artifact=archive_result.artifact,
             )
 
-            self._record(state, candidate, execution, judgment)
+            self._record(
+                state,
+                candidate,
+                execution,
+                judgment,
+                prompt_hash=judgment_result.prompt_hash,
+                skill_ids=judgment_result.used_skills,
+            )
 
             if judgment.status == "keep":
                 state = replace(
@@ -196,6 +213,8 @@ class Orchestrator:
         *,
         rollback: str | None = None,
         status: str | None = None,
+        prompt_hash: str | None = None,
+        skill_ids: tuple[str, ...] = (),
     ) -> None:
         if self.store is None:
             return
@@ -230,5 +249,7 @@ class Orchestrator:
                 artifacts=artifacts,
                 evidence=evidence,
                 rollback=rollback,
+                prompt_hash=prompt_hash,
+                skill_ids=skill_ids,
             )
         )

@@ -21,6 +21,7 @@ from .knowledge.runtime.ledger_store import TaskLedger
 from .knowledge.runtime.reader import RuntimeKnowledgeReader
 from .knowledge.runtime.record_store import ExperimentRecordStore
 from .orchestration import RoundController
+from .runtime.native_prompt_runtime import NativePromptRuntime
 from .reporting import ReportBuilder
 
 __all__ = ["main"]
@@ -69,6 +70,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         store=store,
         reader=reader,
         resolver=resolver,
+        runtime=NativePromptRuntime(),
     )
     state = controller.run_round("round-1")
 

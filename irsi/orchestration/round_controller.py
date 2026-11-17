@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from ..contract import InfraTaskSpec
 from ..experts.observation.expert import ObservationExpert
@@ -34,6 +35,7 @@ class RoundController:
         reader: RuntimeKnowledgeReader | None = None,
         resolver: SkillResolver | None = None,
         patch_manager: ObservationPatchManager | None = None,
+        runtime: Any | None = None,
     ) -> None:
         self.task = task
         self.backend = backend
@@ -44,6 +46,7 @@ class RoundController:
         )
         self.resolver = resolver
         self.patch_manager = patch_manager
+        self.runtime = runtime
 
     def run_round(self, round_id: str = "round-1") -> RoundState:
         clean_facade = RuntimeFacade(
@@ -57,10 +60,17 @@ class RoundController:
         )
 
         # Observation is task-level and independent of any hypothesis.
-        plan = ObservationExpert().run(
-            StageContext(task=self.task, stage="observation"),
-            observed_facade,
-        ).artifact
+        observation_expert = ObservationExpert()
+        observation_context = StageContext(task=self.task, stage="observation")
+        if self.runtime is None:
+            observation_result = observation_expert.run(
+                observation_context, observed_facade
+            )
+        else:
+            observation_result = self.runtime.run(
+                observation_expert, observation_context, (), observed_facade
+            )
+        plan = observation_result.artifact
 
         # Clean baseline is the control; observed baseline is the reference.
         clean = clean_facade.execute_trial({}, "baseline-clean")
@@ -145,6 +155,10 @@ class RoundController:
             self.task, reader=self.reader, resolver=self.resolver
         )
         orchestrator = Orchestrator(
-            self.task, candidate_facade, store=self.store, builder=builder
+            self.task,
+            candidate_facade,
+            store=self.store,
+            builder=builder,
+            runtime=self.runtime,
         )
         return orchestrator.run_round(state, observation_plan=plan)

@@ -276,9 +276,10 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `MetricExtractor` | `irsi/execution/metric_extractor.py` | 已实现 |
 | 五个 `ExpertRole` | `irsi/experts/*/expert.py` | 已实现 |
 | `PromptBuilder` | `irsi/prompting/builder.py` | 已实现 |
+| `ExpertRuntime` / `NativePromptRuntime` | `irsi/runtime/native_prompt_runtime.py` | 已实现；渲染 prompt 并记录 prompt_hash / skill_ids |
 | `RuntimeFacade` | `irsi/runtime/facade.py` | 已实现 |
 | `ReportBuilder` / `StepReport` / `RoundReport` | `irsi/reporting/report_builder.py` | 已实现；从 `ExperimentRecordStore` 生成 report |
 | `CommitRecorder` | `irsi/git/commit_recorder.py` | 已实现；尚未接入 Orchestrator |
 | `HITTAudit` | 无 | 暂缓 |
 
-**结论**：第一阶段剩余的是 **TrialExecutor 统一执行原语、CommitRecorder 接入编排、ExpertRuntime adapter、EnvironmentExpert**；CLI / Orchestrator / RoundController / ContextBuilder / NeutralityChecker / BaselineReference / ReportBuilder / ObservationPatchManager 已落地。
+**结论**：第一阶段剩余的是 **TrialExecutor 统一执行原语、CommitRecorder 接入编排、EnvironmentExpert**；CLI / Orchestrator / RoundController / ContextBuilder / NeutralityChecker / BaselineReference / ReportBuilder / ObservationPatchManager / NativePromptRuntime 已落地。

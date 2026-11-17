@@ -18,7 +18,7 @@ knowledge   knowledge/runtime/ (records.jsonl, ExperimentRecordStore, RuntimeKno
 prompting   prompting/ (StageContext, expert prompt specs, deterministic builder)
 experts     experts/ (five role artifacts, prompt specs, registry)
 execution   execution/stage.py (deterministic ExecutionStage, not an agent)
-runtime     runtime/facade.py + runtime/neutrality.py + runtime/baseline_reference.py + runtime/observation_patch.py
+runtime     runtime/facade.py + runtime/neutrality.py + runtime/baseline_reference.py + runtime/observation_patch.py + runtime/native_prompt_runtime.py
 git         git/commit_recorder.py (candidate commit + report, revert)
 reporting   reporting/ (step/round reports + exporters/)
 ```

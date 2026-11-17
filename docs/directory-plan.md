@@ -68,6 +68,7 @@ infra-rsi/
 │   │   ├── neutrality.py          # NeutralityChecker / NeutralityResult
 │   │   ├── baseline_reference.py  # BaselineReference = observed
 │   │   ├── observation_patch.py   # apply / revert ObservationPatch
+│   │   ├── native_prompt_runtime.py  # render prompt + record provenance
 │   │   └── expert_runtime.py      # ExpertRuntime Protocol
 │   │
 │   ├── experts/
@@ -163,7 +164,6 @@ infra-rsi/
 - `execution/perf_observer.py`
 - `execution/snapshot.py`
 - `execution/trial_executor.py`
-- `runtime/native_prompt_runtime.py`
 - `runtime/openjiuwen_runtime.py`
 - `reporting/exporters/json_exporter.py` / `markdown_exporter.py` / `csv_exporter.py`
 - `audit/hitt.py`、`audit/knowledge_audit.py`、`audit/audit_record.py`（暂缓）
@@ -279,6 +279,7 @@ Orchestrator / RoundController / ContextBuilder
 NeutralityChecker / BaselineReference
 BaselineCalibrator（只分析 TrialResult）
 ObservationPatchManager
+NativePromptRuntime
 ReportBuilder
 CommitRecorder（已建，未接入编排）
 ```
@@ -287,7 +288,6 @@ CommitRecorder（已建，未接入编排）
 
 ```text
 TrialExecutor
-ExpertRuntime adapter
 ```
 
 ---
@@ -315,7 +315,7 @@ ExpertRuntime adapter
 **已建：**
 
 - `prompting/`（context、spec、builder、registry）
-- `runtime/facade.py`、`runtime/calibration.py`、`runtime/neutrality.py`、`runtime/baseline_reference.py`、`runtime/observation_patch.py`、`runtime/expert_runtime.py`
+- `runtime/facade.py`、`runtime/calibration.py`、`runtime/neutrality.py`、`runtime/baseline_reference.py`、`runtime/observation_patch.py`、`runtime/native_prompt_runtime.py`、`runtime/expert_runtime.py`
 - `git/commit_recorder.py`
 - `experts/` 五个角色与 artifact
 - `execution/stage.py` 确定性 ExecutionStage
@@ -333,7 +333,7 @@ ExpertRuntime adapter
 
 - `entry/`（commands / openjiuwen）
 - `execution/trial_executor.py`
-- `runtime/native_prompt_runtime.py` / openjiuwen
+- `runtime/openjiuwen_runtime.py`
 - `baseline/BaselineWorld`
 
 **暂缓：**

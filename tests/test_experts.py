@@ -22,9 +22,10 @@ from irsi.experts import (
 from irsi.execution.backends.base import TrialResult
 from irsi.execution.metric_extractor import StepMetric, TrialMetrics
 from irsi.execution.stage import ExecutionStage
-from irsi.prompting import PROMPTS, StageContext
+from irsi.prompting import PROMPTS, SkillView, StageContext
 from irsi.runtime.calibration import BaselineCalibrator
 from irsi.runtime.facade import RuntimeFacade
+from irsi.runtime.native_prompt_runtime import NativePromptRuntime
 
 TASK_PATH = Path(__file__).resolve().parents[1] / "examples/specs/hyperparallel-recompute.yaml"
 TASK = load_contract(TASK_PATH)
@@ -280,6 +281,28 @@ def test_baseline_reference_is_observed_inside_noise(tmp_path):
     assert calibration.neutrality.overhead == pytest.approx(0.01)
     assert calibration.reference.metric == pytest.approx(101.0)
     assert calibration.reference.trial.label == "baseline-observed"
+
+
+def test_native_prompt_runtime_records_provenance(tmp_path):
+    backend = FakeBackend([_metrics(100.0)])
+    facade = RuntimeFacade(TASK, backend, tmp_path / "runs")
+    skill = SkillView(
+        id="hp/recompute-layerwise",
+        version=1,
+        title="Layerwise recompute",
+        when_to_use="When per-layer checkpointing is available.",
+        excerpt="Use activation_checkpoint.selection.layer_count to choose a layer ladder.",
+        manifest={"framework": "hyperparallel", "surface": "recompute"},
+    )
+    context = StageContext(task=TASK, stage="decision", baseline_metric=100.0)
+
+    result = NativePromptRuntime().run(
+        DecisionExpert(), context, (skill,), facade
+    )
+
+    assert isinstance(result.artifact, HypothesisSet)
+    assert result.prompt_hash
+    assert result.used_skills == ("hp/recompute-layerwise",)
 
 
 def test_judgment_requires_baseline_trial(tmp_path):
