@@ -19,7 +19,7 @@ prompting   prompting/ (StageContext, expert prompt specs, deterministic builder
 experts     experts/ (six role artifacts, prompt specs, registry; execution is a deterministic stage)
 execution   execution/stage.py (deterministic ExecutionStage) + execution/trial_executor.py
 runtime     runtime/facade.py + runtime/neutrality.py + runtime/baseline_reference.py + runtime/observation_patch.py + runtime/native_prompt_runtime.py
-environment environment/snapshot.py (baseline world facts)
+environment environment/snapshot.py (baseline world facts) + environment/repair.py (bounded repair)
 git         git/commit_recorder.py (candidate commit + report, revert; wired in Orchestrator)
 reporting   reporting/ (step/round reports + exporters/)
 ```

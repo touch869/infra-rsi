@@ -35,6 +35,7 @@ baseline_metric
 gates              # gate name, passed, detail
 artifacts          # config / log / metrics paths
 environment_snapshot  # 依赖、驱动、设备、路径、repo commit
+environment_action    # 修复动作、命令、成功/失败
 observation_patch     # target_files, diff, apply_before_baseline
 ```
 

@@ -10,6 +10,7 @@ from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
+from .environment.repair import EnvironmentRepairAgent
 from .execution import backends as _backends  # noqa: F401  (plugin registration)
 from .contract import surfaces as _surfaces  # noqa: F401
 from . import gates as _gates  # noqa: F401
@@ -75,6 +76,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         resolver=resolver,
         runtime=NativePromptRuntime(),
         commit_recorder=commit_recorder,
+        repair_agent=EnvironmentRepairAgent(spec),
     )
     state = controller.run_round("round-1")
 

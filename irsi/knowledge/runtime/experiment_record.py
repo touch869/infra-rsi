@@ -31,6 +31,7 @@ class ExperimentRecord:
     baseline_metric: float | None = None
     gates: tuple[Mapping[str, Any], ...] = ()
     environment_snapshot: Mapping[str, Any] = field(default_factory=dict)
+    environment_action: Mapping[str, Any] = field(default_factory=dict)
     observation_patch: Mapping[str, Any] = field(default_factory=dict)
     neutrality: Mapping[str, Any] = field(default_factory=dict)
     commit: str | None = None
@@ -78,6 +79,7 @@ class ExperimentRecord:
             "gates": [dict(gate) for gate in self.gates],
             "artifacts": dict(self.artifacts),
             "environment_snapshot": dict(self.environment_snapshot),
+            "environment_action": dict(self.environment_action),
             "observation_patch": dict(self.observation_patch),
             "neutrality": dict(self.neutrality),
             "commit": self.commit,
@@ -107,6 +109,7 @@ class ExperimentRecord:
             gates=tuple(dict(gate) for gate in raw.get("gates", ())),
             artifacts=dict(raw.get("artifacts", {})),
             environment_snapshot=dict(raw.get("environment_snapshot", {})),
+            environment_action=dict(raw.get("environment_action", {})),
             observation_patch=dict(raw.get("observation_patch", {})),
             neutrality=dict(raw.get("neutrality", {})),
             commit=raw.get("commit"),

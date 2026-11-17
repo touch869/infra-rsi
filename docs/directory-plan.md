@@ -98,7 +98,8 @@ infra-rsi/
 │   │
 │   ├── environment/
 │   │   ├── __init__.py
-│   │   └── snapshot.py            # EnvironmentSnapshot
+│   │   ├── snapshot.py            # EnvironmentSnapshot
+│   │   └── repair.py              # EnvironmentRepairAgent / EnvironmentAction
 │   │
 │   ├── git/
 │   │   ├── __init__.py
@@ -190,7 +191,7 @@ infra-rsi/
 | `contract/` | TaskSpec、修改面插件、数值精度验证（已建） |
 | `gates/` | 通用 gate 与其 registry（已建） |
 | `execution/` | 执行器、指标抽取、确定性 ExecutionStage（已建） |
-| `environment/` | 环境快照；环境搭建/修复 agent 待建（snapshot 已建） |
+| `environment/` | 环境快照 + 有界环境修复 agent（snapshot/repair 已建） |
 | `runtime/` | 确定性 runtime facade、baseline 分析、观测 patch apply/revert、专家运行时 adapter（facade/neutrality/baseline_reference/observation_patch/expert_runtime 已建） |
 | `git/` | 候选 commit + report、revert（CommitRecorder 已接入 Orchestrator/CLI） |
 | `experts/` | 六个专家角色、各自 prompt spec、统一 artifact 类型（已建） |
@@ -292,13 +293,14 @@ NativePromptRuntime
 ReportBuilder
 EnvironmentSnapshot
 EnvironmentExpert（探测/快照）
+EnvironmentRepairAgent（有界修复）
 CommitRecorder（已接入 Orchestrator/CLI）
 ```
 
 仍待实现：
 
 ```text
-环境修复 agent
+OpenJiuwen runtime
 ```
 
 ---
@@ -335,6 +337,7 @@ CommitRecorder（已接入 Orchestrator/CLI）
 - `gates/`
 - `execution/`（metric_extractor、trial_executor、stage、backends）
 - `environment/snapshot.py` 环境快照
+- `environment/repair.py` 有界环境修复 agent
 - `knowledge/runtime/ledger_store.py`
 - `knowledge/runtime/experiment_record.py`、`record_store.py`、`reader.py`
 - `knowledge/skills.py`、`catalog.py`、`reader.py`、`providers/hyperparallel.py`

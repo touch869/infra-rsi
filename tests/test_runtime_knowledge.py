@@ -114,6 +114,7 @@ def test_record_round_trip_and_optional_fields(tmp_path):
     assert rebuilt.prompt_hash is None
     assert rebuilt.skill_ids == ()
     assert rebuilt.environment_snapshot == {}
+    assert rebuilt.environment_action == {}
     assert rebuilt.observation_patch == {}
     assert rebuilt.neutrality == {}
     assert rebuilt.report == {}

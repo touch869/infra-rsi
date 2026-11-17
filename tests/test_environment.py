@@ -7,7 +7,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from irsi.contract import load_contract
-from irsi.environment import EnvironmentSnapshot
+from irsi.environment import EnvironmentRepairAgent, EnvironmentSnapshot
 
 TASK_PATH = Path(__file__).resolve().parents[1] / "examples/specs/hyperparallel-recompute.yaml"
 TASK = load_contract(TASK_PATH)
@@ -42,3 +42,33 @@ def test_environment_snapshot_capture(tmp_path: Path):
     payload = snapshot.to_dict()
     assert payload["repo_commit"] == snapshot.repo_commit
     assert payload["platform"] == snapshot.platform
+
+
+def test_environment_repair_agent_reruns_env_setup():
+    spec = replace(TASK, env_setup="true")
+    agent = EnvironmentRepairAgent(spec)
+
+    diagnosis = agent.diagnose(OSError("missing dependency"))
+    assert diagnosis.kind == "env_error"
+
+    action = agent.repair(OSError("missing dependency"))
+    assert action.action == "env_setup"
+    assert action.success is True
+
+
+def test_environment_repair_agent_refuses_without_env_setup():
+    spec = replace(TASK, env_setup="")
+    agent = EnvironmentRepairAgent(spec)
+    action = agent.repair(OSError("missing dependency"))
+    assert action.action == "no_env_setup"
+    assert action.success is False
+
+
+def test_environment_repair_agent_respects_attempt_budget():
+    spec = replace(TASK, env_setup="true")
+    agent = EnvironmentRepairAgent(spec, max_attempts=1)
+    first = agent.repair(OSError("missing dependency"))
+    second = agent.repair(OSError("missing dependency"))
+    assert first.success is True
+    assert second.action == "exhausted"
+    assert second.success is False

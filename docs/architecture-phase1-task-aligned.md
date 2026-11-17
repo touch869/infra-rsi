@@ -81,6 +81,7 @@ COMMIT / REPORT
 | 模块 | 职责 | 输入 | 输出 |
 |---|---|---|---|
 | `EnvironmentExpert` / `EnvironmentOperator` | 环境搭建、诊断、修复；有界 agent，可审计 | task、环境快照、错误 | `EnvironmentSnapshot` / `EnvironmentAction` |
+| `EnvironmentRepairAgent` | 有界修复：诊断错误、重跑 `env_setup`、限制 attempts | error、`TaskSpec` | `EnvironmentAction` |
 | `EnvironmentSnapshot` | 记录 python、platform、repo commit、packages、env_setup | `TaskSpec` | `EnvironmentSnapshot` |
 | `TrialExecutor` | 唯一执行原语：渲染配置、启动训练、超时清理、返回 `TrialResult` | spec、overrides、label、patch 状态 | `TrialResult` |
 | `ExecutionStage` | 确定性执行候选；不生成 prompt、不裁决 | `CandidateSpec` | `ExecutionResult` |
@@ -272,7 +273,8 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `NumericPrecisionGate` | `irsi/gates/builtin.py` | 已实现 |
 | `TrialExecutor` | `irsi/execution/trial_executor.py` | 已实现；统一执行原语 |
 | `EnvironmentSnapshot` | `irsi/environment/snapshot.py` | 已实现；记录 baseline world |
-| `EnvironmentExpert` | `irsi/experts/environment/expert.py` | 已实现探测/快照；环境修复仍为有界外部动作 |
+| `EnvironmentExpert` | `irsi/experts/environment/expert.py` | 已实现探测/快照 |
+| `EnvironmentRepairAgent` | `irsi/environment/repair.py` | 已实现有界修复；重跑 env_setup、限制 attempts |
 | `ExecutionStage` | `irsi/execution/stage.py` | 已新增，确定性执行 |
 | `ObservationExpert` | `irsi/experts/observation/expert.py` | 已改为 task-level |
 | `ObservationPatch` | `irsi/experts/artifacts.py` + `irsi/runtime/observation_patch.py` | 已有 artifact；apply/revert 已实现 |
@@ -286,4 +288,4 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `CommitRecorder` | `irsi/git/commit_recorder.py` | 已接入 Orchestrator/CLI；keep 提交 trial config + step report，discard/crash 只提交 step report |
 | `HITTAudit` | 无 | 暂缓 |
 
-**结论**：第一阶段剩余的是 **OpenJiuwen runtime、环境修复 agent 与真实远端运行**；CLI / Orchestrator / RoundController / ContextBuilder / TrialExecutor / NeutralityChecker / BaselineReference / ReportBuilder / ObservationPatchManager / NativePromptRuntime / CommitRecorder / EnvironmentSnapshot / EnvironmentExpert 已落地。
+**结论**：第一阶段剩余的是 **OpenJiuwen runtime 与真实远端运行**；CLI / Orchestrator / RoundController / ContextBuilder / TrialExecutor / NeutralityChecker / BaselineReference / ReportBuilder / ObservationPatchManager / NativePromptRuntime / CommitRecorder / EnvironmentSnapshot / EnvironmentExpert / EnvironmentRepairAgent 已落地。

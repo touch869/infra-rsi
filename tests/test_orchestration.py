@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from irsi.contract import BudgetSpec, load_contract
+from irsi.environment import EnvironmentRepairAgent
 from irsi.execution.backends.base import TrialResult
 from irsi.execution.metric_extractor import StepMetric, TrialMetrics
 from irsi.git import CommitRecorder
@@ -76,6 +77,20 @@ class FailingBackend(FakeBackend):
     def run(self, spec, trial_dir, overrides, label):
         if label == "layers-0":
             raise RuntimeError("out of memory during candidate trial")
+        return super().run(spec, trial_dir, overrides, label)
+
+
+class FlakyEnvBackend(FakeBackend):
+    """Fail the first clean baseline with an environment error, then recover."""
+
+    def __init__(self, metrics):
+        super().__init__(metrics)
+        self.failed = False
+
+    def run(self, spec, trial_dir, overrides, label):
+        if not self.failed:
+            self.failed = True
+            raise OSError("missing dependency")
         return super().run(spec, trial_dir, overrides, label)
 
 
@@ -172,3 +187,27 @@ def test_commit_recorder_is_wired_for_keep(tmp_path):
     assert "step_reports/step-0003.json" in tracked
     assert "trials/layers-0/train.yaml" in tracked
     assert _git(task_dir, "log", "--oneline").strip()
+
+
+def test_environment_repair_retries_clean_baseline(tmp_path):
+    task = replace(TASK, env_setup="true", budget=BudgetSpec(max_trials=1))
+    backend = FlakyEnvBackend([_metrics(100.0), _metrics(100.0), _metrics(120.0)])
+    store = ExperimentRecordStore(tmp_path / "task")
+
+    controller = RoundController(
+        task,
+        backend,
+        tmp_path / "runs",
+        store=store,
+        repair_agent=EnvironmentRepairAgent(task),
+    )
+    state = controller.run_round("round-1")
+
+    assert state.stage == Stage.DONE
+    assert state.best_metric == pytest.approx(120.0)
+    records = store.recent(10, round_id="round-1")
+    env = records[0]
+    assert env.stage == "environment"
+    assert env.status == "env_error"
+    assert env.environment_action["success"] is True
+    assert records[-1].status == "keep"

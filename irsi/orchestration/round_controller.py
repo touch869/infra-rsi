@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any
 
 from ..contract import InfraTaskSpec
+from ..environment.repair import EnvironmentRepairAgent
+from ..environment.snapshot import EnvironmentSnapshot
 from ..experts.environment.expert import EnvironmentExpert
 from ..experts.observation.expert import ObservationExpert
 from ..knowledge.reader import SkillResolver
@@ -40,6 +42,7 @@ class RoundController:
         patch_manager: ObservationPatchManager | None = None,
         runtime: Any | None = None,
         commit_recorder: CommitRecorder | None = None,
+        repair_agent: EnvironmentRepairAgent | None = None,
     ) -> None:
         self.task = task
         self.backend = backend
@@ -52,6 +55,58 @@ class RoundController:
         self.patch_manager = patch_manager
         self.runtime = runtime
         self.commit_recorder = commit_recorder
+        self.repair_agent = repair_agent
+
+    def _run_clean_baseline(
+        self,
+        clean_facade: RuntimeFacade,
+        round_id: str,
+        snapshot: EnvironmentSnapshot,
+    ) -> tuple[Any | None, EnvironmentSnapshot]:
+        """Run clean baseline, repairing allowlisted environment failures."""
+        while True:
+            try:
+                return clean_facade.execute_trial({}, "baseline-clean"), snapshot
+            except Exception as exc:  # noqa: BLE001 - environment failure is evidence
+                if self.repair_agent is None:
+                    if self.store is not None:
+                        self.store.append(
+                            ExperimentRecord(
+                                record_id="",
+                                round_id=round_id,
+                                step_id=0,
+                                stage="environment",
+                                metric=None,
+                                status="env_error",
+                                detail=f"environment error: {exc}",
+                                environment_snapshot=snapshot.to_dict(),
+                            )
+                        )
+                    return None, snapshot
+
+                diagnosis = self.repair_agent.diagnose(exc)
+                action = self.repair_agent.repair(exc)
+                status = "env_error" if diagnosis.kind == "env_error" else "crash"
+                if self.store is not None:
+                    self.store.append(
+                        ExperimentRecord(
+                            record_id="",
+                            round_id=round_id,
+                            step_id=0,
+                            stage="environment",
+                            metric=None,
+                            status=status,
+                            detail=f"{diagnosis.kind}: {diagnosis.reason}",
+                            environment_snapshot=snapshot.to_dict(),
+                            environment_action=action.to_dict(),
+                        )
+                    )
+
+                if not action.success:
+                    return None, snapshot
+
+                # Environment changed; re-probe and re-run the clean baseline.
+                snapshot = EnvironmentSnapshot.capture(self.task)
 
     def run_round(self, round_id: str = "round-1") -> RoundState:
         executor = TrialExecutor(self.task, self.backend)
@@ -91,7 +146,13 @@ class RoundController:
         plan = observation_result.artifact
 
         # Clean baseline is the control; observed baseline is the reference.
-        clean = clean_facade.execute_trial({}, "baseline-clean")
+        clean, snapshot = self._run_clean_baseline(clean_facade, round_id, snapshot)
+        if clean is None:
+            return RoundState(
+                round_id=round_id,
+                stage=Stage.FAILED,
+                stop_reason="environment_unrecoverable",
+            )
         if not plan.instrumentation_patch.is_empty:
             if self.patch_manager is None:
                 raise ValueError(
