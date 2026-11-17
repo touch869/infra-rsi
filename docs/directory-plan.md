@@ -93,7 +93,13 @@ infra-rsi/
 │   │       └── __init__.py        # 出口合并点；具体 exporter 待建
 │   │
 │   ├── audit/                     # 空脚手架；HITT 暂缓
-│   ├── orchestration/             # 空脚手架；Orchestrator / RoundController / ContextBuilder 待建
+│   ├── orchestration/
+│   │   ├── __init__.py
+│   │   ├── state.py               # Stage / RoundState
+│   │   ├── policy.py              # artifact / budget rules
+│   │   ├── context_builder.py     # StageContext + skills
+│   │   ├── orchestrator.py        # candidate-stage loop
+│   │   └── round_controller.py    # observation + baseline + round
 │   └── entry/                     # 空脚手架；commands / openjiuwen 待建
 │
 ├── tests/
@@ -141,11 +147,6 @@ infra-rsi/
 
 ## 2. 规划但尚未落地
 
-- `orchestration/state.py`
-- `orchestration/policy.py`
-- `orchestration/orchestrator.py`
-- `orchestration/round_controller.py`
-- `orchestration/context_builder.py`
 - `entry/commands.py`
 - `entry/openjiuwen_entry.py`
 - `contract/candidate_generator.py`
@@ -173,7 +174,7 @@ infra-rsi/
 | 目录 | 职责 |
 |---|---|
 | `entry/` | CLI 命令、OpenJiuwen prompt 入口（待建） |
-| `orchestration/` | 流程编排、round 控制、StageContext 组装（待建） |
+| `orchestration/` | 流程编排、round 控制、StageContext 组装（已建） |
 | `prompting/` | 阶段 prompt 规范与通用拼装（已建） |
 | `knowledge/` | skill catalog、HP provider、SkillResolver、runtime records、ledger（已建） |
 | `contract/` | TaskSpec、修改面插件、数值精度验证（已建） |
@@ -270,15 +271,13 @@ RuntimeFacade
 SkillCatalog / HPKnowledgeProvider / SkillResolver
 五个 ExpertRole
 ExecutionStage
+Orchestrator / RoundController / ContextBuilder
 BaselineCalibrator（待拆）
 ```
 
 仍待实现：
 
 ```text
-Orchestrator
-RoundController
-ContextBuilder
 TrialExecutor
 NeutralityChecker / BaselineReference
 ExpertRuntime adapter
@@ -313,6 +312,7 @@ ReportBuilder / CommitRecorder
 - `runtime/facade.py`、`runtime/calibration.py`、`runtime/expert_runtime.py`
 - `experts/` 五个角色与 artifact
 - `execution/stage.py` 确定性 ExecutionStage
+- `orchestration/`（state、policy、context_builder、orchestrator、round_controller）
 - `contract/surfaces/recompute.py`
 - `gates/`
 - `execution/`（metric_extractor、backends）
@@ -324,7 +324,6 @@ ReportBuilder / CommitRecorder
 
 **待建：**
 
-- `orchestration/`（Orchestrator / RoundController / ContextBuilder）
 - `entry/`（commands / openjiuwen）
 - `execution/trial_executor.py`
 - `runtime/neutrality.py` / `runtime/baseline_reference.py`

@@ -8,7 +8,7 @@ One command runs a task contract end to end: **environment â†’ clean baseline â†
 
 ```
 entry       cli.py (entry/ commands planned)
-orchestration  Orchestrator / RoundController / ContextBuilder (planned)
+orchestration  Orchestrator / RoundController / ContextBuilder
 plugins     contract/surfaces/ (which candidates a surface offers)
             execution/backends/ (how a trial runs)
             gates/ (receipt, bitwise, memory)
