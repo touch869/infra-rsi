@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -322,6 +323,25 @@ def test_native_prompt_runtime_records_provenance(tmp_path):
     assert isinstance(result.artifact, HypothesisSet)
     assert result.prompt_hash
     assert result.used_skills == ("hp/recompute-layerwise",)
+
+
+def test_observation_patch_is_task_level_from_contract(tmp_path):
+    task = replace(
+        TASK,
+        domain_params={
+            **dict(TASK.domain_params),
+            "observation_patch": {
+                "target_files": ["train.py"],
+                "diff": "diff --git a/train.py b/train.py\n",
+            },
+        },
+    )
+    facade = RuntimeFacade(task, FakeBackend([_metrics(100.0)]), tmp_path / "runs")
+    result = ObservationExpert().run(
+        StageContext(task=task, stage="observation"), facade
+    )
+    assert result.artifact.instrumentation_patch.target_files == ("train.py",)
+    assert result.artifact.instrumentation_patch.diff
 
 
 def test_judgment_requires_baseline_trial(tmp_path):

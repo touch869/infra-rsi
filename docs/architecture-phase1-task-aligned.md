@@ -101,7 +101,7 @@ COMMIT / REPORT
 | `NeutralityChecker` | 检查 numeric fingerprint、性能/显存开销 | clean / observed `TrialResult` | `NeutralityResult` |
 | `BaselineReference` | 冻结 `reference = observed baseline` | observed `TrialResult`、中性结果 | `baseline_metric` / `baseline_trial` |
 
-**边界**：`clean baseline` 是控制变量；`observed baseline` 是实验基准。没有 `BaselineSelector`；单 profile 下直接固定 observed。
+**边界**：`clean baseline` 是控制变量；`observed baseline` 是实验基准。没有 `BaselineSelector`；单 profile 下直接固定 observed。observed baseline 失败时：先 revert patch，记录 `patch_error`，由 ObservationExpert 重改并重跑；若为环境错误则走 `EnvironmentRepairAgent`；不可恢复则 round `FAILED`。
 
 ---
 
@@ -180,7 +180,7 @@ COMMIT / REPORT
 | `ReportBuilder` | 生成 `report.json` / `report.md` | ledger / store | report files |
 | `CommitRecorder` | 每个候选一个 commit；report 随 commit | patch、report | commit |
 
-**边界**：报告 schema 由代码强制；`ArchiveReportExpert` 只整理 artifact，不自动 commit。失败 patch 不入库，失败修改描述写在 report；当前 config-only 候选的 rollback 标记为 `not_committed`。`CommitRecorder` 已接入：keep 提交 trial config + step report，discard/crash 只提交 step report。
+**边界**：报告 schema 由代码强制；`ArchiveReportExpert` 只整理 artifact，不自动 commit。失败 patch 不入库，失败修改描述写在 report；当前 config-only 候选的 rollback 标记为 `not_committed`。`CommitRecorder` 已接入：environment baseline 提交 `environment_report.json`；calibration 提交 `calibration.json` + `observation.patch`；keep 提交 trial config + step report，discard/crash 只提交 step report。
 
 ---
 
@@ -276,7 +276,7 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `EnvironmentExpert` | `irsi/experts/environment/expert.py` | 已实现探测/快照 |
 | `EnvironmentRepairAgent` | `irsi/environment/repair.py` | 已实现有界修复；重跑 env_setup、限制 attempts |
 | `ExecutionStage` | `irsi/execution/stage.py` | 已新增，确定性执行 |
-| `ObservationExpert` | `irsi/experts/observation/expert.py` | 已改为 task-level |
+| `ObservationExpert` | `irsi/experts/observation/expert.py` | task-level；可选 patch 来自 `domain_params.observation_patch` |
 | `ObservationPatch` | `irsi/experts/artifacts.py` + `irsi/runtime/observation_patch.py` | 已有 artifact；apply/revert 已实现 |
 | `NeutralityChecker` / `BaselineReference` | `irsi/runtime/neutrality.py`, `irsi/runtime/baseline_reference.py` | 已实现；`BaselineCalibrator` 只分析两个 `TrialResult`，reference 固定 observed |
 | `MetricExtractor` | `irsi/execution/metric_extractor.py` | 已实现 |

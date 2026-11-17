@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Mapping
+
 from ...prompting import StageContext
 from ...runtime.facade import RuntimeFacade
 from ..artifacts import ObservationPatch, ObservationPlan
@@ -20,6 +22,22 @@ class ObservationExpert:
     def run(self, context: StageContext, facade: RuntimeFacade) -> ExpertResult:
         # Observation is task-level and independent of any hypothesis/candidate.
         metric = context.task.metric
+        patch_config = context.task.domain_params.get("observation_patch", {})
+        if patch_config:
+            if not isinstance(patch_config, Mapping):
+                raise ValueError("domain_params.observation_patch must be a mapping")
+            patch = ObservationPatch(
+                target_files=tuple(
+                    str(path) for path in patch_config.get("target_files", ())
+                ),
+                diff=str(patch_config.get("diff", "")),
+                apply_before_baseline=bool(
+                    patch_config.get("apply_before_baseline", True)
+                ),
+            )
+        else:
+            patch = ObservationPatch()
+
         return ExpertResult(
             role=self.name,
             stage=self.stage,
@@ -34,9 +52,7 @@ class ObservationExpert:
                     "performance/tokens_per_second",
                     "memory/device_max_allocated_gb",
                 ),
-                # Phase-1 HP logs already expose these fields, so no code patch
-                # is required; a non-empty patch is applied before calibration.
-                instrumentation_patch=ObservationPatch(),
+                instrumentation_patch=patch,
                 calibrate_baseline=True,
             ),
         )

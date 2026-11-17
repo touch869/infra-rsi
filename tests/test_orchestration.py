@@ -94,6 +94,25 @@ class FlakyEnvBackend(FakeBackend):
         return super().run(spec, trial_dir, overrides, label)
 
 
+class FakePatchManager:
+    """No-op patch manager for failure-path tests."""
+
+    def apply(self, patch):
+        self.applied = patch
+
+    def revert(self, patch):
+        self.reverted = patch
+
+
+class ObservedFailingBackend(FakeBackend):
+    """Fail the observed baseline to exercise patch-error recording."""
+
+    def run(self, spec, trial_dir, overrides, label):
+        if label == "baseline-observed":
+            raise RuntimeError("observation patch failed")
+        return super().run(spec, trial_dir, overrides, label)
+
+
 def test_round_controller_uses_observed_baseline_and_one_candidate(tmp_path):
     task = replace(TASK, budget=BudgetSpec(max_trials=1))
     backend = FakeBackend([_metrics(100.0), _metrics(100.0), _metrics(120.0)])
@@ -184,6 +203,8 @@ def test_commit_recorder_is_wired_for_keep(tmp_path):
     report = task_dir / "step_reports" / "step-0003.json"
     assert report.is_file()
     tracked = _git(task_dir, "ls-files")
+    assert "environment_report.json" in tracked
+    assert "calibration.json" in tracked
     assert "step_reports/step-0003.json" in tracked
     assert "trials/layers-0/train.yaml" in tracked
     assert _git(task_dir, "log", "--oneline").strip()
@@ -211,3 +232,39 @@ def test_environment_repair_retries_clean_baseline(tmp_path):
     assert env.status == "env_error"
     assert env.environment_action["success"] is True
     assert records[-1].status == "keep"
+
+
+def test_observed_baseline_failure_is_recorded_as_patch_error(tmp_path):
+    task = replace(
+        TASK,
+        domain_params={
+            **dict(TASK.domain_params),
+            "observation_patch": {
+                "target_files": ["train.py"],
+                "diff": "diff --git a/train.py b/train.py\n",
+            },
+        },
+        budget=BudgetSpec(max_trials=1),
+    )
+    backend = ObservedFailingBackend([_metrics(100.0)])
+    store = ExperimentRecordStore(tmp_path / "task")
+    patch_manager = FakePatchManager()
+
+    controller = RoundController(
+        task,
+        backend,
+        tmp_path / "runs",
+        store=store,
+        patch_manager=patch_manager,
+    )
+    state = controller.run_round("round-1")
+
+    assert state.stage == Stage.FAILED
+    assert state.stop_reason == "observation_unrecoverable"
+
+    records = store.recent(10, round_id="round-1")
+    observation = records[-1]
+    assert observation.stage == "observation"
+    assert observation.status == "patch_error"
+    assert observation.observation_patch["target_files"] == ["train.py"]
+    assert patch_manager.reverted.diff
