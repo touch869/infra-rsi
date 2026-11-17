@@ -15,6 +15,7 @@ __all__ = [
     "ExecutionResult",
     "HypothesisSet",
     "Judgment",
+    "ObservationPatch",
     "ObservationPlan",
 ]
 
@@ -44,8 +45,25 @@ class CandidateSpec:
 
 
 @dataclass(frozen=True)
+class ObservationPatch:
+    """A code patch that enables the required metric logging.
+
+    The patch is an artifact, not an action taken by the expert; the runtime
+    applies it before the baseline calibration when it is non-empty.
+    """
+
+    target_files: tuple[str, ...] = ()
+    diff: str = ""
+    apply_before_baseline: bool = True
+
+    def __post_init__(self) -> None:
+        if self.diff and not self.target_files:
+            raise ValueError("an observation patch with a diff must declare target files")
+
+
+@dataclass(frozen=True)
 class ObservationPlan:
-    """How ExecutionExpert should observe the trial."""
+    """How the trial is observed and whether observation changes performance."""
 
     metric_key: str
     direction: str
@@ -53,6 +71,8 @@ class ObservationPlan:
     warmup_steps: int
     measured_steps: int
     log_patterns: tuple[str, ...] = ()
+    instrumentation_patch: ObservationPatch = field(default_factory=ObservationPatch)
+    calibrate_baseline: bool = True
 
 
 @dataclass(frozen=True)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from ...prompting import StageContext
 from ...runtime.facade import RuntimeFacade
-from ..artifacts import CandidateSpec, ObservationPlan
+from ..artifacts import CandidateSpec, ObservationPatch, ObservationPlan
 from ..base import ExpertResult
 from ..registry import EXPERTS
 from .prompt_spec import OBSERVATION_PROMPT_SPEC
@@ -37,6 +37,10 @@ class ObservationExpert:
                     "performance/tokens_per_second",
                     "memory/device_max_allocated_gb",
                 ),
+                # Phase-1 HP logs already expose these fields, so no code patch
+                # is required; a non-empty patch is applied before calibration.
+                instrumentation_patch=ObservationPatch(),
+                calibrate_baseline=True,
             ),
         )
 

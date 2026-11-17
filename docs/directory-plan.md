@@ -76,6 +76,7 @@ infra-rsi/
 │   ├── runtime/
 │   │   ├── __init__.py
 │   │   ├── facade.py              # 确定性运行时工具
+│   │   ├── calibration.py         # clean / observed baseline 校准
 │   │   ├── expert_runtime.py      # ExpertRuntime protocol
 │   │   ├── native_prompt_runtime.py
 │   │   └── openjiuwen_runtime.py  # OpenJiuwen adapter

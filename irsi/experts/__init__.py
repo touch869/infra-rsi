@@ -7,6 +7,7 @@ from .artifacts import (
     ExecutionResult,
     HypothesisSet,
     Judgment,
+    ObservationPatch,
     ObservationPlan,
 )
 from .base import ExpertResult, ExpertRole
@@ -32,6 +33,7 @@ __all__ = [
     "Judgment",
     "JudgmentExpert",
     "ObservationExpert",
+    "ObservationPatch",
     "ObservationPlan",
     "EXPERTS",
 ]

@@ -23,6 +23,7 @@ from irsi.experts import (
 from irsi.execution.backends.base import TrialResult
 from irsi.execution.metric_extractor import StepMetric, TrialMetrics
 from irsi.prompting import PROMPTS, StageContext
+from irsi.runtime.calibration import BaselineCalibrator
 from irsi.runtime.facade import RuntimeFacade
 
 TASK_PATH = Path(__file__).resolve().parents[1] / "examples/specs/hyperparallel-recompute.yaml"
@@ -121,6 +122,8 @@ def test_full_expert_pipeline(tmp_path):
     )
     assert isinstance(observation.artifact, ObservationPlan)
     assert observation.artifact.metric_key == TASK.metric.key
+    assert observation.artifact.calibrate_baseline is True
+    assert observation.artifact.instrumentation_patch.target_files == ()
 
     execution = ExecutionExpert().run(
         StageContext(
@@ -240,6 +243,36 @@ def test_judgment_discard_inside_noise_band(tmp_path):
         facade,
     )
     assert judgment.artifact.status == "discard"
+
+
+def test_baseline_calibration_detects_observation_overhead(tmp_path):
+    clean_backend = FakeBackend([_metrics(100.0)])
+    observed_backend = FakeBackend([_metrics(95.0)])
+    clean_facade = RuntimeFacade(TASK, clean_backend, tmp_path / "clean")
+    observed_facade = RuntimeFacade(TASK, observed_backend, tmp_path / "observed")
+
+    calibration = BaselineCalibrator(TASK, clean_facade, observed_facade).run()
+
+    assert calibration.clean_metric == pytest.approx(100.0)
+    assert calibration.observed_metric == pytest.approx(95.0)
+    assert calibration.overhead == pytest.approx(-0.05)
+    assert calibration.use_observed is True
+    assert calibration.reference_metric == pytest.approx(95.0)
+    assert calibration.clean.label == "baseline-clean"
+    assert calibration.observed.label == "baseline-observed"
+
+
+def test_baseline_calibration_keeps_clean_reference_inside_noise(tmp_path):
+    clean_backend = FakeBackend([_metrics(100.0)])
+    observed_backend = FakeBackend([_metrics(101.0)])
+    clean_facade = RuntimeFacade(TASK, clean_backend, tmp_path / "clean")
+    observed_facade = RuntimeFacade(TASK, observed_backend, tmp_path / "observed")
+
+    calibration = BaselineCalibrator(TASK, clean_facade, observed_facade).run()
+
+    assert calibration.overhead == pytest.approx(0.01)
+    assert calibration.use_observed is False
+    assert calibration.reference_metric == pytest.approx(100.0)
 
 
 def test_judgment_requires_baseline_trial(tmp_path):

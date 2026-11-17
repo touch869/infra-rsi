@@ -23,10 +23,18 @@ OBSERVATION_PROMPT_SPEC = ExpertPromptSpec(
         "warmup_steps": "integer",
         "measured_steps": "integer",
         "log_patterns": ["string"],
+        "instrumentation_patch": {
+            "target_files": ["string"],
+            "diff": "string",
+            "apply_before_baseline": "boolean",
+        },
+        "calibrate_baseline": "boolean",
     },
     guardrails=(
         "Use the metric declared by the task contract.",
         "Do not invent a new metric or alter the workload.",
+        "If metric fields already exist, the instrumentation patch may be empty.",
+        "Any non-empty observation patch must be applied before baseline calibration.",
     ),
 )
 
