@@ -29,7 +29,7 @@ DEVELOPMENT_PROMPT_SPEC = ExpertPromptSpec(
         "Never touch read-only keys.",
         "Do not add a code patch outside the declared surface.",
     ),
-    skill_policy=SkillPolicy(max_skills=3, max_excerpt_chars=800),
+    skill_policy=SkillPolicy(max_skills=4, max_excerpt_chars=800),
 )
 
 PROMPTS.register(DEVELOPMENT_PROMPT_SPEC)

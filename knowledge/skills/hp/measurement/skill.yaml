@@ -1,0 +1,23 @@
+id: hp/measurement
+version: 1
+kind: domain
+framework: hyperparallel
+surface: "*"
+stages:
+  - observation
+  - execution
+  - judgment
+  - archive_report
+title: Training metric extraction and steady windows
+when_to_use: Defining how tokens/s, step time, memory, and numeric evidence are measured.
+tags:
+  - metric
+  - tokens_per_second
+  - warmup
+  - measured
+  - noise
+constraints:
+  - Use the metric key declared by TaskSpec.
+  - Do not measure the no-op control as a candidate improvement.
+  - Warmup steps are excluded; measured steps are median-aggregated.
+source: infra-rsi execution/metric_extractor.py; PR1517 receipt protocol

@@ -1,0 +1,21 @@
+id: hp/recompute-modes
+version: 1
+kind: domain
+framework: hyperparallel
+surface: recompute
+stages:
+  - decision
+  - development
+  - judgment
+title: HyperParallel activation recompute modes
+when_to_use: Choosing or explaining activation_checkpoint.mode for a recompute experiment.
+tags:
+  - recompute
+  - activation_checkpoint
+  - memory
+  - throughput
+constraints:
+  - Only activation_checkpoint.* keys are writable in the phase-1 contract.
+  - allow_cache_entry_mutation is read-only.
+  - Prefer non-empty candidates over the no-op control.
+source: hyperparallel-pr1517@d51e911; infra-rsi 910b4-126 reproduction 2026-11-16

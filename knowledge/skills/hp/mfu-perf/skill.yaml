@@ -1,0 +1,21 @@
+id: hp/mfu-perf
+version: 1
+kind: domain
+framework: hyperparallel
+surface: "*"
+stages:
+  - decision
+  - observation
+  - judgment
+  - archive_report
+title: MFU and HFU performance analysis
+when_to_use: Optional model/hardware utilization analysis beyond tokens/s.
+tags:
+  - mfu
+  - hfu
+  - performance
+  - utilization
+constraints:
+  - MFU/HFU are optional analysis; tokens/s remains the phase-1 contract metric.
+  - Do not use MFU as a substitute for the bitwise gate.
+source: PR1517 mfu-riser harness; phase-1 result docs

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...prompting import ExpertPromptSpec
+from ...prompting import ExpertPromptSpec, SkillPolicy
 from ...prompting.registry import PROMPTS
 
 JUDGMENT_PROMPT_SPEC = ExpertPromptSpec(
@@ -34,6 +34,7 @@ JUDGMENT_PROMPT_SPEC = ExpertPromptSpec(
         "Missing metric must be a crash.",
         "Do not override a deterministic gate result.",
     ),
+    skill_policy=SkillPolicy(max_skills=7, max_excerpt_chars=800),
 )
 
 PROMPTS.register(JUDGMENT_PROMPT_SPEC)

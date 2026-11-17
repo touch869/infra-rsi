@@ -1,0 +1,22 @@
+id: hp/memory-budget
+version: 1
+kind: domain
+framework: hyperparallel
+surface: "*"
+stages:
+  - development
+  - observation
+  - judgment
+  - archive_report
+title: Peak device memory and budget gate
+when_to_use: Checking whether a recompute candidate fits the declared memory budget.
+tags:
+  - memory
+  - gate
+  - budget
+  - peak
+constraints:
+  - memory_budget_gib is a hard contract limit.
+  - Missing peak memory is a gate failure.
+  - Do not trade memory for throughput without checking the budget.
+source: infra-rsi memory gate; 910b4-126 mode measurements

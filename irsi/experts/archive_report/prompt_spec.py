@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...prompting import ExpertPromptSpec
+from ...prompting import ExpertPromptSpec, SkillPolicy
 from ...prompting.registry import PROMPTS
 
 ARCHIVE_REPORT_PROMPT_SPEC = ExpertPromptSpec(
@@ -40,6 +40,7 @@ ARCHIVE_REPORT_PROMPT_SPEC = ExpertPromptSpec(
         "Do not change keep/discard/crash.",
         "Report failed gates and rollback intent explicitly.",
     ),
+    skill_policy=SkillPolicy(max_skills=6, max_excerpt_chars=800),
 )
 
 PROMPTS.register(ARCHIVE_REPORT_PROMPT_SPEC)

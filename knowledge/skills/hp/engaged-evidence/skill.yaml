@@ -1,0 +1,22 @@
+id: hp/engaged-evidence
+version: 1
+kind: domain
+framework: hyperparallel
+surface: "*"
+stages:
+  - observation
+  - execution
+  - judgment
+  - archive_report
+title: Positive evidence that the configured path is engaged
+when_to_use: Proving that a requested recompute mode actually took effect.
+tags:
+  - engaged
+  - evidence
+  - config_dump
+  - memory_band
+constraints:
+  - Engaged evidence must be explicit; a normal-looking run is not enough.
+  - Missing engaged evidence is a crash, and the metric is not recorded.
+  - Use both resolved config dump and peak memory band when available.
+source: PR1517 RSI_TRAINING_RECEIPT / path_not_engaged; 910b4-126 reproduction

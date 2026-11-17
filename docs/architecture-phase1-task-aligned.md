@@ -286,7 +286,7 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `CLI` | `irsi/cli.py` | 已有入口 |
 | `Orchestrator` / `RoundController` | `irsi/engine.py` 的 `run` 流程 | 编排与裁决仍混在一起，需拆 |
 | `ExperimentRecordStore` | 无 | 缺 |
-| `SkillCatalog / HPKnowledgeProvider` | 只有 `prompting` 与 prompt spec；无 skill catalog | 缺结构化实现 |
+| `SkillCatalog / HPKnowledgeProvider / SkillResolver` | `irsi/knowledge/{skills,catalog,reader,providers}` | 已实现；skill 包在 `knowledge/skills/hp/*` |
 | `RecomputeSurface` | `irsi/contract/surfaces/recompute.py` | 已有重计算候选 |
 | `NumericPrecisionGate` | `irsi/gates/builtin.py` 的 `BitwiseGate` | 已有二值 gate |
 | `TrialExecutor` | `irsi/execution/backends/hyperparallel.py` | 已有执行；解析耦合在 backend |
@@ -302,4 +302,4 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `LedgerStore` | `irsi/knowledge/runtime/ledger_store.py` | 已有账本 |
 | `BaselineWorld` | `workspace/` + 契约 | 有输入/产物，缺 baseline 门 |
 
-**结论**：现有代码覆盖 `CLI / RecomputeSurface / NumericPrecisionGate / TrialExecutor / MetricExtractor / LedgerStore / PromptBuilder / RuntimeFacade / 六个 ExpertRole / BaselineCalibrator`；第一阶段真正缺的是 **Orchestrator、RoundController、ExperimentRecordStore、SkillCatalog / HPKnowledgeProvider / SkillResolver、ReportBuilder / StepReport、CommitRecorder、HITTAudit**。
+**结论**：现有代码覆盖 `CLI / RecomputeSurface / NumericPrecisionGate / TrialExecutor / MetricExtractor / LedgerStore / PromptBuilder / RuntimeFacade / 六个 ExpertRole / BaselineCalibrator / SkillCatalog / HPKnowledgeProvider / SkillResolver`；第一阶段真正缺的是 **Orchestrator、RoundController、ExperimentRecordStore、ReportBuilder / StepReport、CommitRecorder、HITTAudit**。

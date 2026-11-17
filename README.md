@@ -91,8 +91,7 @@ hp/numeric-fingerprint
 hp/engaged-evidence
 ```
 
-`hp/mfu-perf` is optional. Process control, report schemas, contract validation
-and audit are code-enforced, not skills.
+`hp/mfu-perf` is optional. The packages live under `knowledge/skills/hp/`; `SkillCatalog` and `HPKnowledgeProvider` load them and `SkillResolver` selects them per stage. Process control, report schemas, contract validation and audit are code-enforced, not skills.
 
 ## Edit surfaces
 

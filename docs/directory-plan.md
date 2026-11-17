@@ -43,6 +43,13 @@ infra-rsi/
 │   │
 │   ├── knowledge/
 │   │   ├── __init__.py
+│   │   ├── skills.py              # Skill / SkillManifest
+│   │   ├── catalog.py             # SkillCatalog
+│   │   ├── reader.py              # SkillResolver
+│   │   ├── providers/
+│   │   │   ├── __init__.py
+│   │   │   ├── base.py            # KnowledgeProvider
+│   │   │   └── hyperparallel.py   # HPKnowledgeProvider
 │   │   └── runtime/
 │   │       ├── __init__.py
 │   │       └── ledger_store.py    # append-only ledger / report
@@ -97,7 +104,32 @@ infra-rsi/
 │   ├── test_engine.py
 │   ├── test_receipt.py
 │   ├── test_prompting.py
-│   └── test_experts.py
+│   ├── test_experts.py
+│   └── test_knowledge.py
+├── knowledge/
+│   └── skills/
+│       └── hp/
+│           ├── recompute-modes/
+│           │   ├── SKILL.md
+│           │   └── skill.yaml
+│           ├── recompute-layerwise/
+│           │   ├── SKILL.md
+│           │   └── skill.yaml
+│           ├── measurement/
+│           │   ├── SKILL.md
+│           │   └── skill.yaml
+│           ├── memory-budget/
+│           │   ├── SKILL.md
+│           │   └── skill.yaml
+│           ├── numeric-fingerprint/
+│           │   ├── SKILL.md
+│           │   └── skill.yaml
+│           ├── engaged-evidence/
+│           │   ├── SKILL.md
+│           │   └── skill.yaml
+│           └── mfu-perf/
+│               ├── SKILL.md
+│               └── skill.yaml
 ├── contracts/
 ├── workspace/
 ├── patches/
@@ -115,10 +147,6 @@ infra-rsi/
 - `orchestration/context_builder.py`
 - `entry/commands.py`
 - `entry/openjiuwen_entry.py`
-- `knowledge/skills.py`（Skill / SkillManifest）
-- `knowledge/catalog.py`（SkillCatalog）
-- `knowledge/reader.py`（SkillResolver / 只读检索）
-- `knowledge/providers/base.py`、`knowledge/providers/hyperparallel.py`
 - `knowledge/runtime/experiment_record.py`
 - `knowledge/runtime/record_store.py`
 - `contract/candidate_generator.py`
@@ -135,7 +163,6 @@ infra-rsi/
 - `audit/hitt.py`、`audit/knowledge_audit.py`、`audit/audit_record.py`（暂缓）
 - `git/CommitRecorder`（按需要再加）
 - `baseline/BaselineWorld`（按需要再加）
-- `knowledge/skills/hp/*`（6 个核心 skill 包）
 - `contract/surfaces/fusion.py`、`parallel.py`、`pipeline.py`（暂不建）
 
 ---
@@ -147,7 +174,7 @@ infra-rsi/
 | `entry/` | CLI 命令、OpenJiuwen prompt 入口（待建） |
 | `orchestration/` | 流程编排、round 控制、StageContext 组装（待建） |
 | `prompting/` | 阶段 prompt 规范与通用拼装（已建） |
-| `knowledge/` | skill catalog、HP provider、runtime records、ledger（部分已建） |
+| `knowledge/` | skill catalog、HP provider、SkillResolver、runtime records、ledger（skill 与 ledger 已建；records 待建） |
 | `contract/` | TaskSpec、修改面插件、数值精度验证（TaskSpec/surface 已建） |
 | `gates/` | 通用 gate 与其 registry（已建） |
 | `execution/` | 执行器、指标抽取、快照（执行/抽取已建） |
@@ -236,6 +263,7 @@ Orchestrator
 PromptBuilder
 RuntimeFacade
 BaselineCalibrator
+SkillCatalog / HPKnowledgeProvider / SkillResolver
 六个 ExpertRole
 ```
 
@@ -245,7 +273,6 @@ BaselineCalibrator
 Orchestrator
 RoundController
 ContextBuilder
-SkillResolver
 ExpertRuntime
 ```
 
@@ -280,13 +307,14 @@ ExpertRuntime
 - `gates/`
 - `execution/`
 - `knowledge/runtime/ledger_store.py`
+- `knowledge/skills.py`、`catalog.py`、`reader.py`、`providers/hyperparallel.py`
+- `knowledge/skills/hp/*` 七个 skill 包（6 核心 + 1 可选）
 - `reporting/exporters/` 出口占位
 
 **待建：**
 
 - `orchestration/`（Orchestrator / RoundController / ContextBuilder）
 - `entry/`（commands / openjiuwen）
-- `knowledge/skills/` + SkillCatalog / Provider / SkillResolver
 - `knowledge/runtime/experiment_record.py` / `record_store.py`
 - `reporting/report_builder.py` / step / round report
 - `runtime/expert_runtime.py` / native / openjiuwen

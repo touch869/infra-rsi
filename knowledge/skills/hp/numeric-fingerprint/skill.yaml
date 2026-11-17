@@ -1,0 +1,21 @@
+id: hp/numeric-fingerprint
+version: 1
+kind: domain
+framework: hyperparallel
+surface: "*"
+stages:
+  - development
+  - judgment
+  - archive_report
+title: Bitwise numeric fingerprint gate
+when_to_use: Checking that recompute candidates preserve loss and grad_norm exactly.
+tags:
+  - bitwise
+  - numeric
+  - gate
+  - fingerprint
+constraints:
+  - The baseline numeric fingerprint must be frozen before candidates.
+  - Numeric precision is a binary PASS/FAIL gate, not a noise-band metric.
+  - A mismatch makes the trial a crash and invalidates its metric.
+source: infra-rsi BitwiseGate; layerwise recompute results

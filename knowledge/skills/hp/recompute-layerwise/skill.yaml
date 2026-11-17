@@ -1,0 +1,22 @@
+id: hp/recompute-layerwise
+version: 1
+kind: domain
+framework: hyperparallel
+surface: recompute
+stages:
+  - decision
+  - development
+  - judgment
+  - archive_report
+title: Per-layer recompute via model adapter safe regions
+when_to_use: Building a layer_count ladder when the model adapter declares a recompute policy.
+tags:
+  - recompute
+  - layerwise
+  - safe_regions
+  - qwen3
+constraints:
+  - domain_params.layer_counts must be non-negative integers.
+  - selection.source must be model_adapter_safe_regions.
+  - Without a ModelAdapterSpec.recompute policy, layerwise candidates fail at launch.
+source: infra-rsi layerwise results 2026-11-13; patches/0001-qwen3-recompute-policy.patch
