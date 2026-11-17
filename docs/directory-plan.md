@@ -2,7 +2,7 @@
 
 日期：2026-11-16  
 更新：2026-11-17  
-原则：按“组件包”组织，不按抽象层名组织；专家目录放角色与 prompt 规范，`prompting/` 放通用拼装，`runtime/` 放确定性工具与专家运行时。流程由代码强制，不由 agent 自由控制。
+原则：按“组件包”组织，不按抽象层名组织；专家目录放角色与 prompt 规范，`prompting/` 放通用拼装，`runtime/` 放确定性工具，`execution/` 放确定性执行。流程由代码强制，不由 agent 自由控制。
 
 ---
 
@@ -13,7 +13,7 @@ infra-rsi/
 ├── irsi/
 │   ├── __init__.py
 │   ├── cli.py                     # 当前 CLI 入口
-│   ├── engine.py                  # 现有 trial 状态机
+│   ├── engine.py                  # 现有 trial 状态机（待被 orchestration 替代）
 │   ├── registry.py                # typed registry
 │   │
 │   ├── contract/
@@ -27,6 +27,7 @@ infra-rsi/
 │   ├── execution/
 │   │   ├── __init__.py
 │   │   ├── metric_extractor.py    # log -> StepMetric / TrialMetrics
+│   │   ├── stage.py               # 确定性 ExecutionStage（非 agent）
 │   │   └── backends/
 │   │       ├── __init__.py
 │   │       ├── base.py            # Backend / TrialResult
@@ -63,13 +64,14 @@ infra-rsi/
 │   ├── runtime/
 │   │   ├── __init__.py
 │   │   ├── facade.py              # list_candidates / validate / execute / gates / metric
-│   │   └── calibration.py         # clean / observed baseline calibration
+│   │   ├── calibration.py         # clean / observed baseline（待拆为 NeutralityChecker / BaselineReference）
+│   │   └── expert_runtime.py      # ExpertRuntime Protocol
 │   │
 │   ├── experts/
 │   │   ├── __init__.py
 │   │   ├── base.py                # ExpertRole / ExpertResult
 │   │   ├── artifacts.py           # HypothesisSet / CandidateSpec / ObservationPlan / ...
-│   │   ├── registry.py            # EXPERTS
+│   │   ├── registry.py            # EXPERTS（五个角色）
 │   │   ├── decision/
 │   │   │   ├── expert.py
 │   │   │   └── prompt_spec.py
@@ -77,9 +79,6 @@ infra-rsi/
 │   │   │   ├── expert.py
 │   │   │   └── prompt_spec.py
 │   │   ├── observation/
-│   │   │   ├── expert.py
-│   │   │   └── prompt_spec.py
-│   │   ├── execution/
 │   │   │   ├── expert.py
 │   │   │   └── prompt_spec.py
 │   │   ├── judgment/
@@ -94,7 +93,7 @@ infra-rsi/
 │   │       └── __init__.py        # 出口合并点；具体 exporter 待建
 │   │
 │   ├── audit/                     # 空脚手架；HITT 暂缓
-│   ├── orchestration/             # 空脚手架；Orchestrator 待建
+│   ├── orchestration/             # 空脚手架；Orchestrator / RoundController / ContextBuilder 待建
 │   └── entry/                     # 空脚手架；commands / openjiuwen 待建
 │
 ├── tests/
@@ -142,6 +141,8 @@ infra-rsi/
 
 ## 2. 规划但尚未落地
 
+- `orchestration/state.py`
+- `orchestration/policy.py`
 - `orchestration/orchestrator.py`
 - `orchestration/round_controller.py`
 - `orchestration/context_builder.py`
@@ -151,7 +152,9 @@ infra-rsi/
 - `contract/validation.py`
 - `execution/perf_observer.py`
 - `execution/snapshot.py`
-- `runtime/expert_runtime.py`
+- `execution/trial_executor.py`
+- `runtime/neutrality.py`
+- `runtime/baseline_reference.py`
 - `runtime/native_prompt_runtime.py`
 - `runtime/openjiuwen_runtime.py`
 - `reporting/step_report.py`
@@ -159,8 +162,8 @@ infra-rsi/
 - `reporting/report_builder.py`
 - `reporting/exporters/json_exporter.py` / `markdown_exporter.py` / `csv_exporter.py`
 - `audit/hitt.py`、`audit/knowledge_audit.py`、`audit/audit_record.py`（暂缓）
-- `git/CommitRecorder`（按需要再加）
-- `baseline/BaselineWorld`（按需要再加）
+- `git/CommitRecorder`（待建）
+- `baseline/BaselineWorld`（待建）
 - `contract/surfaces/fusion.py`、`parallel.py`、`pipeline.py`（暂不建）
 
 ---
@@ -172,31 +175,31 @@ infra-rsi/
 | `entry/` | CLI 命令、OpenJiuwen prompt 入口（待建） |
 | `orchestration/` | 流程编排、round 控制、StageContext 组装（待建） |
 | `prompting/` | 阶段 prompt 规范与通用拼装（已建） |
-| `knowledge/` | skill catalog、HP provider、SkillResolver、runtime records、ledger（skill 与 ledger 已建；records 待建） |
-| `contract/` | TaskSpec、修改面插件、数值精度验证（TaskSpec/surface 已建） |
+| `knowledge/` | skill catalog、HP provider、SkillResolver、runtime records、ledger（已建） |
+| `contract/` | TaskSpec、修改面插件、数值精度验证（已建） |
 | `gates/` | 通用 gate 与其 registry（已建） |
-| `execution/` | 执行器、指标抽取、快照（执行/抽取已建） |
-| `runtime/` | 确定性 runtime facade、baseline 校准、专家运行时 adapter（facade/calibration 已建） |
-| `experts/` | 六个专家角色、各自 prompt spec、统一 artifact 类型（已建） |
+| `execution/` | 执行器、指标抽取、确定性 ExecutionStage（已建） |
+| `runtime/` | 确定性 runtime facade、baseline 校准、专家运行时 adapter（facade/expert_runtime 已建；calibration 待拆） |
+| `experts/` | 五个专家角色、各自 prompt spec、统一 artifact 类型（已建） |
 | `audit/` | HITT 成果审计、知识审计（暂缓） |
-| `reporting/` | 每步报告、round 报告、`exporters/` 导出插件（部分待建） |
+| `reporting/` | 每步报告、round 报告、`exporters/` 导出插件（待建） |
 
 ---
 
 ## 4. 专家职责
 
-| 专家 | 职责 | 输入 | 输出 |
+| 专家/阶段 | 职责 | 输入 | 输出 |
 |---|---|---|---|
-| `DecisionExpert` | 从修改面筛选、排序假设 | TaskSpec、baseline、记录、skills | `HypothesisSet` |
-| `DevelopmentExpert` | 把假设转成 contract 允许的候选 | Hypothesis / HypothesisSet、TaskSpec | `CandidateSpec` |
-| `ObservationExpert` | 定义观测指标与观测代码 patch | CandidateSpec、TaskSpec | `ObservationPlan` + `ObservationPatch` |
-| `ExecutionExpert` | 只执行环境和训练 | CandidateSpec | `ExecutionResult` |
-| `JudgmentExpert` | 用 gates、metric、校准后的 baseline 判断 | ExecutionResult、GateResult | `Judgment` |
+| `DecisionExpert` | 从修改面筛选、排序假设 | TaskSpec、baseline、records、skills | `HypothesisSet` |
+| `DevelopmentExpert` | 把假设转成 contract 允许的候选；只改 `writable_prefixes` | Hypothesis / HypothesisSet | `CandidateSpec` |
+| `ObservationExpert` | 生成 task-level 观测计划与可开关 patch | TaskSpec | `ObservationPlan` + `ObservationPatch` |
+| `ExecutionStage` | 确定性执行候选；不是 agent | CandidateSpec | `ExecutionResult` |
+| `JudgmentExpert` | 用 gates、metric、observed baseline 判断 | ExecutionResult、GateResult | `Judgment` |
 | `ArchiveReportExpert` | 整理报告和归档信息；不自动 commit | Judgment | `ArchiveBundle` |
 | `ExpertRegistry` | 注册/选择专家角色 | role name | `ExpertRole` |
 
 边界：专家只产出 artifact，不控制阶段顺序、预算、retry、restore。  
-`ObservationPatch` 由 runtime 应用；baseline 校准由 `BaselineCalibrator` / RoundController 执行。
+`ObservationPatch` 由 runtime apply/revert；baseline 校准由 `TrialExecutor + NeutralityChecker` 执行。
 
 ---
 
@@ -238,7 +241,7 @@ hp/hp-config                → runtime / contract 配置约束
 - **通用拼装**：`prompting/builder.py`，把 `ExpertPromptSpec + StageContext + selected skills` 按固定段在前、变化段在后渲染成 prompt。
 - **上下文组装**：`orchestration/context_builder.py`（待建），从 task、skills、records、constraints 组装 `StageContext`。
 - **确定性工具**：`runtime/facade.py`，提供 `list_candidates`、`validate_overrides`、`execute_trial`、`run_gates`、`metric_value`、`delta`。
-- **baseline 校准**：`runtime/calibration.py`，跑 clean / observed baseline，选择 reference。
+- **baseline 校准**：`runtime/calibration.py`，跑 clean / observed baseline；待拆成 `NeutralityChecker` 与 `BaselineReference`，reference 固定 observed。
 
 ---
 
@@ -246,7 +249,11 @@ hp/hp-config                → runtime / contract 配置约束
 
 ```text
 Orchestrator
-  → BaselineCalibrator
+  → EnvironmentExpert / EnvironmentOperator
+  → ObservationExpert（task-level）
+  → TrialExecutor（clean / observed baseline）
+  → NeutralityChecker
+  → BaselineReference（observed）
   → SkillResolver
   → ContextBuilder
   → PromptBuilder
@@ -260,9 +267,10 @@ Orchestrator
 ```text
 PromptBuilder
 RuntimeFacade
-BaselineCalibrator
 SkillCatalog / HPKnowledgeProvider / SkillResolver
-六个 ExpertRole
+五个 ExpertRole
+ExecutionStage
+BaselineCalibrator（待拆）
 ```
 
 仍待实现：
@@ -271,7 +279,10 @@ SkillCatalog / HPKnowledgeProvider / SkillResolver
 Orchestrator
 RoundController
 ContextBuilder
-ExpertRuntime
+TrialExecutor
+NeutralityChecker / BaselineReference
+ExpertRuntime adapter
+ReportBuilder / CommitRecorder
 ```
 
 ---
@@ -282,7 +293,7 @@ ExpertRuntime
 
 | 清理前 | 当前 |
 |---|---|
-| `irsi/engine.py` | 保留；计划拆为 `orchestration/orchestrator.py` + `experts/judgment` |
+| `irsi/engine.py` | 保留；待改为 orchestration + judgment |
 | `irsi/contract.py` | `contract/task_spec.py` |
 | `irsi/domain/recompute.py` | `contract/surfaces/recompute.py` |
 | `irsi/backends/hyperparallel.py` | `execution/backends/hyperparallel.py` |
@@ -299,22 +310,24 @@ ExpertRuntime
 **已建：**
 
 - `prompting/`（context、spec、builder、registry）
-- `runtime/facade.py`、`runtime/calibration.py`
-- `experts/` 六个角色与 artifact
+- `runtime/facade.py`、`runtime/calibration.py`、`runtime/expert_runtime.py`
+- `experts/` 五个角色与 artifact
+- `execution/stage.py` 确定性 ExecutionStage
 - `contract/surfaces/recompute.py`
 - `gates/`
-- `execution/`
+- `execution/`（metric_extractor、backends）
 - `knowledge/runtime/ledger_store.py`
 - `knowledge/runtime/experiment_record.py`、`record_store.py`、`reader.py`
 - `knowledge/skills.py`、`catalog.py`、`reader.py`、`providers/hyperparallel.py`
 - `knowledge/skills/hp/*` 七个 skill 包（6 核心 + 1 可选）
-- `runtime/expert_runtime.py`
 - `reporting/exporters/base.py` 与出口占位
 
 **待建：**
 
 - `orchestration/`（Orchestrator / RoundController / ContextBuilder）
 - `entry/`（commands / openjiuwen）
+- `execution/trial_executor.py`
+- `runtime/neutrality.py` / `runtime/baseline_reference.py`
 - `reporting/report_builder.py` / step / round report
 - `runtime/native_prompt_runtime.py` / openjiuwen
 - `git/CommitRecorder`、`baseline/BaselineWorld`

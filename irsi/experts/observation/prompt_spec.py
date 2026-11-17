@@ -8,15 +8,16 @@ from ...prompting.registry import PROMPTS
 OBSERVATION_PROMPT_SPEC = ExpertPromptSpec(
     role="observation",
     stage="observation",
-    objective="Define how one candidate trial is observed and measured.",
+    objective="Define the task-level observation plan and switchable metric patch.",
     system=(
         "You are ObservationExpert. You do not change training config; you only "
-        "produce an observation plan for the ExecutionExpert."
+        "produce a task/round-level observation plan that all candidates share."
     ),
-    required_inputs=("task", "previous_artifact"),
+    required_inputs=("task",),
     allowed_tools=(),
     output_schema={
         "artifact_type": "ObservationPlan",
+        "scope": "task",
         "metric_key": "string",
         "direction": "string",
         "noise_fraction": "number",
@@ -33,6 +34,7 @@ OBSERVATION_PROMPT_SPEC = ExpertPromptSpec(
     guardrails=(
         "Use the metric declared by the task contract.",
         "Do not invent a new metric or alter the workload.",
+        "Observation is task-level, not hypothesis-level.",
         "If metric fields already exist, the instrumentation patch may be empty.",
         "Any non-empty observation patch must be applied before baseline calibration.",
     ),

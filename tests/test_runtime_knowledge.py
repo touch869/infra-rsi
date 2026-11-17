@@ -113,6 +113,32 @@ def test_record_round_trip_and_optional_fields(tmp_path):
     assert rebuilt.rollback is None
     assert rebuilt.prompt_hash is None
     assert rebuilt.skill_ids == ()
+    assert rebuilt.environment_snapshot == {}
+    assert rebuilt.observation_patch == {}
+    assert rebuilt.neutrality == {}
+    assert rebuilt.report == {}
+
+
+def test_calibrated_and_error_statuses(tmp_path):
+    store = ExperimentRecordStore(tmp_path / "task")
+    calibrated = store.append(
+        _record(0, status="calibrated", metric=100.0, stage="calibrated")
+    )
+    env_error = store.append(
+        _record(1, status="env_error", metric=None, stage="environment")
+    )
+    patch_error = store.append(
+        _record(2, status="patch_error", metric=None, stage="observation")
+    )
+
+    assert calibrated.status == "calibrated"
+    assert env_error.status == "env_error"
+    assert patch_error.status == "patch_error"
+    assert [record.status for record in store.recent(3)] == [
+        "calibrated",
+        "env_error",
+        "patch_error",
+    ]
 
 
 def test_invalid_status_is_rejected():

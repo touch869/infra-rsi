@@ -1,4 +1,4 @@
-"""Six expert roles, each producing one artifact for the experiment loop."""
+"""Five expert roles, each producing one artifact for the experiment loop."""
 
 from .archive_report.expert import ArchiveReportExpert
 from .artifacts import (
@@ -13,7 +13,6 @@ from .artifacts import (
 from .base import ExpertResult, ExpertRole
 from .decision.expert import DecisionExpert
 from .development.expert import DevelopmentExpert
-from .execution.expert import ExecutionExpert
 from .judgment.expert import JudgmentExpert
 from .observation.expert import ObservationExpert
 from .registry import EXPERTS, ExpertRegistry
@@ -24,7 +23,6 @@ __all__ = [
     "CandidateSpec",
     "DecisionExpert",
     "DevelopmentExpert",
-    "ExecutionExpert",
     "ExecutionResult",
     "ExpertRegistry",
     "ExpertResult",

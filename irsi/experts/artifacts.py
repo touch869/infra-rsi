@@ -49,7 +49,8 @@ class ObservationPatch:
     """A code patch that enables the required metric logging.
 
     The patch is an artifact, not an action taken by the expert; the runtime
-    applies it before the baseline calibration when it is non-empty.
+    applies it before the baseline calibration when it is non-empty. It is
+    toggleable: clean baseline runs with it off, observed baseline with it on.
     """
 
     target_files: tuple[str, ...] = ()
@@ -60,16 +61,21 @@ class ObservationPatch:
         if self.diff and not self.target_files:
             raise ValueError("an observation patch with a diff must declare target files")
 
+    @property
+    def is_empty(self) -> bool:
+        return not self.diff and not self.target_files
+
 
 @dataclass(frozen=True)
 class ObservationPlan:
-    """How the trial is observed and whether observation changes performance."""
+    """How the task is observed and whether observation changes performance."""
 
     metric_key: str
     direction: str
     noise_fraction: float
     warmup_steps: int
     measured_steps: int
+    scope: str = "task"
     log_patterns: tuple[str, ...] = ()
     instrumentation_patch: ObservationPatch = field(default_factory=ObservationPatch)
     calibrate_baseline: bool = True

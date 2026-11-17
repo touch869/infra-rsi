@@ -1,10 +1,10 @@
-"""ObservationExpert: produce the metric/log observation plan."""
+"""ObservationExpert: produce a task-level metric/log observation plan."""
 
 from __future__ import annotations
 
 from ...prompting import StageContext
 from ...runtime.facade import RuntimeFacade
-from ..artifacts import CandidateSpec, ObservationPatch, ObservationPlan
+from ..artifacts import ObservationPatch, ObservationPlan
 from ..base import ExpertResult
 from ..registry import EXPERTS
 from .prompt_spec import OBSERVATION_PROMPT_SPEC
@@ -18,10 +18,7 @@ class ObservationExpert:
     prompt_spec = OBSERVATION_PROMPT_SPEC
 
     def run(self, context: StageContext, facade: RuntimeFacade) -> ExpertResult:
-        artifact = context.previous_artifact
-        if not isinstance(artifact, CandidateSpec):
-            raise ValueError("ObservationExpert needs a CandidateSpec")
-
+        # Observation is task-level and independent of any hypothesis/candidate.
         metric = context.task.metric
         return ExpertResult(
             role=self.name,

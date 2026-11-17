@@ -8,19 +8,21 @@ skill 库回答“怎么做/为什么”，运行时知识库回答“过去发�
 
 ## 1. 数据模型
 
-### `ExperimentRecord`：核心字段 + 可选字段
+### `ExperimentRecord`
 
-一条实验记录对应一个阶段或一个 trial。第一阶段只强制核心字段：
+一条实验记录对应一个阶段、一个 trial、一次校准或一次失败。
+
+核心字段：
 
 ```text
 record_id          # store 生成
 round_id
 step_id
-stage
+stage              # environment / observation / uncertainty / baseline / calibrated / trial / report
 hypothesis_id      # 可为空
 overrides          # baseline 可为 {}
 metric             # crash 可为 null
-status             # baseline / keep / discard / crash
+status             # baseline / calibrated / keep / discard / crash / env_error / patch_error
 detail
 timestamp
 ```
@@ -32,6 +34,8 @@ surface
 baseline_metric
 gates              # gate name, passed, detail
 artifacts          # config / log / metrics paths
+environment_snapshot  # 依赖、驱动、设备、路径、repo commit
+observation_patch     # target_files, diff, apply_before_baseline
 ```
 
 可选 / 后加：
@@ -42,9 +46,16 @@ rollback
 prompt_hash
 skill_ids
 evidence           # engaged, numeric hash, peak memory
+neutrality         # numeric_identical, overhead, memory_delta
+report             # step/round report payload 或路径
 ```
 
-建议用 JSON 可序列化结构，写入 `records.jsonl`。`record_id` 和 `timestamp` 可由 store 在缺失时自动生成。
+原则：
+
+- append-only，不原地修改历史；
+- 失败也记录，不删除；
+- 观测 patch、环境快照、中性结果都要记录；
+- 不自动晋升知识；晋升由后续审计/人审决定。
 
 ---
 
@@ -52,10 +63,8 @@ evidence           # engaged, numeric hash, peak memory
 
 ### `ExperimentRecordStore`
 
-职责：追加记录、读取记录、汇总 round。
-
 ```python
-class ExperimentRecordStore(Protocol):
+class ExperimentRecordStore:
     def append(self, record: ExperimentRecord) -> ExperimentRecord: ...
     def get(self, record_id: str) -> ExperimentRecord | None: ...
     def recent(self, limit: int = 10, *, round_id: str | None = None) -> list[ExperimentRecord]: ...
@@ -68,24 +77,24 @@ class ExperimentRecordStore(Protocol):
         stage: str | None = None,
         limit: int | None = None,
     ) -> list[ExperimentRecord]: ...
-    def summary(self, round_id: str) -> RoundSummary: ...
+    def summary(self, round_id: str, *, maximize: bool = True) -> RoundSummary: ...
 ```
 
-`RoundSummary` 建议包含：
+`RoundSummary`：
 
 ```text
 round_id
 baseline_metric
 best_record
-counts: keep / discard / crash
-steps: list[ExperimentRecord]
+counts: baseline / calibrated / keep / discard / crash / env_error / patch_error
+steps
 ```
 
 原则：
 
-- append-only，不原地修改历史。
-- 失败也记录，不删除。
-- 不自动晋升知识；晋升由后续审计/人审决定。
+- append-only；
+- 失败也记录；
+- 不自动晋升知识。
 
 ---
 
@@ -93,17 +102,15 @@ steps: list[ExperimentRecord]
 
 ### `RuntimeKnowledgeReader`
 
-职责：只读查询，供编排和专家使用。
-
 ```python
-class RuntimeKnowledgeReader(Protocol):
+class RuntimeKnowledgeReader:
     def bundle(self, *, round_id: str | None = None, limit: int = 10) -> KnowledgeBundle: ...
     def best(self, surface: str) -> ExperimentRecord | None: ...
     def failures(self, surface: str, limit: int = 10) -> list[ExperimentRecord]: ...
     def recent(self, limit: int = 10, *, round_id: str | None = None) -> list[ExperimentRecord]: ...
 ```
 
-`KnowledgeBundle` 建议包含：
+`KnowledgeBundle`：
 
 ```text
 records
@@ -119,7 +126,7 @@ failures
 
 | 角色/组件 | 调用 | 用途 |
 |---|---|---|
-| `Orchestrator` | `ExperimentRecordStore.append` | 每阶段/每 trial 后写入记录 |
+| `Orchestrator` | `ExperimentRecordStore.append` | 环境快照、观测 patch、中性结果、baseline、trial、judgment 后写入 |
 | `RoundController` | `RuntimeKnowledgeReader.best` / `recent` | 选择 baseline、下一轮参考 |
 | `ContextBuilder` | `RuntimeKnowledgeReader.bundle` | 组装 `StageContext.records` |
 | `DecisionExpert` | 只读 `StageContext.records` | 参考历史实验提出/排序假设 |
@@ -129,10 +136,11 @@ failures
 
 关键边界：
 
-- **专家不直接写运行时知识库**；写入由 Orchestrator / runtime 做。
-- **DecisionExpert 不直接查询 store**；它通过 `ContextBuilder` 得到 `StageContext.records`。
-- **ExperimentRecordStore 与 LedgerStore 分工**：LedgerStore 是原始追加事件/决策账本；ExperimentRecordStore 是语义化实验记录。
-- **运行时知识库不控制流程**；它只提供证据。
+- 专家不直接写运行时知识库；写入由 Orchestrator / RoundController 做。
+- DecisionExpert 不直接查询 store；它通过 `ContextBuilder` 得到 `StageContext.records`。
+- `ExperimentRecordStore` 与 `LedgerStore` 分工：LedgerStore 是原始追加事件/决策账本；ExperimentRecordStore 是语义化实验记录。
+- 运行时知识库不控制流程；它只提供证据。
+- 环境快照记录用于说明 baseline world；观测 patch 记录用于解释观测开销；中性结果记录用于说明 reference 是否可信。
 
 ---
 

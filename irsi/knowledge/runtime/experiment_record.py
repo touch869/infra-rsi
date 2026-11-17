@@ -30,11 +30,15 @@ class ExperimentRecord:
     surface: str | None = None
     baseline_metric: float | None = None
     gates: tuple[Mapping[str, Any], ...] = ()
+    environment_snapshot: Mapping[str, Any] = field(default_factory=dict)
+    observation_patch: Mapping[str, Any] = field(default_factory=dict)
+    neutrality: Mapping[str, Any] = field(default_factory=dict)
     commit: str | None = None
     rollback: str | None = None
     prompt_hash: str | None = None
     skill_ids: tuple[str, ...] = ()
     evidence: Mapping[str, Any] = field(default_factory=dict)
+    report: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.round_id.strip():
@@ -43,8 +47,19 @@ class ExperimentRecord:
             raise ValueError("step_id must be >= 0")
         if not self.stage.strip():
             raise ValueError("stage must be non-empty")
-        if self.status not in ("baseline", "keep", "discard", "crash"):
-            raise ValueError("status must be baseline, keep, discard, or crash")
+        if self.status not in (
+            "baseline",
+            "calibrated",
+            "keep",
+            "discard",
+            "crash",
+            "env_error",
+            "patch_error",
+        ):
+            raise ValueError(
+                "status must be baseline, calibrated, keep, discard, crash, "
+                "env_error, or patch_error"
+            )
 
     def to_dict(self) -> dict[str, Any]:
         """JSON-safe projection for ``records.jsonl``."""
@@ -62,12 +77,16 @@ class ExperimentRecord:
             "detail": self.detail,
             "gates": [dict(gate) for gate in self.gates],
             "artifacts": dict(self.artifacts),
+            "environment_snapshot": dict(self.environment_snapshot),
+            "observation_patch": dict(self.observation_patch),
+            "neutrality": dict(self.neutrality),
             "commit": self.commit,
             "rollback": self.rollback,
             "timestamp": self.timestamp,
             "prompt_hash": self.prompt_hash,
             "skill_ids": list(self.skill_ids),
             "evidence": dict(self.evidence),
+            "report": dict(self.report),
         }
 
     @classmethod
@@ -87,10 +106,14 @@ class ExperimentRecord:
             detail=str(raw.get("detail", "")),
             gates=tuple(dict(gate) for gate in raw.get("gates", ())),
             artifacts=dict(raw.get("artifacts", {})),
+            environment_snapshot=dict(raw.get("environment_snapshot", {})),
+            observation_patch=dict(raw.get("observation_patch", {})),
+            neutrality=dict(raw.get("neutrality", {})),
             commit=raw.get("commit"),
             rollback=raw.get("rollback"),
             timestamp=str(raw.get("timestamp", "")),
             prompt_hash=raw.get("prompt_hash"),
             skill_ids=tuple(str(skill) for skill in raw.get("skill_ids", ())),
             evidence=dict(raw.get("evidence", {})),
+            report=dict(raw.get("report", {})),
         )

@@ -1,4 +1,4 @@
-"""Expert roles and the six-stage artifact handoff."""
+"""Five expert roles and the deterministic execution stage."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ from irsi.experts import (
     CandidateSpec,
     DecisionExpert,
     DevelopmentExpert,
-    ExecutionExpert,
     EXPERTS,
     HypothesisSet,
     JudgmentExpert,
@@ -22,6 +21,7 @@ from irsi.experts import (
 )
 from irsi.execution.backends.base import TrialResult
 from irsi.execution.metric_extractor import StepMetric, TrialMetrics
+from irsi.execution.stage import ExecutionStage
 from irsi.prompting import PROMPTS, StageContext
 from irsi.runtime.calibration import BaselineCalibrator
 from irsi.runtime.facade import RuntimeFacade
@@ -77,8 +77,8 @@ class FakeBackend:
         )
 
 
-def test_six_experts_and_prompts_are_registered():
-    expected = ["archive_report", "decision", "development", "execution", "judgment", "observation"]
+def test_five_experts_and_prompts_are_registered():
+    expected = ["archive_report", "decision", "development", "judgment", "observation"]
     assert EXPERTS.names() == expected
     assert PROMPTS.names() == expected
     for name in expected:
@@ -116,16 +116,18 @@ def test_full_expert_pipeline(tmp_path):
     assert isinstance(development.artifact, CandidateSpec)
     assert development.artifact.hypothesis_id == "layers-0"
 
+    # Observation is task-level and does not depend on a candidate.
     observation = ObservationExpert().run(
-        StageContext(task=TASK, stage="observation", previous_artifact=development.artifact),
+        StageContext(task=TASK, stage="observation"),
         facade,
     )
     assert isinstance(observation.artifact, ObservationPlan)
     assert observation.artifact.metric_key == TASK.metric.key
+    assert observation.artifact.scope == "task"
     assert observation.artifact.calibrate_baseline is True
-    assert observation.artifact.instrumentation_patch.target_files == ()
+    assert observation.artifact.instrumentation_patch.is_empty
 
-    execution = ExecutionExpert().run(
+    execution = ExecutionStage().run(
         StageContext(
             task=TASK,
             stage="execution",
@@ -135,13 +137,13 @@ def test_full_expert_pipeline(tmp_path):
         ),
         facade,
     )
-    assert execution.artifact.trial.label == "layers-0"
+    assert execution.trial.label == "layers-0"
 
     judgment = JudgmentExpert().run(
         StageContext(
             task=TASK,
             stage="judgment",
-            previous_artifact=execution.artifact,
+            previous_artifact=execution,
             baseline_metric=baseline_metric,
             best_metric=baseline_metric,
             baseline_trial=baseline,
@@ -175,7 +177,7 @@ def test_judgment_crash_on_bitwise_mismatch(tmp_path):
     facade = RuntimeFacade(TASK, backend, tmp_path / "runs")
     baseline = facade.execute_trial({}, "baseline")
 
-    execution = ExecutionExpert().run(
+    execution = ExecutionStage().run(
         StageContext(
             task=TASK,
             stage="execution",
@@ -196,7 +198,7 @@ def test_judgment_crash_on_bitwise_mismatch(tmp_path):
         StageContext(
             task=TASK,
             stage="judgment",
-            previous_artifact=execution.artifact,
+            previous_artifact=execution,
             baseline_metric=100.0,
             best_metric=100.0,
             baseline_trial=baseline,
@@ -213,7 +215,7 @@ def test_judgment_discard_inside_noise_band(tmp_path):
     facade = RuntimeFacade(TASK, backend, tmp_path / "runs")
     baseline = facade.execute_trial({}, "baseline")
 
-    execution = ExecutionExpert().run(
+    execution = ExecutionStage().run(
         StageContext(
             task=TASK,
             stage="execution",
@@ -234,7 +236,7 @@ def test_judgment_discard_inside_noise_band(tmp_path):
         StageContext(
             task=TASK,
             stage="judgment",
-            previous_artifact=execution.artifact,
+            previous_artifact=execution,
             baseline_metric=100.0,
             best_metric=100.0,
             baseline_trial=baseline,
@@ -277,7 +279,7 @@ def test_baseline_calibration_keeps_clean_reference_inside_noise(tmp_path):
 
 def test_judgment_requires_baseline_trial(tmp_path):
     facade = RuntimeFacade(TASK, FakeBackend([_metrics(100.0), _metrics(120.0)]), tmp_path / "runs")
-    execution = ExecutionExpert().run(
+    execution = ExecutionStage().run(
         StageContext(
             task=TASK,
             stage="execution",
@@ -298,7 +300,7 @@ def test_judgment_requires_baseline_trial(tmp_path):
             StageContext(
                 task=TASK,
                 stage="judgment",
-                previous_artifact=execution.artifact,
+                previous_artifact=execution,
                 baseline_metric=100.0,
                 best_metric=100.0,
             ),
