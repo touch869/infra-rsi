@@ -6,6 +6,8 @@ from .expert_runtime import ExpertRuntime
 from .facade import RuntimeFacade
 from .neutrality import NeutralityChecker, NeutralityResult
 
+from .observation_patch import ObservationPatchManager
+
 __all__ = [
     "BaselineCalibration",
     "BaselineCalibrator",
@@ -13,5 +15,6 @@ __all__ = [
     "ExpertRuntime",
     "NeutralityChecker",
     "NeutralityResult",
+    "ObservationPatchManager",
     "RuntimeFacade",
 ]

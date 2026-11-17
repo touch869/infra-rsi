@@ -13,6 +13,7 @@ from ..knowledge.runtime.record_store import ExperimentRecordStore
 from ..prompting import StageContext
 from ..runtime.calibration import BaselineCalibrator
 from ..runtime.facade import RuntimeFacade
+from ..runtime.observation_patch import ObservationPatchManager
 from .context_builder import ContextBuilder
 from .orchestrator import Orchestrator
 from .state import RoundState, Stage
@@ -32,6 +33,7 @@ class RoundController:
         store: ExperimentRecordStore | None = None,
         reader: RuntimeKnowledgeReader | None = None,
         resolver: SkillResolver | None = None,
+        patch_manager: ObservationPatchManager | None = None,
     ) -> None:
         self.task = task
         self.backend = backend
@@ -41,6 +43,7 @@ class RoundController:
             RuntimeKnowledgeReader(store) if store is not None else None
         )
         self.resolver = resolver
+        self.patch_manager = patch_manager
 
     def run_round(self, round_id: str = "round-1") -> RoundState:
         clean_facade = RuntimeFacade(
@@ -61,6 +64,12 @@ class RoundController:
 
         # Clean baseline is the control; observed baseline is the reference.
         clean = clean_facade.execute_trial({}, "baseline-clean")
+        if not plan.instrumentation_patch.is_empty:
+            if self.patch_manager is None:
+                raise ValueError(
+                    "non-empty ObservationPatch requires an ObservationPatchManager"
+                )
+            self.patch_manager.apply(plan.instrumentation_patch)
         observed = observed_facade.execute_trial({}, "baseline-observed")
         calibration = BaselineCalibrator().calibrate(self.task, clean, observed)
         reference = calibration.reference.trial

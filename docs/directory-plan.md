@@ -67,6 +67,7 @@ infra-rsi/
 │   │   ├── calibration.py         # analyze clean/observed TrialResult
 │   │   ├── neutrality.py          # NeutralityChecker / NeutralityResult
 │   │   ├── baseline_reference.py  # BaselineReference = observed
+│   │   ├── observation_patch.py   # apply / revert ObservationPatch
 │   │   └── expert_runtime.py      # ExpertRuntime Protocol
 │   │
 │   ├── experts/
@@ -89,6 +90,10 @@ infra-rsi/
 │   │   └── archive_report/
 │   │       ├── expert.py
 │   │       └── prompt_spec.py
+│   │
+│   ├── git/
+│   │   ├── __init__.py
+│   │   └── commit_recorder.py     # commit candidate + report; revert
 │   │
 │   ├── reporting/
 │   │   ├── __init__.py
@@ -162,7 +167,6 @@ infra-rsi/
 - `runtime/openjiuwen_runtime.py`
 - `reporting/exporters/json_exporter.py` / `markdown_exporter.py` / `csv_exporter.py`
 - `audit/hitt.py`、`audit/knowledge_audit.py`、`audit/audit_record.py`（暂缓）
-- `git/CommitRecorder`（待建）
 - `baseline/BaselineWorld`（待建）
 - `contract/surfaces/fusion.py`、`parallel.py`、`pipeline.py`（暂不建）
 
@@ -179,7 +183,8 @@ infra-rsi/
 | `contract/` | TaskSpec、修改面插件、数值精度验证（已建） |
 | `gates/` | 通用 gate 与其 registry（已建） |
 | `execution/` | 执行器、指标抽取、确定性 ExecutionStage（已建） |
-| `runtime/` | 确定性 runtime facade、baseline 分析、专家运行时 adapter（facade/neutrality/baseline_reference/expert_runtime 已建） |
+| `runtime/` | 确定性 runtime facade、baseline 分析、观测 patch apply/revert、专家运行时 adapter（facade/neutrality/baseline_reference/observation_patch/expert_runtime 已建） |
+| `git/` | 候选 commit + report、revert（CommitRecorder 已建，未接入编排） |
 | `experts/` | 五个专家角色、各自 prompt spec、统一 artifact 类型（已建） |
 | `audit/` | HITT 成果审计、知识审计（暂缓） |
 | `reporting/` | 每步报告、round 报告、`exporters/` 导出插件（report_builder 已建；exporters 待建） |
@@ -273,7 +278,9 @@ ExecutionStage
 Orchestrator / RoundController / ContextBuilder
 NeutralityChecker / BaselineReference
 BaselineCalibrator（只分析 TrialResult）
+ObservationPatchManager
 ReportBuilder
+CommitRecorder（已建，未接入编排）
 ```
 
 仍待实现：
@@ -281,7 +288,6 @@ ReportBuilder
 ```text
 TrialExecutor
 ExpertRuntime adapter
-CommitRecorder
 ```
 
 ---
@@ -309,7 +315,8 @@ CommitRecorder
 **已建：**
 
 - `prompting/`（context、spec、builder、registry）
-- `runtime/facade.py`、`runtime/calibration.py`、`runtime/neutrality.py`、`runtime/baseline_reference.py`、`runtime/expert_runtime.py`
+- `runtime/facade.py`、`runtime/calibration.py`、`runtime/neutrality.py`、`runtime/baseline_reference.py`、`runtime/observation_patch.py`、`runtime/expert_runtime.py`
+- `git/commit_recorder.py`
 - `experts/` 五个角色与 artifact
 - `execution/stage.py` 确定性 ExecutionStage
 - `orchestration/`（state、policy、context_builder、orchestrator、round_controller）
@@ -327,7 +334,7 @@ CommitRecorder
 - `entry/`（commands / openjiuwen）
 - `execution/trial_executor.py`
 - `runtime/native_prompt_runtime.py` / openjiuwen
-- `git/CommitRecorder`、`baseline/BaselineWorld`
+- `baseline/BaselineWorld`
 
 **暂缓：**
 
