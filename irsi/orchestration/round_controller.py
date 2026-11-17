@@ -12,6 +12,7 @@ from ..knowledge.runtime.experiment_record import ExperimentRecord
 from ..knowledge.runtime.reader import RuntimeKnowledgeReader
 from ..knowledge.runtime.record_store import ExperimentRecordStore
 from ..prompting import StageContext
+from ..execution.trial_executor import TrialExecutor
 from ..runtime.calibration import BaselineCalibrator
 from ..runtime.facade import RuntimeFacade
 from ..runtime.observation_patch import ObservationPatchManager
@@ -49,14 +50,15 @@ class RoundController:
         self.runtime = runtime
 
     def run_round(self, round_id: str = "round-1") -> RoundState:
+        executor = TrialExecutor(self.task, self.backend)
         clean_facade = RuntimeFacade(
-            self.task, self.backend, self.root / "baseline-clean"
+            self.task, self.backend, self.root / "baseline-clean", executor=executor
         )
         observed_facade = RuntimeFacade(
-            self.task, self.backend, self.root / "baseline-observed"
+            self.task, self.backend, self.root / "baseline-observed", executor=executor
         )
         candidate_facade = RuntimeFacade(
-            self.task, self.backend, self.root / "trials"
+            self.task, self.backend, self.root / "trials", executor=executor
         )
 
         # Observation is task-level and independent of any hypothesis.

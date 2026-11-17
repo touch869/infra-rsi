@@ -268,7 +268,7 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `SkillCatalog / HPKnowledgeProvider / SkillResolver` | `irsi/knowledge/{skills,catalog,reader,providers}` | 已实现 |
 | `RecomputeSurface` | `irsi/contract/surfaces/recompute.py` | 已实现 |
 | `NumericPrecisionGate` | `irsi/gates/builtin.py` | 已实现 |
-| `TrialExecutor` | `irsi/execution/backends/hyperparallel.py` | 已有执行；待抽统一执行原语 |
+| `TrialExecutor` | `irsi/execution/trial_executor.py` | 已实现；统一执行原语 |
 | `ExecutionStage` | `irsi/execution/stage.py` | 已新增，确定性执行 |
 | `ObservationExpert` | `irsi/experts/observation/expert.py` | 已改为 task-level |
 | `ObservationPatch` | `irsi/experts/artifacts.py` + `irsi/runtime/observation_patch.py` | 已有 artifact；apply/revert 已实现 |
@@ -282,4 +282,4 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `CommitRecorder` | `irsi/git/commit_recorder.py` | 已实现；尚未接入 Orchestrator |
 | `HITTAudit` | 无 | 暂缓 |
 
-**结论**：第一阶段剩余的是 **TrialExecutor 统一执行原语、CommitRecorder 接入编排、EnvironmentExpert**；CLI / Orchestrator / RoundController / ContextBuilder / NeutralityChecker / BaselineReference / ReportBuilder / ObservationPatchManager / NativePromptRuntime 已落地。
+**结论**：第一阶段剩余的是 **CommitRecorder 接入编排、EnvironmentExpert**；CLI / Orchestrator / RoundController / ContextBuilder / TrialExecutor / NeutralityChecker / BaselineReference / ReportBuilder / ObservationPatchManager / NativePromptRuntime 已落地。

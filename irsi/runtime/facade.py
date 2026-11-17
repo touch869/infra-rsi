@@ -14,6 +14,7 @@ from ..contract import surfaces as _surfaces  # noqa: F401  (plugin registration
 from .. import gates as _gates  # noqa: F401
 from ..contract.surfaces.base import Hypothesis
 from ..execution.backends.base import Backend, TrialResult
+from ..execution.trial_executor import TrialExecutor
 from ..gates.base import GateContext, GateResult
 from ..registry import GATES, SURFACES
 
@@ -28,10 +29,13 @@ class RuntimeFacade:
         spec: InfraTaskSpec,
         backend: Backend,
         trial_root: str | Path,
+        *,
+        executor: TrialExecutor | None = None,
     ) -> None:
         self.spec = spec
         self.backend = backend
         self.trial_root = Path(trial_root)
+        self.executor = executor or TrialExecutor(spec, backend)
 
     def list_candidates(self) -> list[Hypothesis]:
         """Return the edit-surface candidates for the contract's domain."""
@@ -54,7 +58,7 @@ class RuntimeFacade:
         """Run one candidate trial through the selected backend."""
         self.validate_overrides(overrides)
         path = Path(trial_dir) if trial_dir is not None else self.trial_root / label
-        return self.backend.run(self.spec, path, overrides, label)
+        return self.executor.execute(overrides, label, path)
 
     def run_gates(
         self,

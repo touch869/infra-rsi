@@ -27,6 +27,7 @@ infra-rsi/
 │   ├── execution/
 │   │   ├── __init__.py
 │   │   ├── metric_extractor.py    # log -> StepMetric / TrialMetrics
+│   │   ├── trial_executor.py      # unified deterministic execution primitive
 │   │   ├── stage.py               # 确定性 ExecutionStage（非 agent）
 │   │   └── backends/
 │   │       ├── __init__.py
@@ -163,7 +164,6 @@ infra-rsi/
 - `contract/validation.py`
 - `execution/perf_observer.py`
 - `execution/snapshot.py`
-- `execution/trial_executor.py`
 - `runtime/openjiuwen_runtime.py`
 - `reporting/exporters/json_exporter.py` / `markdown_exporter.py` / `csv_exporter.py`
 - `audit/hitt.py`、`audit/knowledge_audit.py`、`audit/audit_record.py`（暂缓）
@@ -287,7 +287,7 @@ CommitRecorder（已建，未接入编排）
 仍待实现：
 
 ```text
-TrialExecutor
+EnvironmentExpert
 ```
 
 ---
@@ -322,7 +322,7 @@ TrialExecutor
 - `orchestration/`（state、policy、context_builder、orchestrator、round_controller）
 - `contract/surfaces/recompute.py`
 - `gates/`
-- `execution/`（metric_extractor、backends）
+- `execution/`（metric_extractor、trial_executor、stage、backends）
 - `knowledge/runtime/ledger_store.py`
 - `knowledge/runtime/experiment_record.py`、`record_store.py`、`reader.py`
 - `knowledge/skills.py`、`catalog.py`、`reader.py`、`providers/hyperparallel.py`
@@ -332,7 +332,6 @@ TrialExecutor
 **待建：**
 
 - `entry/`（commands / openjiuwen）
-- `execution/trial_executor.py`
 - `runtime/openjiuwen_runtime.py`
 - `baseline/BaselineWorld`
 
