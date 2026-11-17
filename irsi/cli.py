@@ -15,6 +15,7 @@ from .contract import surfaces as _surfaces  # noqa: F401
 from . import gates as _gates  # noqa: F401
 from .execution.backends.hyperparallel import HyperParallelBackend
 from .contract import BudgetSpec, load_contract
+from .git.commit_recorder import CommitRecorder
 from .knowledge.catalog import SkillCatalog
 from .knowledge.reader import SkillResolver
 from .knowledge.runtime.ledger_store import TaskLedger
@@ -55,6 +56,8 @@ def _cmd_run(args: argparse.Namespace) -> int:
     )
     store = ExperimentRecordStore(task_dir)
     reader = RuntimeKnowledgeReader(store)
+    commit_recorder = CommitRecorder(task_dir)
+    commit_recorder.ensure_repo()
     catalog = SkillCatalog.from_root(
         Path(__file__).resolve().parents[1] / "knowledge" / "skills"
     )
@@ -71,6 +74,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         reader=reader,
         resolver=resolver,
         runtime=NativePromptRuntime(),
+        commit_recorder=commit_recorder,
     )
     state = controller.run_round("round-1")
 

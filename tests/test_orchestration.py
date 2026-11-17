@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 from dataclasses import replace
 from pathlib import Path
 
@@ -10,6 +11,7 @@ import pytest
 from irsi.contract import BudgetSpec, load_contract
 from irsi.execution.backends.base import TrialResult
 from irsi.execution.metric_extractor import StepMetric, TrialMetrics
+from irsi.git import CommitRecorder
 from irsi.knowledge.runtime.record_store import ExperimentRecordStore
 from irsi.orchestration import Orchestrator, RoundController, RoundState, Stage, StagePolicyError
 from irsi.runtime.facade import RuntimeFacade
@@ -56,6 +58,16 @@ class FakeBackend:
             command="fake",
             elapsed_s=0.01,
         )
+
+
+def _git(repo: Path, *args: str) -> str:
+    completed = subprocess.run(
+        ["git", "-C", str(repo), *args],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    return completed.stdout
 
 
 class FailingBackend(FakeBackend):
@@ -132,3 +144,31 @@ def test_execution_failure_is_recorded_as_crash(tmp_path):
     assert crash.metric is None
     assert "execution error" in crash.detail
     assert crash.rollback == "not_committed"
+
+
+def test_commit_recorder_is_wired_for_keep(tmp_path):
+    task = replace(TASK, budget=BudgetSpec(max_trials=1))
+    task_dir = tmp_path / "task"
+    backend = FakeBackend([_metrics(100.0), _metrics(100.0), _metrics(120.0)])
+    store = ExperimentRecordStore(task_dir)
+    recorder = CommitRecorder(task_dir)
+    recorder.ensure_repo()
+    _git(task_dir, "config", "user.email", "test@example.com")
+    _git(task_dir, "config", "user.name", "Test")
+
+    controller = RoundController(
+        task,
+        backend,
+        task_dir,
+        store=store,
+        commit_recorder=recorder,
+    )
+    state = controller.run_round("round-1")
+
+    assert state.stage == Stage.DONE
+    report = task_dir / "step_reports" / "step-0003.json"
+    assert report.is_file()
+    tracked = _git(task_dir, "ls-files")
+    assert "step_reports/step-0003.json" in tracked
+    assert "trials/layers-0/train.yaml" in tracked
+    assert _git(task_dir, "log", "--oneline").strip()

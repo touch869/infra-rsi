@@ -178,7 +178,7 @@ COMMIT / REPORT
 | `ReportBuilder` | 生成 `report.json` / `report.md` | ledger / store | report files |
 | `CommitRecorder` | 每个候选一个 commit；report 随 commit | patch、report | commit |
 
-**边界**：报告 schema 由代码强制；`ArchiveReportExpert` 只整理 artifact，不自动 commit。失败 patch 不入库，失败修改描述写在 report；当前 config-only 候选的 rollback 标记为 `not_committed`，代码 patch 的 actual revert 由 `CommitRecorder` 处理。
+**边界**：报告 schema 由代码强制；`ArchiveReportExpert` 只整理 artifact，不自动 commit。失败 patch 不入库，失败修改描述写在 report；当前 config-only 候选的 rollback 标记为 `not_committed`。`CommitRecorder` 已接入：keep 提交 trial config + step report，discard/crash 只提交 step report。
 
 ---
 
@@ -282,7 +282,7 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `ExpertRuntime` / `NativePromptRuntime` | `irsi/runtime/native_prompt_runtime.py` | 已实现；渲染 prompt 并记录 prompt_hash / skill_ids |
 | `RuntimeFacade` | `irsi/runtime/facade.py` | 已实现 |
 | `ReportBuilder` / `StepReport` / `RoundReport` | `irsi/reporting/report_builder.py` | 已实现；从 `ExperimentRecordStore` 生成 report |
-| `CommitRecorder` | `irsi/git/commit_recorder.py` | 已实现；尚未接入 Orchestrator |
+| `CommitRecorder` | `irsi/git/commit_recorder.py` | 已接入 Orchestrator/CLI；keep 提交 trial config + step report，discard/crash 只提交 step report |
 | `HITTAudit` | 无 | 暂缓 |
 
-**结论**：第一阶段剩余的是 **CommitRecorder 接入编排、EnvironmentExpert**；CLI / Orchestrator / RoundController / ContextBuilder / TrialExecutor / NeutralityChecker / BaselineReference / ReportBuilder / ObservationPatchManager / NativePromptRuntime 已落地。
+**结论**：第一阶段剩余的是 **EnvironmentExpert、OpenJiuwen runtime 与真实远端运行**；CLI / Orchestrator / RoundController / ContextBuilder / TrialExecutor / NeutralityChecker / BaselineReference / ReportBuilder / ObservationPatchManager / NativePromptRuntime / CommitRecorder / EnvironmentSnapshot 已落地。

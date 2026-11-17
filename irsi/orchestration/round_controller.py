@@ -14,6 +14,7 @@ from ..knowledge.runtime.reader import RuntimeKnowledgeReader
 from ..knowledge.runtime.record_store import ExperimentRecordStore
 from ..prompting import StageContext
 from ..execution.trial_executor import TrialExecutor
+from ..git.commit_recorder import CommitRecorder
 from ..runtime.calibration import BaselineCalibrator
 from ..runtime.facade import RuntimeFacade
 from ..runtime.observation_patch import ObservationPatchManager
@@ -38,6 +39,7 @@ class RoundController:
         resolver: SkillResolver | None = None,
         patch_manager: ObservationPatchManager | None = None,
         runtime: Any | None = None,
+        commit_recorder: CommitRecorder | None = None,
     ) -> None:
         self.task = task
         self.backend = backend
@@ -49,6 +51,7 @@ class RoundController:
         self.resolver = resolver
         self.patch_manager = patch_manager
         self.runtime = runtime
+        self.commit_recorder = commit_recorder
 
     def run_round(self, round_id: str = "round-1") -> RoundState:
         executor = TrialExecutor(self.task, self.backend)
@@ -165,5 +168,6 @@ class RoundController:
             store=self.store,
             builder=builder,
             runtime=self.runtime,
+            commit_recorder=self.commit_recorder,
         )
         return orchestrator.run_round(state, observation_plan=plan)

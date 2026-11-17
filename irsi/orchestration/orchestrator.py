@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import replace
+from pathlib import Path
 from typing import Any
 
 from ..contract import InfraTaskSpec
 from ..execution.stage import ExecutionStage
 from ..experts import EXPERTS
 from ..experts.artifacts import CandidateSpec, Judgment
+from ..git.commit_recorder import CommitRecorder
 from ..knowledge.runtime.experiment_record import ExperimentRecord
 from ..knowledge.runtime.record_store import ExperimentRecordStore
 from ..runtime.facade import RuntimeFacade
@@ -40,12 +43,20 @@ class Orchestrator:
         store: ExperimentRecordStore | None = None,
         builder: ContextBuilder | None = None,
         runtime: Any | None = None,
+        commit_recorder: CommitRecorder | None = None,
+        report_root: str | Path | None = None,
     ) -> None:
         self.task = task
         self.facade = facade
         self.store = store
         self.builder = builder or ContextBuilder(task)
         self.runtime = runtime
+        self.commit_recorder = commit_recorder
+        self.report_root = (
+            Path(report_root)
+            if report_root is not None
+            else (store.root if store is not None else None)
+        )
         self.execution = ExecutionStage()
 
     def _run_expert(self, name: str, context: Any, skills: tuple[Any, ...]) -> Any:
@@ -53,6 +64,46 @@ class Orchestrator:
         if self.runtime is None:
             return expert.run(context, self.facade)
         return self.runtime.run(expert, context, skills, self.facade)
+
+    def _write_step_report(self, state: RoundState, archive: Any, judgment: Judgment) -> Path | None:
+        if self.report_root is None:
+            return None
+        path = (
+            self.report_root
+            / "step_reports"
+            / f"step-{state.trials_run + 2:04d}.json"
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(
+                {
+                    "step_report": dict(archive.step_report),
+                    "round_report": dict(archive.round_report),
+                    "status": judgment.status,
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+        return path
+
+    def _commit_step(
+        self,
+        path: Path | None,
+        *,
+        files: tuple[str, ...] = (),
+        message: str,
+    ) -> None:
+        if self.commit_recorder is None or path is None or self.report_root is None:
+            return
+        relative_report = str(path.relative_to(self.report_root))
+        self.commit_recorder.commit(
+            message,
+            files=files,
+            report_path=relative_report,
+        )
 
     def run_round(
         self,
@@ -132,6 +183,16 @@ class Orchestrator:
                     stage=Stage.ARCHIVE,
                     previous_artifact=archive_result.artifact,
                 )
+                report_path = self._write_step_report(
+                    state, archive_result.artifact, judgment
+                )
+                self._commit_step(
+                    report_path,
+                    message=(
+                        f"step {state.trials_run + 2} "
+                        f"{candidate.hypothesis_id} {_error_status(exc)}"
+                    ),
+                )
                 self._record(
                     state,
                     candidate,
@@ -174,6 +235,25 @@ class Orchestrator:
                 state,
                 stage=Stage.ARCHIVE,
                 previous_artifact=archive_result.artifact,
+            )
+
+            report_path = self._write_step_report(
+                state, archive_result.artifact, judgment
+            )
+            config_files: tuple[str, ...] = ()
+            if judgment.status == "keep" and self.report_root is not None:
+                config_path = Path(execution.trial.config_path)
+                try:
+                    config_files = (str(config_path.relative_to(self.report_root)),)
+                except ValueError:
+                    config_files = (str(config_path),)
+            self._commit_step(
+                report_path,
+                files=config_files,
+                message=(
+                    f"step {state.trials_run + 2} "
+                    f"{candidate.hypothesis_id} {judgment.status}"
+                ),
             )
 
             self._record(

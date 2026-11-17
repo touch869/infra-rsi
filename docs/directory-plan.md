@@ -189,7 +189,7 @@ infra-rsi/
 | `execution/` | 执行器、指标抽取、确定性 ExecutionStage（已建） |
 | `environment/` | 环境快照；环境搭建/修复 agent 待建（snapshot 已建） |
 | `runtime/` | 确定性 runtime facade、baseline 分析、观测 patch apply/revert、专家运行时 adapter（facade/neutrality/baseline_reference/observation_patch/expert_runtime 已建） |
-| `git/` | 候选 commit + report、revert（CommitRecorder 已建，未接入编排） |
+| `git/` | 候选 commit + report、revert（CommitRecorder 已接入 Orchestrator/CLI） |
 | `experts/` | 五个专家角色、各自 prompt spec、统一 artifact 类型（已建） |
 | `audit/` | HITT 成果审计、知识审计（暂缓） |
 | `reporting/` | 每步报告、round 报告、`exporters/` 导出插件（report_builder 已建；exporters 待建） |
@@ -287,7 +287,7 @@ ObservationPatchManager
 NativePromptRuntime
 ReportBuilder
 EnvironmentSnapshot
-CommitRecorder（已建，未接入编排）
+CommitRecorder（已接入 Orchestrator/CLI）
 ```
 
 仍待实现：
