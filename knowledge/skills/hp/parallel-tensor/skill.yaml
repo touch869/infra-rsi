@@ -1,0 +1,27 @@
+id: hp/parallel-tensor
+version: 1
+kind: domain
+framework: hyperparallel
+surface: parallel
+stages:
+  - decision
+  - development
+  - judgment
+  - archive_report
+title: Tensor-parallel topology and FSDP shard constraints
+when_to_use: Building a TP/FSDP candidate ladder for a dense model on a fixed 8-rank workload.
+tags:
+  - parallel
+  - tensor_parallel
+  - fsdp
+  - dp_shard
+  - topology
+  - qwen3
+constraints:
+  - nproc must equal dp_size * cp_size * tp_size * pp_size.
+  - fsdp_config.dp_shard_size must divide dp_size = nproc / (tp_size * cp_size * pp_size).
+  - dp_shard_size < dp_size means parameter replication across FSDP groups.
+  - tp_size must divide num_attention_heads and num_key_value_heads for GQA.
+  - Tensor parallel shards the vocabulary output, so loss_parallel=true is required.
+  - sequence_parallel is not the same as TP and is not enabled in this packed-text workload.
+source: HyperParallel accelerator/mesh contract; infra-rsi qwen3-0.6b-parallel contract 2026-11-17

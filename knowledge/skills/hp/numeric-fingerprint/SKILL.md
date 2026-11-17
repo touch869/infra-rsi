@@ -17,6 +17,10 @@ Performance gain is meaningless if numerics change. The numeric gate is a binary
 - Do not compare only the final loss; compare every step's loss and grad_norm.
 - Do not accept a candidate whose numeric hash differs from the baseline.
 - If the baseline fingerprint is missing, do not proceed to candidate comparisons.
+- `bitwise` is for recompute and other exact-equivalence changes. Tensor-parallel
+  and FSDP candidates change floating-point reduction order, so use
+  `numeric-parity` with a contract-declared tolerance; record the fields and
+  maximum deviation.
 
 ## Archive use
 

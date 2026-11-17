@@ -21,6 +21,9 @@ def test_catalog_loads_hp_skills():
         "hp/memory-budget",
         "hp/mfu-perf",
         "hp/numeric-fingerprint",
+        "hp/parallel-frontier",
+        "hp/parallel-numeric-parity",
+        "hp/parallel-tensor",
         "hp/recompute-layerwise",
         "hp/recompute-modes",
     ]
@@ -51,6 +54,8 @@ def test_list_by_stage_and_surface():
     assert [skill.manifest.id for skill in development] == [
         "hp/memory-budget",
         "hp/numeric-fingerprint",
+        "hp/parallel-frontier",
+        "hp/parallel-tensor",
         "hp/recompute-layerwise",
         "hp/recompute-modes",
     ]

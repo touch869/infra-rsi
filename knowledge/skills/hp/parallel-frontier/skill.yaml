@@ -1,0 +1,24 @@
+id: hp/parallel-frontier
+version: 1
+kind: domain
+framework: hyperparallel
+surface: parallel
+stages:
+  - decision
+  - development
+  - judgment
+  - archive_report
+title: Parallel-strategy throughput and memory frontier
+when_to_use: Interpreting TP/FSDP candidates when communication overhead may dominate a small model.
+tags:
+  - parallel
+  - throughput
+  - memory
+  - frontier
+  - communication
+constraints:
+  - Compare global tokens/s, not per-rank tokens/s.
+  - Keep the workload, batch size, seed, optimizer and activation-checkpoint mode fixed.
+  - A lower per-rank memory is not a win if throughput falls outside the noise band.
+  - TP adds all-gather/reduce-scatter; FSDP shard size changes parameter replication and communication.
+source: infra-rsi qwen3-0.6b parallel measurements on 910b4-126 2026-11-17

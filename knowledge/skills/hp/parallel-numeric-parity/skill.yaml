@@ -1,0 +1,23 @@
+id: hp/parallel-numeric-parity
+version: 1
+kind: domain
+framework: hyperparallel
+surface: parallel
+stages:
+  - judgment
+  - archive_report
+title: Tolerance-based numeric parity for parallel candidates
+when_to_use: Judging TP/FSDP candidates whose floating-point reduction order changes.
+tags:
+  - parallel
+  - numeric
+  - parity
+  - tolerance
+  - gate
+constraints:
+  - A bitwise hash is not the right gate for tensor parallel.
+  - Compare the contract-selected per-step fields against the observed baseline.
+  - For parallel candidates, loss is the model-equivalence proxy; grad_norm is diagnostic.
+  - Use the contract's rtol/atol; do not loosen the gate after seeing the result.
+  - A divergence outside the tolerance makes the trial a crash, not a keep.
+source: infra-rsi NumericParityGate and qwen3-0.6b-parallel contract 2026-11-18

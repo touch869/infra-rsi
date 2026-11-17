@@ -18,4 +18,5 @@ constraints:
   - The baseline numeric fingerprint must be frozen before candidates.
   - Numeric precision is a binary PASS/FAIL gate, not a noise-band metric.
   - A mismatch makes the trial a crash and invalidates its metric.
-source: infra-rsi BitwiseGate; layerwise recompute results
+  - Parallel candidates use `numeric-parity` with declared tolerance, not `bitwise`.
+source: infra-rsi BitwiseGate; layerwise recompute results; qwen3-0.6b parallel result
