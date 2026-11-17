@@ -7,12 +7,14 @@ from pathlib import Path
 import pytest
 
 from irsi.contract import load_contract
+from irsi.environment import EnvironmentSnapshot
 from irsi.experts import (
     ArchiveBundle,
     ArchiveReportExpert,
     CandidateSpec,
     DecisionExpert,
     DevelopmentExpert,
+    EnvironmentExpert,
     EXPERTS,
     HypothesisSet,
     JudgmentExpert,
@@ -78,8 +80,15 @@ class FakeBackend:
         )
 
 
-def test_five_experts_and_prompts_are_registered():
-    expected = ["archive_report", "decision", "development", "judgment", "observation"]
+def test_six_experts_and_prompts_are_registered():
+    expected = [
+        "archive_report",
+        "decision",
+        "development",
+        "environment",
+        "judgment",
+        "observation",
+    ]
     assert EXPERTS.names() == expected
     assert PROMPTS.names() == expected
     for name in expected:
@@ -281,6 +290,16 @@ def test_baseline_reference_is_observed_inside_noise(tmp_path):
     assert calibration.neutrality.overhead == pytest.approx(0.01)
     assert calibration.reference.metric == pytest.approx(101.0)
     assert calibration.reference.trial.label == "baseline-observed"
+
+
+def test_environment_expert_returns_snapshot(tmp_path):
+    facade = RuntimeFacade(TASK, FakeBackend([_metrics(100.0)]), tmp_path / "runs")
+    result = EnvironmentExpert().run(
+        StageContext(task=TASK, stage="environment"), facade
+    )
+    assert isinstance(result.artifact, EnvironmentSnapshot)
+    assert result.artifact.python
+    assert result.artifact.repo_root == TASK.repo_root
 
 
 def test_native_prompt_runtime_records_provenance(tmp_path):

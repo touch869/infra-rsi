@@ -16,7 +16,7 @@ contract    contract/task_spec.py (what may change, how it is judged)
 knowledge   knowledge/runtime/ (records.jsonl, ExperimentRecordStore, RuntimeKnowledgeReader)
             knowledge/skills/hp/ (skill packages)
 prompting   prompting/ (StageContext, expert prompt specs, deterministic builder)
-experts     experts/ (five role artifacts, prompt specs, registry)
+experts     experts/ (six role artifacts, prompt specs, registry; execution is a deterministic stage)
 execution   execution/stage.py (deterministic ExecutionStage) + execution/trial_executor.py
 runtime     runtime/facade.py + runtime/neutrality.py + runtime/baseline_reference.py + runtime/observation_patch.py + runtime/native_prompt_runtime.py
 environment environment/snapshot.py (baseline world facts)

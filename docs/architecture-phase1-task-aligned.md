@@ -132,6 +132,7 @@ COMMIT / REPORT
 
 | 模块 | 职责 | 输入 | 输出 |
 |---|---|---|---|
+| `EnvironmentExpert` | 环境探测与快照；不修改实验代码 | `TaskSpec` | `EnvironmentSnapshot` |
 | `DecisionExpert` | 从修改面筛选、排序假设 | task、baseline、records、skills | `HypothesisSet` |
 | `DevelopmentExpert` | 把假设转成 contract 允许的候选；只改 `writable_prefixes` | `Hypothesis` / `HypothesisSet` | `CandidateSpec` |
 | `ObservationExpert` | 生成 task-level 观测计划与 patch | `TaskSpec` | `ObservationPlan` + `ObservationPatch` |
@@ -197,7 +198,7 @@ HITT 流程尚未对齐，暂不建 `HITTAudit` / `KnowledgeAudit` / `AuditRecor
 | hp 领域知识库 | `SkillCatalog` + `HPKnowledgeProvider` | `SkillBundle` | 已实现；6 个核心 skill |
 | native infra 修改面：重计算 | `RecomputeSurface` + `CandidateGenerator` | `CandidateSpec` | 已实现 |
 | native infra 验证面：数值精度 | `NumericPrecisionGate` | `GateResult` | 已实现，二值硬门槛 |
-| agents 角色 | 5 个 `ExpertRole` + `ExecutionStage` | artifacts | 已调整：执行不是 agent |
+| agents 角色 | 6 个 `ExpertRole` + `ExecutionStage` | artifacts | 已调整：执行不是 agent；环境探测是 expert |
 | HITT 成果审计 | `HITTAudit` | `AuditVerdict` | 暂缓 |
 | 报告 | `StepReport` + `RoundReport` + `ReportBuilder` | report | 待实现 |
 | 入口层 cli | `CLI` | `RoundRequest` | 已有入口，待接编排 |
@@ -271,7 +272,7 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `NumericPrecisionGate` | `irsi/gates/builtin.py` | 已实现 |
 | `TrialExecutor` | `irsi/execution/trial_executor.py` | 已实现；统一执行原语 |
 | `EnvironmentSnapshot` | `irsi/environment/snapshot.py` | 已实现；记录 baseline world |
-| `EnvironmentExpert` | 无 | 未实现；env setup 仍靠 backend / 人工 |
+| `EnvironmentExpert` | `irsi/experts/environment/expert.py` | 已实现探测/快照；环境修复仍为有界外部动作 |
 | `ExecutionStage` | `irsi/execution/stage.py` | 已新增，确定性执行 |
 | `ObservationExpert` | `irsi/experts/observation/expert.py` | 已改为 task-level |
 | `ObservationPatch` | `irsi/experts/artifacts.py` + `irsi/runtime/observation_patch.py` | 已有 artifact；apply/revert 已实现 |
@@ -285,4 +286,4 @@ Skill 只承载领域知识；流程、报告、审计、contract 约束由代�
 | `CommitRecorder` | `irsi/git/commit_recorder.py` | 已接入 Orchestrator/CLI；keep 提交 trial config + step report，discard/crash 只提交 step report |
 | `HITTAudit` | 无 | 暂缓 |
 
-**结论**：第一阶段剩余的是 **EnvironmentExpert、OpenJiuwen runtime 与真实远端运行**；CLI / Orchestrator / RoundController / ContextBuilder / TrialExecutor / NeutralityChecker / BaselineReference / ReportBuilder / ObservationPatchManager / NativePromptRuntime / CommitRecorder / EnvironmentSnapshot 已落地。
+**结论**：第一阶段剩余的是 **OpenJiuwen runtime、环境修复 agent 与真实远端运行**；CLI / Orchestrator / RoundController / ContextBuilder / TrialExecutor / NeutralityChecker / BaselineReference / ReportBuilder / ObservationPatchManager / NativePromptRuntime / CommitRecorder / EnvironmentSnapshot / EnvironmentExpert 已落地。

@@ -76,7 +76,10 @@ infra-rsi/
 │   │   ├── __init__.py
 │   │   ├── base.py                # ExpertRole / ExpertResult
 │   │   ├── artifacts.py           # HypothesisSet / CandidateSpec / ObservationPlan / ...
-│   │   ├── registry.py            # EXPERTS（五个角色）
+│   │   ├── registry.py            # EXPERTS（六个角色）
+│   │   ├── environment/
+│   │   │   ├── expert.py
+│   │   │   └── prompt_spec.py
 │   │   ├── decision/
 │   │   │   ├── expert.py
 │   │   │   └── prompt_spec.py
@@ -190,7 +193,7 @@ infra-rsi/
 | `environment/` | 环境快照；环境搭建/修复 agent 待建（snapshot 已建） |
 | `runtime/` | 确定性 runtime facade、baseline 分析、观测 patch apply/revert、专家运行时 adapter（facade/neutrality/baseline_reference/observation_patch/expert_runtime 已建） |
 | `git/` | 候选 commit + report、revert（CommitRecorder 已接入 Orchestrator/CLI） |
-| `experts/` | 五个专家角色、各自 prompt spec、统一 artifact 类型（已建） |
+| `experts/` | 六个专家角色、各自 prompt spec、统一 artifact 类型（已建） |
 | `audit/` | HITT 成果审计、知识审计（暂缓） |
 | `reporting/` | 每步报告、round 报告、`exporters/` 导出插件（report_builder 已建；exporters 待建） |
 
@@ -200,6 +203,7 @@ infra-rsi/
 
 | 专家/阶段 | 职责 | 输入 | 输出 |
 |---|---|---|---|
+| `EnvironmentExpert` | 环境探测与快照；不修改实验代码 | TaskSpec | `EnvironmentSnapshot` |
 | `DecisionExpert` | 从修改面筛选、排序假设 | TaskSpec、baseline、records、skills | `HypothesisSet` |
 | `DevelopmentExpert` | 把假设转成 contract 允许的候选；只改 `writable_prefixes` | Hypothesis / HypothesisSet | `CandidateSpec` |
 | `ObservationExpert` | 生成 task-level 观测计划与可开关 patch | TaskSpec | `ObservationPlan` + `ObservationPatch` |
@@ -287,13 +291,14 @@ ObservationPatchManager
 NativePromptRuntime
 ReportBuilder
 EnvironmentSnapshot
+EnvironmentExpert（探测/快照）
 CommitRecorder（已接入 Orchestrator/CLI）
 ```
 
 仍待实现：
 
 ```text
-EnvironmentExpert
+环境修复 agent
 ```
 
 ---
@@ -323,7 +328,7 @@ EnvironmentExpert
 - `prompting/`（context、spec、builder、registry）
 - `runtime/facade.py`、`runtime/calibration.py`、`runtime/neutrality.py`、`runtime/baseline_reference.py`、`runtime/observation_patch.py`、`runtime/native_prompt_runtime.py`、`runtime/expert_runtime.py`
 - `git/commit_recorder.py`
-- `experts/` 五个角色与 artifact
+- `experts/` 六个角色与 artifact
 - `execution/stage.py` 确定性 ExecutionStage
 - `orchestration/`（state、policy、context_builder、orchestrator、round_controller）
 - `contract/surfaces/recompute.py`

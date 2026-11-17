@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from ..contract import InfraTaskSpec
-from ..environment.snapshot import EnvironmentSnapshot
+from ..experts.environment.expert import EnvironmentExpert
 from ..experts.observation.expert import ObservationExpert
 from ..knowledge.reader import SkillResolver
 from ..knowledge.runtime.experiment_record import ExperimentRecord
@@ -55,7 +55,6 @@ class RoundController:
 
     def run_round(self, round_id: str = "round-1") -> RoundState:
         executor = TrialExecutor(self.task, self.backend)
-        snapshot = EnvironmentSnapshot.capture(self.task)
         clean_facade = RuntimeFacade(
             self.task, self.backend, self.root / "baseline-clean", executor=executor
         )
@@ -65,6 +64,18 @@ class RoundController:
         candidate_facade = RuntimeFacade(
             self.task, self.backend, self.root / "trials", executor=executor
         )
+
+        environment_expert = EnvironmentExpert()
+        environment_context = StageContext(task=self.task, stage="environment")
+        if self.runtime is None:
+            environment_result = environment_expert.run(
+                environment_context, clean_facade
+            )
+        else:
+            environment_result = self.runtime.run(
+                environment_expert, environment_context, (), clean_facade
+            )
+        snapshot = environment_result.artifact
 
         # Observation is task-level and independent of any hypothesis.
         observation_expert = ObservationExpert()
