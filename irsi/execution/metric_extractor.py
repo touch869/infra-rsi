@@ -5,9 +5,17 @@ from __future__ import annotations
 import hashlib
 import re
 from dataclasses import dataclass
-from typing import Dict, Iterable, Optional, Tuple
+from typing import Any, Dict, Iterable, Optional, Protocol, Tuple
 
-__all__ = ["StepMetric", "TrialMetrics", "parse_log"]
+__all__ = ["MetricExtractor", "StepMetric", "TrialMetrics", "parse_log"]
+
+
+class MetricExtractor(Protocol):
+    """Framework-neutral contract for log -> metrics extraction."""
+
+    def extract(self, execution: Any, spec: Any) -> Any:
+        ...
+
 
 _TOKEN = re.compile(r"([A-Za-z0-9_/.-]+)=(-?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)")
 _LOSS_KEYS = ("training/foundation_loss", "training/total_loss", "foundation_loss")

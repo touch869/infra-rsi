@@ -16,10 +16,6 @@ infra-rsi/
 │   ├── engine.py                  # 现有 trial 状态机
 │   ├── registry.py                # typed registry
 │   │
-│   ├── core/
-│   │   ├── __init__.py
-│   │   └── protocols.py           # Gate / TrialExecutor / KnowledgeProvider / Exporter / ExpertRuntime
-│   │
 │   ├── contract/
 │   │   ├── __init__.py
 │   │   ├── task_spec.py           # InfraTaskSpec

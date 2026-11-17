@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import Any, Mapping, Protocol
 
-__all__ = ["Hypothesis"]
+__all__ = ["Hypothesis", "SurfacePlugin"]
 
 
 @dataclass(frozen=True)
@@ -20,3 +20,16 @@ class Hypothesis:
     def __post_init__(self) -> None:
         if not self.id.strip():
             raise ValueError("hypothesis id must be non-empty")
+
+
+class SurfacePlugin(Protocol):
+    """Framework-specific modification surface contract."""
+
+    framework: str
+    surface: str
+
+    def validate(self, spec: Any) -> None:
+        ...
+
+    def candidates(self, spec: Any) -> list[Any]:
+        ...

@@ -1,4 +1,4 @@
-"""HyperParallel skill provider, decoupled from the core package."""
+"""HyperParallel skill provider, decoupled from the harness engine."""
 
 from __future__ import annotations
 
