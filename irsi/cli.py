@@ -1,4 +1,4 @@
-"""Command-line entry point: ``irsi run`` / ``irsi status`` / ``irsi report``."""
+"""Command-line entry point: ``run`` / ``status`` / ``report`` / ``skills``."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from . import gates as _gates  # noqa: F401
 from .execution.backends.hyperparallel import HyperParallelBackend
 from .contract import load_contract
 from .engine import Engine
+from .knowledge import DEFAULT_CATALOG, get_skill
 from .knowledge.runtime.ledger_store import TaskLedger
 
 __all__ = ["main"]
@@ -82,6 +83,30 @@ def _cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_skills(args: argparse.Namespace) -> int:
+    if args.name:
+        skill = get_skill(args.name, args.version)
+        if args.json:
+            print(json.dumps(skill.to_dict(), ensure_ascii=False, indent=2, sort_keys=True))
+        else:
+            print(f"{skill.name} v{skill.version}")
+            print(f"path: {skill.path}")
+            print(skill.description)
+        if args.body:
+            print()
+            print(skill.body)
+        return 0
+
+    skills = DEFAULT_CATALOG.list_skills(args.query)
+    if args.json:
+        print(json.dumps([skill.to_dict() for skill in skills], ensure_ascii=False, indent=2))
+        return 0
+    for skill in skills:
+        summary = skill.description.splitlines()[0] if skill.description else ""
+        print(f"{skill.name}\tv{skill.version}\t{skill.path}\t{summary}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """Parse arguments and dispatch one subcommand."""
     parser = argparse.ArgumentParser(prog="irsi", description=__doc__)
@@ -103,6 +128,14 @@ def main(argv: list[str] | None = None) -> int:
     report.add_argument("task_dir")
     report.add_argument("--json", action="store_true")
     report.set_defaults(func=_cmd_report)
+
+    skills = subs.add_parser("skills", help="list or show auto-loaded skills")
+    skills.add_argument("name", nargs="?", default=None, help="skill name to show")
+    skills.add_argument("--version", type=int, default=None, help="skill version")
+    skills.add_argument("--query", default=None, help="filter name or description text")
+    skills.add_argument("--json", action="store_true", help="print metadata as JSON")
+    skills.add_argument("--body", action="store_true", help="print the SKILL.md body")
+    skills.set_defaults(func=_cmd_skills)
 
     args = parser.parse_args(argv)
     return int(args.func(args))

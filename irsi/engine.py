@@ -39,6 +39,12 @@ class Decision:
     detail: str = ""
     overrides: dict[str, Any] = field(default_factory=dict)
     artifacts: dict[str, str] = field(default_factory=dict)
+    why: str = ""
+    changes: list[str] = field(default_factory=list)
+    test_result: str = ""
+    commit_ref: str = ""
+    code_restored: bool = False
+    rollback_ref: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -125,13 +131,44 @@ class Engine:
         self.ledger.write_json(path, decision.to_dict())
         self.ledger.append_jsonl("candidates.jsonl", decision.to_dict())
         self.ledger.append_result(
+            commit_ref=decision.commit_ref,
             trial=decision.trial,
             metric=decision.metric,
             status=decision.status,
             delta_vs_best=decision.delta_vs_best,
             description=decision.description,
         )
+        self.ledger.append_experiment_log(
+            record_id=decision.trial,
+            trial=decision.trial,
+            decision=decision.status,
+            why=decision.why,
+            changes=decision.changes,
+            test_result=decision.test_result,
+            commit_ref=decision.commit_ref,
+            code_restored=decision.code_restored,
+            rollback_ref=decision.rollback_ref,
+            evidence=decision.artifacts,
+        )
         self.decisions.append(decision)
+
+    @staticmethod
+    def _changes(overrides: dict[str, Any]) -> list[str]:
+        if not overrides:
+            return ["no-op control: no overrides"]
+        return [f"{key}={value!r}" for key, value in sorted(overrides.items())]
+
+    @staticmethod
+    def _test_result(
+        status: str,
+        detail: str,
+        metric: Optional[float],
+        delta_vs_best: Optional[float],
+    ) -> str:
+        if metric is None:
+            return f"{status}: {detail}"
+        delta = "n/a" if delta_vs_best is None else f"{delta_vs_best:+.2%}"
+        return f"{status}: metric {metric:.6g}, delta vs best {delta}; {detail}"
 
     def run_candidate(self, index: int, hypothesis: Hypothesis) -> Decision:
         """Execute one hypothesis and record keep/discard/crash."""
@@ -151,6 +188,12 @@ class Engine:
                 delta_vs_best=None,
                 detail=f"backend error: {exc}",
                 overrides=dict(hypothesis.overrides),
+                why=hypothesis.description,
+                changes=self._changes(dict(hypothesis.overrides)),
+                test_result=f"crash: backend error: {exc}",
+                commit_ref=f"Experiment-Record: {label}",
+                code_restored=True,
+                rollback_ref=self.best.label if self.best else "baseline",
             )
             self._record(decision)
             return decision
@@ -186,6 +229,12 @@ class Engine:
             detail=detail,
             overrides=dict(hypothesis.overrides),
             artifacts=artifacts,
+            why=hypothesis.description,
+            changes=self._changes(dict(hypothesis.overrides)),
+            test_result=self._test_result(status, detail, metric, delta),
+            commit_ref=f"Experiment-Record: {label}",
+            code_restored=status != "keep",
+            rollback_ref=(self.best.label if self.best else "baseline") if status != "keep" else None,
         )
         self._record(decision)
         if status == "keep":

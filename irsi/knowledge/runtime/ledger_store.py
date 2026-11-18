@@ -11,7 +11,13 @@ from typing import Any, Mapping
 
 __all__ = ["TaskLedger"]
 
-_RESULTS_HEADER = "timestamp\ttrial\tmetric\tstatus\tdelta_vs_best\tdescription\n"
+_RESULTS_HEADER = (
+    "timestamp\tcommit\ttrial\tmetric\tstatus\tdelta_vs_best\tdescription\n"
+)
+_EXPERIMENT_LOG_HEADER = (
+    "# Experiment log\n\n"
+    "Append one entry per experiment step. Never rewrite previous entries.\n"
+)
 
 
 def _now() -> str:
@@ -46,6 +52,10 @@ class TaskLedger:
     def events_path(self) -> Path:
         return self.root / "events.jsonl"
 
+    @property
+    def experiment_log_path(self) -> Path:
+        return self.root / "experiment_log.md"
+
     def trial_dir(self, label: str) -> Path:
         path = self.root / "trials" / _slug(label)
         path.mkdir(parents=True, exist_ok=True)
@@ -79,13 +89,59 @@ class TaskLedger:
         status: str,
         delta_vs_best: float | None,
         description: str,
+        commit_ref: str | None = None,
     ) -> None:
         if not self.results_path.exists():
             self.results_path.write_text(_RESULTS_HEADER, encoding="utf-8")
         value = "nan" if metric is None else f"{metric:.6g}"
         delta = "" if delta_vs_best is None else f"{delta_vs_best:+.6f}"
+        commit = commit_ref or "pending"
         with self.results_path.open("a", encoding="utf-8", newline="\n") as handle:
-            handle.write(f"{_now()}\t{trial}\t{value}\t{status}\t{delta}\t{description}\n")
+            handle.write(
+                f"{_now()}\t{_tsv(commit)}\t{_tsv(trial)}\t{value}\t{status}\t"
+                f"{delta}\t{_tsv(description)}\n"
+            )
+
+    def append_experiment_log(
+        self,
+        *,
+        record_id: str,
+        trial: str,
+        decision: str,
+        why: str,
+        changes: list[str],
+        test_result: str,
+        commit_ref: str,
+        code_restored: bool,
+        rollback_ref: str | None,
+        evidence: Mapping[str, str] | None = None,
+    ) -> None:
+        """Append one human-readable step entry to ``experiment_log.md``."""
+        if not self.experiment_log_path.exists():
+            self.experiment_log_path.write_text(_EXPERIMENT_LOG_HEADER, encoding="utf-8")
+
+        change_lines = "\n".join(f"  - `{change}`" for change in changes)
+        rollback = rollback_ref or "not applicable"
+        evidence_lines = "\n".join(
+            f"  - {kind}: `{path}`" for kind, path in (evidence or {}).items()
+        ) or "  - none recorded"
+        entry = (
+            f"\n## {trial} - {decision} ({record_id})\n\n"
+            f"- **Experiment identity:** trial `{trial}`, record `{record_id}`.\n"
+            f"- **Why:** {why}\n"
+            f"- **What changed:**\n{change_lines}\n"
+            f"- **Test result:** {test_result}\n"
+            f"- **Commit:** `{commit_ref}`; docs included; "
+            f"code restored: `{str(code_restored).lower()}`; rollback: `{rollback}`.\n"
+            f"- **Evidence:**\n{evidence_lines}\n"
+        )
+        with self.experiment_log_path.open("a", encoding="utf-8", newline="\n") as handle:
+            handle.write(entry)
 
     def set_state(self, status: str, **extra: Any) -> None:
         self.write_json("state.json", {"status": status, "updated": _now(), **extra})
+
+
+def _tsv(value: str) -> str:
+    """Keep one result row on one TSV line."""
+    return value.replace("\t", "\\t").replace("\r", "\\r").replace("\n", "\\n")

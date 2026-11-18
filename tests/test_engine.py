@@ -107,6 +107,21 @@ def test_keep_discard_and_recovery(tmp_path):
     assert report["robust"] is True
     assert (tmp_path / "task" / "results.tsv").read_text(encoding="utf-8").count("\n") == 3
     assert len((tmp_path / "task" / "candidates.jsonl").read_text(encoding="utf-8").splitlines()) == 2
+    results_header = (tmp_path / "task" / "results.tsv").read_text(encoding="utf-8").splitlines()[0]
+    assert results_header.startswith("timestamp\tcommit\t")
+    experiment_log = (tmp_path / "task" / "experiment_log.md").read_text(encoding="utf-8")
+    assert "- **Why:**" in experiment_log
+    assert "- **What changed:**" in experiment_log
+    assert "- **Test result:**" in experiment_log
+    assert "Experiment-Record: h01-win" in experiment_log
+    decisions = [
+        json.loads(line)
+        for line in (tmp_path / "task" / "candidates.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert decisions[0]["code_restored"] is False
+    assert decisions[0]["rollback_ref"] is None
+    assert decisions[1]["code_restored"] is True
+    assert decisions[1]["rollback_ref"] == "h01-win"
     assert (tmp_path / "task" / "report.md").is_file()
     state = json.loads((tmp_path / "task" / "state.json").read_text(encoding="utf-8"))
     assert state["status"] == "COMPLETED"
@@ -120,6 +135,8 @@ def test_bitwise_mismatch_is_a_crash(tmp_path):
     decision = report["decisions"][0]
     assert decision["status"] == "crash"
     assert "bitwise" in decision["detail"]
+    assert decision["code_restored"] is True
+    assert decision["rollback_ref"] == "baseline"
     assert report["best"]["trial"] == "baseline"
 
 

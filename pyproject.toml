@@ -21,5 +21,13 @@ irsi = "irsi.cli:main"
 [tool.setuptools.packages.find]
 include = ["irsi*"]
 
+[tool.setuptools.package-data]
+"irsi.knowledge.runtime" = [
+  "experiment-record/SKILL.md",
+  "experiment-record/references/*.md",
+  "experiment-record/schemas/*.json",
+  "experiment-record/templates/*",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

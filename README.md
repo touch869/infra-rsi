@@ -17,13 +17,21 @@ plugins     contract/surfaces/ (which candidates a surface offers)
             execution/backends/ (how a trial runs)
             gates/ (receipt, bitwise, memory)
 contract    contract/task_spec.py (what may change, how it is judged)
-knowledge   knowledge/runtime/ledger_store.py (append-only runtime evidence)
+knowledge   knowledge/skill_catalog.py (auto-loads SKILL.md)
+            knowledge/runtime/ledger_store.py (append-only runtime evidence)
 reporting   reporting/ (step/round reports + exporters/)
 ```
 
 Dependency rule: `engine` never imports torch or HyperParallel; it talks to a
 `Backend`. Gates never mutate a trial. Surfaces only emit contract-approved
 overrides, and the contract rejects any key outside `writable_prefixes`.
+
+## Skills
+
+Skills are auto-discovered from `SKILL.md` frontmatter anywhere under
+`irsi/knowledge/`. `irsi skills` lists them; `irsi skills experiment-record
+--body` prints the loaded instructions. The `experiment-record` skill defines
+the per-step why/change/test record and its commit and rollback accounting.
 
 ## Quickstart (Ascend host)
 
