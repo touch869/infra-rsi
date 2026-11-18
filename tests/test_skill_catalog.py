@@ -13,9 +13,11 @@ from irsi.knowledge import DEFAULT_CATALOG, SkillCatalog, SkillLoadError, get_sk
 def test_package_skill_is_loaded_automatically():
     skills = DEFAULT_CATALOG.list_skills()
     assert [skill.name for skill in skills] == [
-        "experiment-record", "memory-analysis", "moe-profiler",
-        "parallel-strategy-planner", "perf-playbook", "precision", "profiling",
-        "sapp-parallel-strategy"]
+        "bringup-benchmark", "experiment-record", "formal-verification",
+        "hf-model-precision-validation", "memory-analysis", "moe-optimizer",
+        "moe-profiler", "parallel-strategy-planner", "perf-playbook",
+        "precision", "profiling", "routing-validator",
+        "sapp-parallel-strategy", "strategy-optimizer", "strategy-validator"]
     skill = get_skill("experiment-record", 1)
     assert "append-only" in skill.description
     assert skill.read_text("references/field-dictionary.md").startswith("# Field Dictionary")
@@ -28,6 +30,10 @@ def test_package_skill_is_loaded_automatically():
     assert moe_profiler.metadata["environment"] == "ascend"
     assert moe_profiler.metadata["framework"] == "hyperparallel"
     assert "extract_moe_facts.py" in moe_profiler.read_text("SKILL.md")
+    moe_optimizer = get_skill("moe-optimizer", 1)
+    assert moe_optimizer.metadata["category"] == "strategy"
+    assert moe_optimizer.metadata["environment"] == "generic"
+    assert moe_optimizer.metadata["framework"] == "hyperparallel"
     strategy = get_skill("parallel-strategy-planner", 1)
     assert strategy.metadata["category"] == "strategy"
     assert strategy.metadata["environment"] == "generic"
@@ -37,6 +43,11 @@ def test_package_skill_is_loaded_automatically():
     assert sapp.metadata["environment"] == "ascend"
     assert sapp.metadata["framework"] == "hyperparallel"
     assert "HYPER_PARALLEL_ROOT" in sapp.read_text("SKILL.md")
+    optimizer = get_skill("strategy-optimizer", 1)
+    assert optimizer.metadata["category"] == "strategy"
+    assert optimizer.metadata["environment"] == "generic"
+    assert optimizer.metadata["framework"] == "hyperparallel"
+    assert "run_optimization.py" in optimizer.read_text("SKILL.md")
     playbook = get_skill("perf-playbook", 1)
     assert playbook.metadata["category"] == "strategy"
     assert playbook.metadata["environment"] == "ascend"
@@ -50,6 +61,23 @@ def test_package_skill_is_loaded_automatically():
     assert memory.metadata["environment"] == "ascend"
     assert memory.metadata["framework"] == "generic"
     assert "torch_npu" in memory.read_text("scripts/mem_hook.py")
+    bringup = get_skill("bringup-benchmark", 1)
+    assert bringup.metadata["category"] == "validation"
+    assert bringup.metadata["environment"] == "generic"
+    assert bringup.metadata["framework"] == "hyperparallel"
+    formal = get_skill("formal-verification", 1)
+    assert formal.metadata["category"] == "validation"
+    assert formal.read_text("profiles.json").find("../../rules") == -1
+    hf_precision = get_skill("hf-model-precision-validation", 1)
+    assert hf_precision.metadata["category"] == "validation"
+    assert hf_precision.metadata["environment"] == "ascend"
+    routing = get_skill("routing-validator", 1)
+    assert routing.metadata["category"] == "validation"
+    assert routing.metadata["environment"] == "generic"
+    assert routing.metadata["framework"] == "generic"
+    strategy_validator = get_skill("strategy-validator", 1)
+    assert strategy_validator.metadata["category"] == "validation"
+    assert strategy_validator.metadata["framework"] == "hyperparallel"
 
 
 def test_catalog_discovers_a_new_skill_directory(tmp_path):
@@ -76,9 +104,11 @@ def test_cli_lists_and_shows_the_packaged_skill(capsys):
     assert main(["skills", "--json"]) == 0
     listed = json.loads(capsys.readouterr().out)
     assert [item["name"] for item in listed] == [
-        "experiment-record", "memory-analysis", "moe-profiler",
-        "parallel-strategy-planner", "perf-playbook", "precision", "profiling",
-        "sapp-parallel-strategy"]
+        "bringup-benchmark", "experiment-record", "formal-verification",
+        "hf-model-precision-validation", "memory-analysis", "moe-optimizer",
+        "moe-profiler", "parallel-strategy-planner", "perf-playbook",
+        "precision", "profiling", "routing-validator",
+        "sapp-parallel-strategy", "strategy-optimizer", "strategy-validator"]
 
     assert main(["skills", "experiment-record", "--body"]) == 0
     shown = capsys.readouterr().out

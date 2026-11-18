@@ -32,6 +32,38 @@ Skills are auto-discovered from `SKILL.md` frontmatter anywhere under
 `irsi/knowledge/`. `irsi skills` lists them; `irsi skills experiment-record
 --body` prints the loaded instructions. The `experiment-record` skill defines
 the per-step why/change/test record and its commit and rollback accounting.
+The `profiling` skill targets Ascend NPU + HyperParallel and lives at
+`irsi/knowledge/analysis/profiling/ascend/hyperparallel/`; other environments
+can add sibling variants under `analysis/profiling/`.
+The peer `moe-profiler` skill extracts MoE expert-load, All-to-All, routing,
+and gradient facts from logs, profile captures, and checkpoints under
+`irsi/knowledge/analysis/moe-profiler/ascend/hyperparallel/`.
+The `parallel-strategy-planner` skill plans DP/FSDP/TP/PP/EP/CP strategies
+for Ascend and NVIDIA hardware, with HyperParallel DeviceMesh output, under
+`irsi/knowledge/strategy/parallel-strategy-planner/generic/hyperparallel/`.
+The `sapp-parallel-strategy` skill prices concrete layouts on Ascend dies with
+HyperParallel's device-free ND model under
+`irsi/knowledge/strategy/sapp-parallel-strategy/ascend/hyperparallel/`.
+The `perf-playbook` skill maps a measured bottleneck to a tuning technique and
+records the change in a tuning summary under
+`irsi/knowledge/strategy/perf-playbook/ascend/hyperparallel/`.
+The `strategy-optimizer` skill runs a bounded parallel-layout search with
+real-device benchmarks under
+`irsi/knowledge/strategy/strategy-optimizer/generic/hyperparallel/`.
+The `moe-optimizer` skill closes the loop from MoE profiling and diagnosis to
+candidate generation and refinement under
+`irsi/knowledge/strategy/moe-optimizer/generic/hyperparallel/`.
+The `memory-analysis` skill captures and breaks down Ascend NPU allocation
+snapshots under `irsi/knowledge/analysis/memory-analysis/ascend/generic/`.
+The `precision` skill captures msprobe dumps, compares candidate and reference
+runs, and localizes numerical divergence under
+`irsi/knowledge/analysis/precision/ascend/generic/`.
+Validation skills live under `irsi/knowledge/validation/`:
+`bringup-benchmark` scores bring-up assets and A/B evidence;
+`formal-verification` drives FM-Agent contracts and counterexamples;
+`hf-model-precision-validation` checks numerical acceptance on Ascend;
+`routing-validator` checks MoE token, ordering and gradient-flow invariants;
+and `strategy-validator` measures parallel-strategy candidates.
 
 ## Quickstart (Ascend host)
 

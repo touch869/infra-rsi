@@ -11,7 +11,6 @@ description: >
 category: "analysis"
 environment: "ascend"
 framework: "generic"
-stages: ["S2", "S3", "S5"]
 inputs:
   - "candidate and reference runs"
   - "msprobe dumps"
