@@ -32,6 +32,7 @@ include = ["irsi*"]
   "analysis/README.md",
   "strategy/README.md",
   "validation/README.md",
+  "execution/README.md",
   "analysis/profiling/ascend/hyperparallel/SKILL.md",
   "analysis/profiling/ascend/hyperparallel/references/*.md",
   "analysis/profiling/ascend/hyperparallel/scripts/*.py",
@@ -105,6 +106,12 @@ include = ["irsi*"]
   "validation/strategy-validator/generic/hyperparallel/references/*.md",
   "validation/strategy-validator/generic/hyperparallel/workflows/*.md",
   "validation/strategy-validator/generic/hyperparallel/validate_*.py",
+  "execution/autoresearch/SKILL.md",
+  "execution/autoresearch/scripts/*.py",
+  "execution/autoresearch/templates/*",
+  "execution/mfu-riser/ascend/hyperparallel/SKILL.md",
+  "execution/mfu-riser/ascend/hyperparallel/references/*.md",
+  "execution/mfu-riser/ascend/hyperparallel/scripts/*.py",
 ]
 
 [tool.pytest.ini_options]

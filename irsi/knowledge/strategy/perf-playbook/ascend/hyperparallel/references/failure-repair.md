@@ -124,7 +124,7 @@ path. This applies even when both phases use the same Git commit and global flag
 
 Close the original regression before declaring the affected path accepted. Then
 continue the task's authorized sequence-length, batch, and parallel-layout search in
-the `mfu-riser` linked workload series (not yet migrated).
+the [mfu-riser linked workload series](../../../../../execution/mfu-riser/ascend/hyperparallel/references/contracts.md#linked-series).
 Short diagnostic workloads do not replace a requested long-context target.
 
 Retain negative experiments with the tested shapes, runtime, mechanism, and retry

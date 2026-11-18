@@ -64,6 +64,9 @@ Validation skills live under `irsi/knowledge/validation/`:
 `hf-model-precision-validation` checks numerical acceptance on Ascend;
 `routing-validator` checks MoE token, ordering and gradient-flow invariants;
 and `strategy-validator` measures parallel-strategy candidates.
+Execution skills live under `irsi/knowledge/execution/`: `autoresearch` runs
+the generic benchmark/gate/keep-or-revert loop, and `mfu-riser` drives the
+Ascend + HyperParallel MFU optimization controller.
 
 ## Quickstart (Ascend host)
 

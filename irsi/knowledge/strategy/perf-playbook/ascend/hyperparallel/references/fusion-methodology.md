@@ -1,7 +1,7 @@
 # Operator optimization methodology
 
 > **Evidence provenance:** Mixed. General engineering practice and two measured
-> fused-operator optimization runs, with ledgers under the `autoresearch` workflow (not yet migrated).
+> fused-operator optimization runs, with ledgers under the [autoresearch workflow](../../../../../execution/autoresearch/SKILL.md).
 > See [evidence provenance](../SKILL.md#evidence-provenance).
 
 `fused-ops.md` describes available fused operators and their constraints. This page

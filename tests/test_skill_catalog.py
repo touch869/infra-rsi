@@ -13,11 +13,12 @@ from irsi.knowledge import DEFAULT_CATALOG, SkillCatalog, SkillLoadError, get_sk
 def test_package_skill_is_loaded_automatically():
     skills = DEFAULT_CATALOG.list_skills()
     assert [skill.name for skill in skills] == [
-        "bringup-benchmark", "experiment-record", "formal-verification",
-        "hf-model-precision-validation", "memory-analysis", "moe-optimizer",
-        "moe-profiler", "parallel-strategy-planner", "perf-playbook",
-        "precision", "profiling", "routing-validator",
-        "sapp-parallel-strategy", "strategy-optimizer", "strategy-validator"]
+        "autoresearch", "bringup-benchmark", "experiment-record",
+        "formal-verification", "hf-model-precision-validation",
+        "memory-analysis", "mfu-riser", "moe-optimizer", "moe-profiler",
+        "parallel-strategy-planner", "perf-playbook", "precision", "profiling",
+        "routing-validator", "sapp-parallel-strategy", "strategy-optimizer",
+        "strategy-validator"]
     skill = get_skill("experiment-record", 1)
     assert "append-only" in skill.description
     assert skill.read_text("references/field-dictionary.md").startswith("# Field Dictionary")
@@ -78,6 +79,13 @@ def test_package_skill_is_loaded_automatically():
     strategy_validator = get_skill("strategy-validator", 1)
     assert strategy_validator.metadata["category"] == "validation"
     assert strategy_validator.metadata["framework"] == "hyperparallel"
+    autoresearch = get_skill("autoresearch", 1)
+    assert autoresearch.metadata["category"] == "execution"
+    assert "autoresearch.py" in autoresearch.read_text("SKILL.md")
+    mfu_riser = get_skill("mfu-riser", 1)
+    assert mfu_riser.metadata["category"] == "execution"
+    assert mfu_riser.metadata["environment"] == "ascend"
+    assert mfu_riser.metadata["framework"] == "hyperparallel"
 
 
 def test_catalog_discovers_a_new_skill_directory(tmp_path):
@@ -104,11 +112,12 @@ def test_cli_lists_and_shows_the_packaged_skill(capsys):
     assert main(["skills", "--json"]) == 0
     listed = json.loads(capsys.readouterr().out)
     assert [item["name"] for item in listed] == [
-        "bringup-benchmark", "experiment-record", "formal-verification",
-        "hf-model-precision-validation", "memory-analysis", "moe-optimizer",
-        "moe-profiler", "parallel-strategy-planner", "perf-playbook",
-        "precision", "profiling", "routing-validator",
-        "sapp-parallel-strategy", "strategy-optimizer", "strategy-validator"]
+        "autoresearch", "bringup-benchmark", "experiment-record",
+        "formal-verification", "hf-model-precision-validation",
+        "memory-analysis", "mfu-riser", "moe-optimizer", "moe-profiler",
+        "parallel-strategy-planner", "perf-playbook", "precision", "profiling",
+        "routing-validator", "sapp-parallel-strategy", "strategy-optimizer",
+        "strategy-validator"]
 
     assert main(["skills", "experiment-record", "--body"]) == 0
     shown = capsys.readouterr().out

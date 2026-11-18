@@ -47,6 +47,6 @@ benefit without producing a warning. Positive evidence of path engagement is req
 ## Related references
 
 - Versioned interfaces and training compatibility: [Ascend fusion index](ascend-fusion/index.md).
-- Evidence-driven training fusion experiments: `mfu-riser` (not yet migrated).
-- Automated fusion and postprocessing experiments: the `autoresearch` skill.
+- Evidence-driven training fusion experiments: [mfu-riser](../../../../../execution/mfu-riser/ascend/hyperparallel/SKILL.md).
+- Automated fusion and postprocessing experiments: the [autoresearch skill](../../../../../execution/autoresearch/SKILL.md).
 - Environment variables affecting operator execution: `cann-pta-envs.md`.

@@ -7,7 +7,7 @@ effect on the current workload.
 ## Performance-driven optimization
 
 When the task prioritizes end-to-end training performance, use the
-the `mfu-riser` performance policy (not yet migrated)
+the [mfu-riser performance policy](../../../../../execution/mfu-riser/ascend/hyperparallel/SKILL.md)
 with declared screening and acceptance gates.
 
 - Audit model FLOPs using the active model architecture and actual sequence
@@ -16,7 +16,7 @@ with declared screening and acceptance gates.
   MFU, HFU evidence coverage, effective tokens/s/device, and optimization costs
   in the report. See [utilization conventions](mfu-targets.md).
 - For a low baseline, first verify the measurement and size the target gap.
-  Use the `mfu-riser` planner (not yet migrated) to rank exposed
+  Use the [mfu-riser planner](../../../../../execution/mfu-riser/ascend/hyperparallel/references/planner.md) to rank exposed
   bottlenecks and consider equivalent module replacements, operator fusion,
   communication scheduling, and parallel layout changes. A threshold such as
   10% is a task-specific trigger for this investigation.
@@ -26,7 +26,7 @@ with declared screening and acceptance gates.
   Place tunable execution settings in the candidate source/configuration and
   place fixed task constraints in the workload.
 - If the task permits sequence length, batch, or accumulation changes, measure
-  a `mfu-riser` linked capacity series (not yet migrated)
+  a [mfu-riser linked capacity series](../../../../../execution/mfu-riser/ascend/hyperparallel/references/contracts.md#linked-series)
   for each selected workload. Check supported lengths, peak memory, and gradient
   normalization. Carry forward the task's capacity requirements. Treat a memory
   reserve used for baseline planning as a constraint only if the task requires it.
@@ -138,7 +138,7 @@ continue using the existing marker protocol.
   local parity but fails while reading offloaded state, isolate the observer
   from the training path before reassessing the operator.
 - Preserve deferred candidates with their dependency scopes in the
-  `autoresearch` ledger (not yet migrated).
+  [autoresearch ledger](../../../../../execution/autoresearch/SKILL.md).
   Prefetch can be within noise on a slow configuration and become measurable
   after a compute or optimizer change. Re-measure it against the new parent
   when the declared scope is kept.

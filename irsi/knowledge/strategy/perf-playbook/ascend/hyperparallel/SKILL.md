@@ -65,7 +65,7 @@ down, and this playbook maps those findings to techniques and records the summar
 `scripts/fetch_ascend_docs.py` — retrieve official API text with URL/version/hash provenance,
 or `--query "rmsnorm rsqrt"` to search the local fusion catalog. Rejects challenge/error pages;
 an official API entry does not prove current-runtime compatibility or training backward support.
-The bounded experiment workflow is `mfu-riser` (not yet migrated), which calls this knowledge
+The bounded experiment workflow is [mfu-riser](../../../../execution/mfu-riser/ascend/hyperparallel/SKILL.md), which calls this knowledge
 base after collecting actual operator evidence.
 
 `scripts/extra_flops.py` — aggregate the executed-but-not-model work
