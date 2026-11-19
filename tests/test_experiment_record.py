@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RECORD = ROOT / "irsi" / "knowledge" / "runtime" / "experiment-record"
+RECORD = ROOT / "irsi" / "knowledge" / "skills" / "runtime" / "experiment-record"
 
 
 def test_schema_requires_step_evidence_and_commit_accounting():

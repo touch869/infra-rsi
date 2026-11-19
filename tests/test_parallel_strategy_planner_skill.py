@@ -11,7 +11,7 @@ from irsi.knowledge import get_skill
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE = (
-    ROOT / "irsi" / "knowledge" / "strategy" / "parallel-strategy-planner"
+    ROOT / "irsi" / "knowledge" / "skills" / "strategy" / "parallel-strategy-planner"
     / "generic" / "hyperparallel"
 )
 

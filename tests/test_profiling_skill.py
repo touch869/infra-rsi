@@ -8,7 +8,7 @@ from irsi.knowledge import get_skill
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROFILE = ROOT / "irsi" / "knowledge" / "analysis" / "profiling" / "ascend" / "hyperparallel"
+PROFILE = ROOT / "irsi" / "knowledge" / "skills" / "analysis" / "profiling" / "ascend" / "hyperparallel"
 
 
 def test_profiling_is_discovered_under_its_environment_directory():
@@ -33,5 +33,5 @@ def test_profiling_bundle_keeps_scripts_references_and_template():
 
 def test_skill_commands_point_at_the_migrated_path():
     skill = (PROFILE / "SKILL.md").read_text(encoding="utf-8")
-    assert "irsi/knowledge/analysis/profiling/ascend/hyperparallel/scripts" in skill
+    assert "irsi/knowledge/skills/analysis/profiling/ascend/hyperparallel/scripts" in skill
     assert "skills/analysis/profiling/scripts" not in skill

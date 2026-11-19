@@ -3,6 +3,10 @@
 日期：2026-11-16  
 原则：按“组件包”组织，不按抽象层名组织；专家目录放角色与 prompt 规范，`prompting/` 放通用拼装，`runtime/` 放确定性工具与专家运行时。
 
+落地说明（2026-11-19）：技能资源统一位于 `irsi/knowledge/skills/<category>/...`，
+由 `knowledge/skill_catalog.py` 自动发现；`irsi/knowledge/runtime/` 只保留运行时代码和账本。
+原 `knowledge/skills/hp/*` 是单域阶段的初始路径。
+
 ## 1. 目录树
 
 ```text

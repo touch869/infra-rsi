@@ -9,7 +9,7 @@ from irsi.knowledge import get_skill
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROFILE = ROOT / "irsi" / "knowledge" / "analysis" / "moe-profiler" / "ascend" / "hyperparallel"
+PROFILE = ROOT / "irsi" / "knowledge" / "skills" / "analysis" / "moe-profiler" / "ascend" / "hyperparallel"
 
 
 def test_moe_profiler_is_discovered_under_its_environment_directory():

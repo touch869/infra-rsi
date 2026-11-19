@@ -11,7 +11,7 @@ from irsi.knowledge import get_skill
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROFILE = ROOT / "irsi" / "knowledge" / "analysis" / "precision" / "ascend" / "generic"
+PROFILE = ROOT / "irsi" / "knowledge" / "skills" / "analysis" / "precision" / "ascend" / "generic"
 
 
 def _load_module(name: str, relative: str):

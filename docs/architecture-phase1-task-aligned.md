@@ -70,6 +70,9 @@ ExperimentRecordStore（知识沉淀/记录）
 
 HP 知识不是 `HPDomainKnowledge` 大类，而是 `knowledge/skills/hp/*` 下的 skill；`SkillCatalog` 聚合多个 provider。`SKILL.md` 是人类可读流程，`skill.yaml` 是机器可读 manifest。
 
+落地说明（2026-11-19）：实现统一使用 `irsi/knowledge/skills/<category>/<skill>/<environment>/<framework>/`，
+由 `SkillCatalog` 递归发现 `SKILL.md`；`SKILL.md` 的 YAML frontmatter 承担机器可读 manifest 职责。
+
 `ExperimentRecord` 建议字段：
 
 ```text

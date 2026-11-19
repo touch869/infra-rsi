@@ -1,4 +1,4 @@
-"""Auto-discovered ``SKILL.md`` packages stored under ``irsi.knowledge``."""
+"""Auto-discovered ``SKILL.md`` packages stored under ``irsi.knowledge.skills``."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ __all__ = [
     "list_skills",
 ]
 
-_PACKAGE_ROOT = Path(__file__).resolve().parent
+_SKILLS_ROOT = Path(__file__).resolve().parent / "skills"
 _FRONTMATTER = re.compile(r"^---[ \t]*\n(.*?)\n---[ \t]*\n", re.DOTALL)
 
 
@@ -69,8 +69,8 @@ class SkillCatalog:
 
     @classmethod
     def discover(cls, root: str | Path | None = None) -> "SkillCatalog":
-        """Discover every ``SKILL.md`` below ``root`` (the package by default)."""
-        base = Path(root) if root is not None else _PACKAGE_ROOT
+        """Discover every ``SKILL.md`` below ``root`` (``knowledge/skills`` by default)."""
+        base = Path(root) if root is not None else _SKILLS_ROOT
         if not base.is_dir():
             raise SkillLoadError(f"skill root is not a directory: {base}")
         return cls(_parse_skill(path) for path in sorted(base.rglob("SKILL.md")))

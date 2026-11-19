@@ -11,7 +11,7 @@ from irsi.knowledge import get_skill
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXECUTION = ROOT / "irsi" / "knowledge" / "execution"
+EXECUTION = ROOT / "irsi" / "knowledge" / "skills" / "execution"
 AUTORESEARCH = EXECUTION / "autoresearch"
 MFU_RISER = EXECUTION / "mfu-riser" / "ascend" / "hyperparallel"
 
@@ -92,7 +92,7 @@ def test_autoresearch_init_uses_runtime_experiment_templates(tmp_path):
         check=False,
     )
     assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"
-    shared = ROOT / "irsi" / "knowledge" / "runtime" / "experiment-record" / "templates"
+    shared = ROOT / "irsi" / "knowledge" / "skills" / "runtime" / "experiment-record" / "templates"
     for name in ("ideas.md", "results.tsv", "learnings.md", "experiment_log.md"):
         assert (run_dir / name).read_text(encoding="utf-8") == (shared / name).read_text(encoding="utf-8")
 
@@ -100,10 +100,10 @@ def test_autoresearch_init_uses_runtime_experiment_templates(tmp_path):
 def test_mfu_collect_state_targets_migrated_profiling_parser():
     module = _load_module("mfu_collect_state", MFU_RISER / "scripts" / "collect_state.py")
     expected = (
-        ROOT / "irsi" / "knowledge" / "analysis" / "profiling"
+        ROOT / "irsi" / "knowledge" / "skills" / "analysis" / "profiling"
         / "ascend" / "hyperparallel" / "scripts" / "breakdown.py"
     )
-    assert module.KNOWLEDGE == ROOT / "irsi" / "knowledge"
+    assert module.KNOWLEDGE == ROOT / "irsi" / "knowledge" / "skills"
     assert expected.is_file()
 
 

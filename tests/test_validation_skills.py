@@ -10,7 +10,7 @@ from irsi.knowledge import get_skill
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VALIDATION = ROOT / "irsi" / "knowledge" / "validation"
+VALIDATION = ROOT / "irsi" / "knowledge" / "skills" / "validation"
 SKILLS = {
     "bringup-benchmark": VALIDATION / "bringup-benchmark" / "generic" / "hyperparallel",
     "formal-verification": VALIDATION / "formal-verification" / "generic" / "hyperparallel",
@@ -85,6 +85,6 @@ def test_migrated_validation_docs_have_no_old_repository_paths():
     for root in SKILLS.values():
         for path in root.rglob("*.md"):
             text = path.read_text(encoding="utf-8")
-            assert "skills/validation/" not in text, path
+            assert "train-rsi/skills/validation/" not in text, path
             assert "../../../reference/perf-playbook/" not in text, path
             assert "parallel-strategy-analyzer" not in text, path

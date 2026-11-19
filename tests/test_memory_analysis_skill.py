@@ -10,7 +10,7 @@ from irsi.knowledge import get_skill
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROFILE = ROOT / "irsi" / "knowledge" / "analysis" / "memory-analysis" / "ascend" / "generic"
+PROFILE = ROOT / "irsi" / "knowledge" / "skills" / "analysis" / "memory-analysis" / "ascend" / "generic"
 
 
 def _load_breakdown():
