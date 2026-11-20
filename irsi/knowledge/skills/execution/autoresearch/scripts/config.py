@@ -103,6 +103,10 @@ class RunConfig:
         repo_root: Absolute path of the enclosing git repository.
         target_files: Repo-relative files the agent is allowed to modify.
         benchmark_cmd: Argv list producing the metric line on stdout.
+        baseline_cmd: Optional argv list for the initial baseline measurement;
+            empty means reuse ``benchmark_cmd``.
+        baseline_artifact: Optional run-relative frozen baseline JSON produced
+            by the baseline command; committed with the baseline step.
         gate_cmd: Optional argv list for a separate correctness gate;
             empty when the benchmark command already runs the gate.
         metric_pattern: Regex with a ``metric`` named group, applied to the
@@ -127,6 +131,8 @@ class RunConfig:
     repo_root: Path
     target_files: list[str]
     benchmark_cmd: list[str]
+    baseline_cmd: list[str] = field(default_factory=list)
+    baseline_artifact: str = ""
     gate_cmd: list[str] = field(default_factory=list)
     metric_pattern: str = r"total_ms=(?P<metric>[0-9.]+)"
     metric_lower_is_better: bool = True
@@ -148,6 +154,13 @@ class RunConfig:
     def log_path(self) -> Path:
         """Absolute path of the experiment log."""
         return self.run_dir / self.log_file
+
+    @property
+    def baseline_path(self) -> Path | None:
+        """Absolute path of the frozen baseline evidence, when configured."""
+        if not self.baseline_artifact:
+            return None
+        return self.run_dir / self.baseline_artifact
 
     def extract_metric(self, output: str) -> float | None:
         """Return the last metric occurrence in ``output``, if any."""
@@ -222,6 +235,20 @@ def _load_aux_patterns(raw: dict) -> dict[str, str]:
     return aux_patterns
 
 
+def _run_relative_path(value: object, run_dir: Path, key: str) -> str:
+    """Validate a run-relative path without allowing escapes through its parent."""
+    _require(isinstance(value, str) and value.strip(), f"{key} must be a non-empty string")
+    candidate = Path(value.strip())
+    _require(not candidate.is_absolute(), f"{key} must be run-relative")
+    resolved = (run_dir / candidate).resolve()
+    try:
+        resolved.relative_to(run_dir.resolve())
+    except ValueError as exc:
+        raise ValueError(f"autoresearch run.json: {key} must stay inside the run directory") from exc
+    _require(resolved != run_dir.resolve(), f"{key} must name a file")
+    return candidate.as_posix()
+
+
 def load_run_config(run_dir: str | Path, repo_root: str | Path) -> RunConfig:
     """Load and validate ``run.json`` from ``run_dir``.
 
@@ -254,8 +281,16 @@ def load_run_config(run_dir: str | Path, repo_root: str | Path) -> RunConfig:
              "benchmark_cmd must be a non-empty argv list")
     _require(all(isinstance(item, str) for item in benchmark_cmd),
              "benchmark_cmd entries must be strings")
+    baseline_cmd = raw.get("baseline_cmd", []) or []
+    _require(isinstance(baseline_cmd, list), "baseline_cmd must be an argv list")
+    _require(all(isinstance(item, str) for item in baseline_cmd),
+             "baseline_cmd entries must be strings")
     gate_cmd = raw.get("gate_cmd", []) or []
     _require(isinstance(gate_cmd, list), "gate_cmd must be an argv list")
+
+    baseline_artifact = raw.get("baseline_artifact", "") or ""
+    if baseline_artifact:
+        baseline_artifact = _run_relative_path(baseline_artifact, run_path, "baseline_artifact")
 
     pattern = raw.get("metric_pattern", RunConfig.metric_pattern)
     try:
@@ -275,6 +310,8 @@ def load_run_config(run_dir: str | Path, repo_root: str | Path) -> RunConfig:
         repo_root=root,
         target_files=list(targets),
         benchmark_cmd=list(benchmark_cmd),
+        baseline_cmd=list(baseline_cmd),
+        baseline_artifact=baseline_artifact,
         gate_cmd=[str(item) for item in gate_cmd],
         metric_pattern=pattern,
         metric_lower_is_better=bool(raw.get("metric_lower_is_better", True)),

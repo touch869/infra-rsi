@@ -7,6 +7,7 @@ declared target files, run the gate and benchmark, and record `keep`, `discard`,
 ## [SETUP] Run configuration
 
 - **Optimization objective:** <FILL: what to optimize>
+- **Contract and baseline command:** <FILL: contract path, `baseline_cmd`, run-relative `baseline_artifact`, and frozen reference path>
 - **Primary metric:** <FILL: benchmark_cmd output field and optimization direction>
 - **Starting point:** <FILL: current implementation and known performance>
 - **Scaffolding level:** <FILL: readable references and access to the network or history>
@@ -52,12 +53,24 @@ Absence of warnings does not establish that an optimization executed. For a firs
 measurement inside the noise band, configured automatic repeats use the median before
 deciding (`noise_confirm_reruns`). Do not override this with a single reading.
 
+Before the first baseline, `irsi contract show --contract <path>` must report
+`status: confirmed`. The Agent must generate the draft and explain it to the user,
+but only the user's explicit confirmation may authorize `irsi contract confirm`.
+Never edit a confirmed contract or confirm a changed hash; regenerate, re-review,
+re-confirm, and freeze a new baseline instead.
+
+The baseline step validates the frozen JSON, records SHA-256 fingerprints for
+`run.json`, this manual and the baseline evidence, and commits them with the
+append-only ledger. After baseline, these protected files must not change.
+
 ## Records
 
 The tool appends `results.tsv`, `candidates.jsonl`, and `experiment_log.md` and
 creates one step commit. A kept step contains code plus documents. A failed step
 contains only its report; the target files are restored. Update `ideas.md` and
-`learnings.md` as follow-up state for the next step.
+`learnings.md` as follow-up state for the next step. The baseline commit includes
+`run.json`, `manual.md`, the frozen baseline JSON and all ledger files; a later
+candidate may change only the declared targets and living documents.
 
 ## Experiment loop
 
@@ -76,6 +89,24 @@ Within the declared budget:
    best configuration and pass `--retry-of <commit>`.
 4. Update ideas and learnings for the next step. Do not append a second experiment-log
    entry by hand; the engine already committed one Why/Change/Result entry.
+
+## Stage handoffs
+
+The main controller owns the budget and final decision. Delegate only bounded
+stages, and require an artifact at each handoff:
+
+- **Observe:** return a diagnosis with bottleneck, evidence paths, and allowed
+  change scope. Do not edit source or choose a winner.
+- **Propose:** return a ranked candidate shortlist with `why`, target files,
+  expected gate, and evidence. Do not benchmark.
+- **Implement:** apply exactly one accepted candidate in `target_files`, then stop
+  and return the change summary. No two delegates may edit targets concurrently.
+- **Execute/Judge:** only `iterate` and its engine record decide keep/discard/crash.
+  Do not let a delegate report a metric outside those records.
+- **Reflect:** the main controller updates `ideas.md` and `learnings.md`, then
+  chooses the next stage or records the stop reason.
+
+Pass this manual's restrictions and commands verbatim to every delegate.
 
 **Crash:** Identify the first failing stage and distinguish training, validation, and
 resource failures. Record the fix, retry conditions, and evidence paths.

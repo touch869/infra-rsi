@@ -59,25 +59,82 @@ def _repo_root(start: Path) -> Path:
     return Path(done.stdout.strip())
 
 
+def _freeze_baseline_arg(argv: list[str]) -> str | None:
+    """Return the path following ``--freeze-baseline`` in an argv list."""
+    for index, item in enumerate(argv):
+        if item == "--freeze-baseline" and index + 1 < len(argv):
+            return argv[index + 1]
+        if item.startswith("--freeze-baseline="):
+            return item.split("=", 1)[1]
+    return None
+
+
+def _baseline_artifact_path(run_dir: Path, repo_root: Path, value: str) -> str:
+    """Normalize a CLI baseline path to a run-relative artifact path."""
+    candidate = Path(value)
+    if candidate.is_absolute():
+        resolved = candidate.resolve()
+    else:
+        run_prefix = run_dir.resolve().relative_to(repo_root.resolve()).parts
+        if candidate.parts[:len(run_prefix)] == run_prefix:
+            resolved = (repo_root / candidate).resolve()
+        else:
+            resolved = (run_dir / candidate).resolve()
+    try:
+        relative = resolved.relative_to(run_dir.resolve())
+    except ValueError as exc:
+        raise ValueError("baseline artifact must stay inside the run directory") from exc
+    if relative == Path("."):
+        raise ValueError("baseline artifact must name a file")
+    return relative.as_posix()
+
+
 def command_init(args: argparse.Namespace) -> int:
     """Scaffold a run directory: run.json plus the shared record templates."""
     run_dir = Path(args.run_dir).resolve()
     run_dir.mkdir(parents=True, exist_ok=True)
-    _repo_root(run_dir)  # fail fast when the run dir is outside a git repository
+    repo_root = _repo_root(run_dir)  # fail fast when the run dir is outside a git repository
     config_file = run_dir / CONFIG_NAME
     if config_file.exists() and not args.force:
         print(f"refusing to overwrite existing {config_file} (use --force)")
         return 1
-    config_file.write_text(json.dumps({
+    baseline_cmd = shlex.split(args.baseline_cmd) if args.baseline_cmd else []
+    baseline_artifact = args.baseline_artifact
+    try:
+        inferred = _freeze_baseline_arg(baseline_cmd)
+        if inferred:
+            inferred_path = _baseline_artifact_path(run_dir, repo_root, inferred)
+            if baseline_artifact:
+                explicit_path = _baseline_artifact_path(run_dir, repo_root, baseline_artifact)
+                if explicit_path != inferred_path:
+                    raise ValueError(
+                        "--baseline-artifact conflicts with --freeze-baseline in --baseline-cmd"
+                    )
+            baseline_artifact = inferred_path
+        elif baseline_artifact:
+            baseline_artifact = _baseline_artifact_path(run_dir, repo_root, baseline_artifact)
+    except ValueError as exc:
+        print(f"invalid baseline artifact: {exc}", file=sys.stderr)
+        return 1
+    payload = {
         "target_files": list(args.target),
         "benchmark_cmd": shlex.split(args.benchmark_cmd),
+        "baseline_artifact": baseline_artifact,
         "gate_cmd": shlex.split(args.gate_cmd) if args.gate_cmd else [],
         "metric_pattern": args.metric_pattern,
         "metric_lower_is_better": True,
         "noise_fraction": args.noise_fraction,
         "bench_must_match": list(args.bench_must_match),
         "gate_must_match": list(args.gate_must_match),
-    }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    }
+    if baseline_cmd:
+        payload["baseline_cmd"] = baseline_cmd
+    if not baseline_artifact:
+        del payload["baseline_artifact"]
+    config_file.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
     template_sources = {
         "manual.md": _TEMPLATES / "manual.md",
         "ideas.md": _SHARED_TEMPLATES / "ideas.md",
@@ -140,6 +197,16 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--target", action="append", required=True,
                       help="repo-relative file the agent may modify (repeatable)")
     init.add_argument("--benchmark-cmd", required=True)
+    init.add_argument(
+        "--baseline-cmd",
+        default="",
+        help="optional command used only for the initial baseline measurement",
+    )
+    init.add_argument(
+        "--baseline-artifact",
+        default="",
+        help="frozen baseline JSON path, run-relative (inferred from --freeze-baseline)",
+    )
     init.add_argument("--gate-cmd", default="")
     init.add_argument("--metric-pattern", default=r"total_ms=(?P<metric>[0-9.]+)")
     init.add_argument("--noise-fraction", type=float, default=0.02)

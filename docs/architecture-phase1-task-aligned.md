@@ -9,6 +9,11 @@
 3. 只覆盖第一阶段高优先级任务；并行、流水、通信、算子融合、内存、优化器、MoE 等暂列为扩展。
 4. 专家是“角色/协议”，不是引擎；执行器只负责跑，裁决器只负责判断，审计器只负责人审。
 
+> 2026-11-19 落地修正：本文中的 `Orchestrator` / `RoundController` 组件目录是早期设计清单。
+> 当前寻优主控制器使用 `knowledge/skills/execution/autoresearch`，infra-rsi 只保留
+> 单次测量、合同、gate、指标与账本；专家职责以 autoresearch 子 agent 的 artifact
+> 交接实现。参见 `docs/autoresearch-controller.md` 与 `autoresearch/SKILL.md`。
+
 ---
 
 ## 1. 按任务表的总图

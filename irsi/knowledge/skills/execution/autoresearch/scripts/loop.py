@@ -29,7 +29,9 @@ discipline:
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import math
 import statistics
 import subprocess
 import time
@@ -37,7 +39,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from config import RunConfig  # sibling module; the entry script puts this directory on sys.path
+from config import CONFIG_NAME, RunConfig  # sibling module; the entry script puts this directory on sys.path
 
 # Recovery header; keep in sync with experiment-record/templates/results.tsv.
 RESULTS_HEADER = "timestamp\tcommit\tmetric\tstatus\tdescription\n"
@@ -129,10 +131,16 @@ def _job_failure(result: CommandResult, receipt: dict, expected_steps: int) -> s
     return "missing_markers" if result.missing else ""
 
 
-def _run_job(config: RunConfig, phase: str, jobs: list[dict]) -> CommandResult:
+def _run_job(config: RunConfig, phase: str, jobs: list[dict], *,
+             baseline: bool = False) -> CommandResult:
     """Run one gate or measurement and attach its validated evidence."""
     gate = phase == "gate"
-    command = config.gate_cmd if gate else config.benchmark_cmd
+    if gate:
+        command = config.gate_cmd
+    elif baseline and config.baseline_cmd:
+        command = config.baseline_cmd
+    else:
+        command = config.benchmark_cmd
     markers = config.gate_must_match if gate else config.bench_must_match
     result = _run_shell(config.repo_root, command, markers)
     protocol = config.training_protocol
@@ -211,6 +219,84 @@ def _change_delta(repo: Path, parent: str, commit: str, target_files: list[str])
     return files, stat
 
 
+def _file_trace(repo: Path, path: Path) -> dict[str, str]:
+    """Return a repo-relative path and content hash for one traceable file."""
+    if not path.is_file():
+        raise RuntimeError(f"traceability file is missing: {path}")
+    try:
+        relative = path.resolve().relative_to(repo.resolve()).as_posix()
+    except ValueError as exc:
+        raise RuntimeError(f"traceability file is outside the repository: {path}") from exc
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    return {"path": relative, "sha256": digest}
+
+
+def _baseline_evidence(config: RunConfig, head: str, metric: float) -> dict:
+    """Validate and fingerprint the frozen measurement produced by baseline_cmd."""
+    path = config.baseline_path
+    if path is None:
+        return {}
+    if not path.is_file():
+        raise RuntimeError(
+            f"baseline artifact was not written: {path}; configure --freeze-baseline "
+            "and baseline_artifact to the same run-relative file"
+        )
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise RuntimeError(f"baseline artifact is not valid JSON: {path}") from exc
+    if not isinstance(payload, dict) or payload.get("schema") != "infra-rsi-measurement/v1":
+        raise RuntimeError(f"unsupported baseline artifact schema: {path}")
+    if payload.get("source_commit") != head:
+        raise RuntimeError(
+            "baseline artifact source_commit does not match the measured commit"
+        )
+    try:
+        artifact_metric = float(payload["metric"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise RuntimeError("baseline artifact has no numeric metric") from exc
+    if not math.isclose(artifact_metric, metric, rel_tol=1e-9, abs_tol=1e-12):
+        raise RuntimeError("baseline artifact metric disagrees with the command output")
+    numeric_hash = payload.get("numeric_hash")
+    contract_hash = payload.get("contract_hash")
+    lock = payload.get("contract_lock")
+    if not isinstance(numeric_hash, str) or not numeric_hash:
+        raise RuntimeError("baseline artifact has no numeric_hash")
+    if not isinstance(contract_hash, str) or not contract_hash:
+        raise RuntimeError("baseline artifact has no contract_hash")
+    if not isinstance(lock, dict) or lock.get("contract_hash") != contract_hash:
+        raise RuntimeError("baseline artifact is not tied to a confirmed contract lock")
+    trace = _file_trace(config.repo_root, path)
+    trace.update(
+        {
+            "contract_hash": contract_hash,
+            "confirmation_code": str(lock.get("confirmation_code") or ""),
+            "numeric_hash": numeric_hash,
+            "source_commit": head,
+            "metric": artifact_metric,
+        }
+    )
+    return trace
+
+
+def _traceability(config: RunConfig, baseline: dict | None) -> dict:
+    """Collect immutable provenance attached to the baseline record."""
+    return {
+        "run_config": _file_trace(config.repo_root, config.run_dir / CONFIG_NAME),
+        "manual": _file_trace(config.repo_root, config.run_dir / "manual.md"),
+        "baseline_artifact": baseline,
+    }
+
+
+def _protected_trace_paths(config: RunConfig) -> list[str]:
+    """Repo-relative files frozen by the baseline step."""
+    run_rel = config.run_dir.relative_to(config.repo_root).as_posix()
+    paths = [f"{run_rel}/{CONFIG_NAME}", f"{run_rel}/manual.md"]
+    if config.baseline_artifact:
+        paths.append(f"{run_rel}/{config.baseline_artifact}")
+    return paths
+
+
 def _step_commit_message(status: str, description: str, why: str,
                          metric: float | None, detail: str) -> str:
     """Build a commit message that carries the step's Why, Change, Result summary."""
@@ -228,6 +314,19 @@ def _append_experiment_log(config: RunConfig, record: dict) -> None:
     files = ", ".join(f"`{name}`" for name in change["files"]) or "none"
     diff_stat = " ".join(change["diff_stat"].split()) or "none"
     aux = ", ".join(f"{name}={value}" for name, value in result["aux"].items()) or "none"
+    trace = ((record.get("extensions") or {}).get("autoresearch") or {}).get(
+        "traceability"
+    ) or {}
+    run_trace = trace.get("run_config") or {}
+    manual_trace = trace.get("manual") or {}
+    baseline_trace = trace.get("baseline_artifact") or {}
+    trace_text = (
+        f"- **Traceability:** run.json `{run_trace.get('sha256', 'n/a')}`, "
+        f"manual.md `{manual_trace.get('sha256', 'n/a')}`, "
+        f"baseline `{baseline_trace.get('sha256', 'n/a')}`\n"
+        if run_trace or manual_trace or baseline_trace
+        else ""
+    )
     entry = (
         f"\n## {change['summary']} - {result['status']} ({record['record_id']})\n\n"
         f"- **Why:** {record['why']}\n"
@@ -237,6 +336,7 @@ def _append_experiment_log(config: RunConfig, record: dict) -> None:
         f"- **Test result:** `{result['status']}` after `{result['stage']}`; "
         f"gate `{result['gate']}`; metric `{metric}`; {result['detail']}\n"
         f"- **Auxiliary evidence:** {aux}\n"
+        f"{trace_text}"
         f"- **Measured commit:** `{record['commit']}`\n"
     )
     path = config.log_path
@@ -285,8 +385,18 @@ def best_recorded_metric(config: RunConfig) -> float | None:
 def _bookkeeping_paths(config: RunConfig) -> list[str]:
     """Repo-relative run files the loop itself is allowed to commit."""
     run_rel = config.run_dir.relative_to(config.repo_root).as_posix()
-    return [f"{run_rel}/{config.results_file}", f"{run_rel}/{config.log_file}",
-            f"{run_rel}/ideas.md", f"{run_rel}/learnings.md", f"{run_rel}/{CANDIDATES_FILE}"]
+    paths = [
+        f"{run_rel}/{CONFIG_NAME}",
+        f"{run_rel}/manual.md",
+        f"{run_rel}/{config.results_file}",
+        f"{run_rel}/{config.log_file}",
+        f"{run_rel}/ideas.md",
+        f"{run_rel}/learnings.md",
+        f"{run_rel}/{CANDIDATES_FILE}",
+    ]
+    if config.baseline_artifact:
+        paths.append(f"{run_rel}/{config.baseline_artifact}")
+    return paths
 
 
 def _append_receipt(config: RunConfig, receipt: dict) -> None:
@@ -368,7 +478,13 @@ def record_baseline(config: RunConfig, description: str = "baseline",
     _check_training_baseline(config, starting=True)
     head = _git(config.repo_root, "rev-parse", "HEAD")
     jobs: list[dict] = []
-    status, metric, detail, aux, stage = _run_gate_and_benchmark(config, None, jobs)
+    status, metric, detail, aux, stage = _run_gate_and_benchmark(
+        config, None, jobs, baseline=True
+    )
+    baseline_trace = None
+    if config.baseline_artifact and status == _STATUS_KEEP:
+        assert metric is not None
+        baseline_trace = _baseline_evidence(config, head, metric)
     record = {
         "schema": RECORD_SCHEMA,
         "record_id": _next_record_id(config),
@@ -393,6 +509,11 @@ def record_baseline(config: RunConfig, description: str = "baseline",
         "changes": [],
         "revisit_on": [],
         "retry_of": None,
+        "extensions": {
+            "autoresearch": {
+                "traceability": _traceability(config, baseline_trace),
+            }
+        },
     }
     if config.training_protocol is not None:
         record["training_protocol"] = asdict(config.training_protocol)
@@ -447,8 +568,13 @@ def _failure_detail(phase: str, result: CommandResult, fallback: str) -> str:
     return f"{phase} {fallback}"
 
 
-def _run_gate_and_benchmark(config: RunConfig, best: float | None,
-                            jobs: list[dict]) -> tuple[str, float | None, str, dict[str, str], str]:
+def _run_gate_and_benchmark(
+    config: RunConfig,
+    best: float | None,
+    jobs: list[dict],
+    *,
+    baseline: bool = False,
+) -> tuple[str, float | None, str, dict[str, str], str]:
     """Gate, benchmark, noise-confirm, and decide against ``best``.
 
     Returns ``(status, metric, detail, aux, stage)``; the status stays ``crash``
@@ -460,7 +586,7 @@ def _run_gate_and_benchmark(config: RunConfig, best: float | None,
         if not gate.ok:
             detail = _failure_detail("gate", gate, "failed")
             return _STATUS_CRASH, None, detail, config.extract_aux(gate.output), "gate"
-    bench = _run_job(config, "benchmark", jobs)
+    bench = _run_job(config, "benchmark", jobs, baseline=baseline)
     metric = _benchmark_metric(config, jobs, bench)
     if metric is None:
         detail = _failure_detail("benchmark", bench, "failed or metric absent")
@@ -504,6 +630,13 @@ def iterate(config: RunConfig, description: str, *, why: str,
     if not description.strip() or not why.strip():
         raise RuntimeError("experiment description and why must be non-empty")
     dirty = _dirty_files(repo)
+    protected = set(_protected_trace_paths(config))
+    changed_protected = [item for item in dirty if item in protected]
+    if changed_protected:
+        raise RuntimeError(
+            "traceability files changed after baseline: "
+            f"{changed_protected}; restore them before measuring candidates"
+        )
     run_rel = config.run_dir.relative_to(repo).as_posix() + "/"
     offending = [item for item in dirty
                  if item not in config.target_files and not item.startswith(run_rel)]

@@ -1,19 +1,26 @@
 # infra-rsi
 
-Closed-loop experiment harness for training-infra optimization (phase 1).
+Experiment harness for Agent-driven training-infra optimization (phase 1).
 
-One command runs a task contract end to end: **baseline → hypotheses → gates →
-decision → ledger**, and produces a report with the measured gain. The first
-edit surface is activation recompute on HyperParallel; the harness itself is
-plugin-based so backends, gates and edit surfaces are added without touching the
-engine.
+The main controller is the `autoresearch` skill. The user states an optimization
+objective in natural language; the host Agent reads the skill, analyses the
+baseline, proposes candidates, edits the declared target files, and lets
+`autoresearch` run the deterministic **gate → benchmark → keep/discard/crash →
+record → commit** loop.
+
+The repository supplies the deterministic pieces the controller needs: contract
+validation, one-trial measurement (`irsi measure`), receipt/memory/numerical
+gates, source-safe configuration rendering, and the experiment ledger. It does
+not need a second orchestration engine or a fixed candidate list.
 
 ## Architecture
 
 ```
 entry       cli.py
-engine      baseline -> candidates -> gates -> keep/discard/crash -> ledger
-plugins     contract/surfaces/ (which candidates a surface offers)
+controller  knowledge/skills/execution/autoresearch/
+measurement irsi measure -> backend -> gates -> metric + evidence
+loop        baseline -> one candidate -> gate -> benchmark -> decision -> commit
+plugins     contract/surfaces/ (optional fixed candidates for legacy irsi run)
             execution/backends/ (how a trial runs)
             gates/ (receipt, bitwise, memory)
 contract    contract/task_spec.py (what may change, how it is judged)
@@ -29,8 +36,8 @@ overrides, and the contract rejects any key outside `writable_prefixes`.
 ## Skills
 
 Skills are auto-discovered from `SKILL.md` frontmatter anywhere under
-`irsi/knowledge/skills/`. `irsi skills` lists them; `irsi skills experiment-record
---body` prints the loaded instructions. The `experiment-record` skill defines
+`irsi/knowledge/skills/`. `irsi skills` lists them; `irsi skills autoresearch
+--body` prints the controller instructions. The `experiment-record` skill defines
 the per-step why/change/test record and its commit and rollback accounting, and
 lives at `irsi/knowledge/skills/runtime/experiment-record/`.
 The `profiling` skill targets Ascend NPU + HyperParallel and lives at
@@ -65,11 +72,83 @@ Validation skills live under `irsi/knowledge/skills/validation/`:
 `hf-model-precision-validation` checks numerical acceptance on Ascend;
 `routing-validator` checks MoE token, ordering and gradient-flow invariants;
 and `strategy-validator` measures parallel-strategy candidates.
-Execution skills live under `irsi/knowledge/skills/execution/`: `autoresearch` runs
-the generic benchmark/gate/keep-or-revert loop, and `mfu-riser` drives the
+Execution skills live under `irsi/knowledge/skills/execution/`: `autoresearch` is
+the generic experiment controller described above, and `mfu-riser` drives the
 Ascend + HyperParallel MFU optimization controller.
 
+`autoresearch` assigns work to bounded subagents: analysis produces a diagnosis
+with evidence, strategy proposes a ranked shortlist, an implementer applies one
+candidate in `target_files`, and the deterministic `iterate` command performs the
+gate, benchmark, record and commit. Observe and propose may run in parallel;
+target-file edits are serial. The full ownership and handoff rules are in
+`autoresearch/SKILL.md` and are copied into each run's `manual.md`.
+
 ## Quickstart (Ascend host)
+
+The preferred entry is natural language to the host Agent:
+
+```text
+在 contracts/tiny-qwen3.yaml 下把吞吐提高 15%，保持 loss/grad_norm 完全一致；
+用 autoresearch 跑 baseline、分析瓶颈、提出候选、逐个验证，失败实验保留报告并回退代码。
+```
+
+The Agent does not ask the user to write contract YAML. It inspects the target
+repository/base config, generates a draft, shows the natural-language summary,
+and waits for an explicit user confirmation:
+
+```bash
+python -m irsi.cli contract draft \
+  --objective "把吞吐提高 15%，保持 loss/grad_norm 完全一致" \
+  --base-config /root/irsi-workspace/configs/train_tiny.yaml \
+  --repo-root /root/hyper-parallel --out contracts/tiny-qwen3.generated.yaml
+python -m irsi.cli contract show --contract contracts/tiny-qwen3.generated.yaml
+
+# Show the summary, semantic hash and confirmation code to the user and WAIT.
+# Only the user's explicit natural-language confirmation authorizes this:
+python -m irsi.cli contract confirm \
+  --contract contracts/tiny-qwen3.generated.yaml --code <shown-code> \
+  --statement "<用户的确认原话>" --confirmed-by user
+```
+
+`draft` also writes `<contract>.summary.md` and `<contract>.draft.json`; `confirm`
+writes `<contract>.lock.json`. The lock is a semantic hash, so comments or YAML
+formatting may change, but workload/metric/gates/editable surface may not. Any
+semantic change requires a new draft, a new user confirmation, and a new baseline.
+
+After confirmation, the Agent uses `autoresearch` as the controller and
+`irsi measure` as its measurement primitive. Create `runs/ar-qwen3` inside the git
+repository that contains the editable target files; the contract may live in
+infra-rsi. A direct shell run has the same shape:
+
+```bash
+python irsi/knowledge/skills/execution/autoresearch/scripts/autoresearch.py init \
+  --run-dir runs/ar-qwen3 --target <editable-source-file> \
+  --baseline-cmd "python -m irsi.cli measure --contract contracts/tiny-qwen3.generated.yaml \
+    --artifacts-dir runs/ar-qwen3/measurements \
+    --freeze-baseline runs/ar-qwen3/baseline.json --label baseline" \
+  --benchmark-cmd "python -m irsi.cli measure --contract contracts/tiny-qwen3.generated.yaml \
+    --artifacts-dir runs/ar-qwen3/measurements \
+    --reference runs/ar-qwen3/baseline.json --label candidate" \
+  --baseline-artifact baseline.json \
+  --metric-pattern 'IRSI_MEASURE_METRIC=(?P<metric>[0-9.eE+-]+)' \
+  --bench-must-match 'IRSI_MEASURE_GATE=pass' --noise-fraction 0.03
+python irsi/knowledge/skills/execution/autoresearch/scripts/autoresearch.py \
+  baseline --run-dir runs/ar-qwen3 --why "freeze the measured starting point"
+```
+
+The baseline step commits `run.json`, `manual.md`, the frozen `baseline.json`, the
+append-only ledgers and the living docs in one traceable commit. The baseline
+receipt also records SHA-256 fingerprints for those files plus the contract hash,
+confirmation code, numeric hash and measured commit. After baseline, `iterate`
+refuses to proceed if `run.json`, `manual.md` or the baseline evidence changed.
+The contract YAML and its `.draft.json`/`.summary.md`/`.lock.json` sidecars must be
+committed in the repository where they live.
+
+Then the Agent edits one target file, writes the why/change description, and runs
+`autoresearch.py iterate --run-dir ... --why ... --description ...`. The command
+owns the gate, metric, failed-code restoration and one-step commit.
+
+The original fixed-surface path remains available for deterministic regression:
 
 ```bash
 pip install -e .
@@ -133,5 +212,5 @@ python -m pytest -q
 
 Design docs live in `docs/`: `architecture-phase1-task-aligned.md`,
 `directory-plan.md`, `architecture-comparison-inferrsi.md`,
-`architecture-comparison-hp-pr1517.md`; results in `phase1-result.md` and
+`architecture-comparison-hp-pr1517.md`, `autoresearch-controller.md`; results in `phase1-result.md` and
 `layerwise-recompute-result.md`. Older design notes are in `docs/archive/`.
